@@ -90,6 +90,11 @@ ActiveRecord::Schema[7.1].define(version: 2025_08_23_150704) do
     t.datetime "updated_at", null: false
     t.integer "role", default: 0, null: false
     t.boolean "profile_completed", default: false, null: false
+    t.string "name"
+    t.string "cep"
+    t.string "address"
+    t.text "description"
+    t.string "phone_number"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
     t.index ["role"], name: "index_users_on_role"

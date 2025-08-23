@@ -56,6 +56,7 @@ gem "cloudinary"
 gem "pg_search"
 
 
+gem "activestorage-cloudinary-service"
 
 group :development, :test do
   gem "dotenv-rails"
