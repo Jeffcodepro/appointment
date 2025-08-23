@@ -1,0 +1,70 @@
+<div class="container-fluid banner d-flex align-items-center justify-content-center text-white">
+  <div class="text-center">
+    <h1 class="display-3 fw-bold">Encontre o Serviço Perfeito</h1>
+    <p class="lead">Conectando você aos melhores profissionais, perto de você.</p>
+  </div>
+</div>
+
+
+<div class="container mt-4">
+  <div class="row justify-content-center">
+    <div class="col-sm-8 my-3">
+      <%= form_with url: services_path, method: :get, class: "mb-4" do |form| %>
+        <div class="input-group">
+          <%= form.text_field :query,
+                              class: "form-control",
+                              placeholder: "Busque por serviço, descrição ou nome do profissional...",
+                              value: params[:query] %>
+          <button class="btn-search" type="submit">
+            <i class="fas fa-search"></i>
+          </button>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <% if params[:query].present? %>
+    <p mb-4 ml-2>
+      <%= link_to "← Ver todos os serviços", services_path, class: "btn-back-to-services" %>
+    </p>
+  <% end %>
+
+<div class="container mt-4">
+  <h1 class="mb-4">Todos os serviços</h1>
+
+
+  <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    <% @services.each do |service| %>
+      <div class="col">
+        <div class="card h-100 shadow-sm">
+          <div class="card-body d-flex p-3">
+            <% if service.user.images.attached? %>
+              <div class="flex-shrink-0 me-3">
+                <%= image_tag service.user.images.first, class: "rounded-circle border", style: "width: 80px; height: 80px; object-fit: cover;" %>
+              </div>
+            <% else %>
+              <div class="flex-shrink-0 me-3">
+                <%= image_tag "placeholder_profile.png", class: "rounded-circle border", style: "width: 80px; height: 80px; object-fit: cover;" %>
+              </div>
+            <% end %>
+
+            <div class="flex-grow-1">
+              <h5 class="card-title mb-1"><%= service.user.email %></h5>
+              <p class="card-text text-muted mb-2"><%= service.categories %></p>
+              <p class="card-text"><%= service.subcategories %></p>
+              <div class="mt-auto">
+                <p class="card-text">
+                  <strong>Preço/hora:</strong> <%= number_to_currency(service.price_hour, unit: "R$") %>
+                </p>
+                <p class="card-text">
+                  <strong>Duração média:</strong> <%= service.mean_hours %> horas
+                </p>
+                <%= link_to "Ver detalhes",root_path, class: "btn-see-more w-100 mt-2" %>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>
