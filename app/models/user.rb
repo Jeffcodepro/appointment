@@ -4,6 +4,7 @@ class User < ApplicationRecord
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable
 
+  has_many_attached :images
   enum role: { client: 0, professional: 1 }
 
   has_one_attached :avatar

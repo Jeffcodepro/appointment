@@ -136,6 +136,8 @@ GEM
     erb (5.0.2)
     erubi (1.13.1)
     execjs (2.10.0)
+    faker (3.5.2)
+      i18n (>= 1.8.11, < 2)
     faraday (2.13.4)
       faraday-net_http (>= 2.0, < 3.5)
       json
@@ -186,6 +188,15 @@ GEM
     matrix (0.4.3)
     mini_mime (1.1.5)
     minitest (5.25.5)
+    monetize (1.13.0)
+      money (~> 6.12)
+    money (6.19.0)
+      i18n (>= 0.6.4, <= 2)
+    money-rails (1.15.0)
+      activesupport (>= 3.0)
+      monetize (~> 1.9)
+      money (~> 6.13)
+      railties (>= 3.0)
     msgpack (1.8.0)
     multipart-post (2.4.1)
     mutex_m (0.3.0)
@@ -226,6 +237,9 @@ GEM
     pg (1.6.1-x86_64-darwin)
     pg (1.6.1-x86_64-linux)
     pg (1.6.1-x86_64-linux-musl)
+    pg_search (2.3.7)
+      activerecord (>= 6.1)
+      activesupport (>= 6.1)
     popper_js (2.11.8)
     pp (0.6.2)
       prettyprint
@@ -359,10 +373,13 @@ DEPENDENCIES
   debug
   devise
   dotenv-rails
+  faker
   font-awesome-sass (~> 6.1)
   importmap-rails
   jbuilder
+  money-rails
   pg (~> 1.1)
+  pg_search
   puma (>= 5.0)
   rails (~> 7.1.5, >= 7.1.5.1)
   sassc-rails
