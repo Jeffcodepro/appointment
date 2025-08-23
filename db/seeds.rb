@@ -20,25 +20,27 @@ puts "Criando 20 usuários (5 profissionais e 15 clientes)..."
 
 # Usuários específicos para referência fácil
 user_data = [
-  { email: "joao.cliente@email.com", password: "password", role: "1" },
-  { email: "maria.profissional@email.com", password: "password", role: "0", profile_completed: true }
+  { name: "Joao", email: "joao.cliente@email.com", password: "password", role: :professional },
+  { name: "Maria", email: "maria.profissional@email.com", password: "password", role: :client, profile_completed: true }
 ]
 
 # Cria 3 profissionais e 13 clientes com dados aleatórios
 3.times do
   user_data << {
+    name: Faker::Name.name,
     email: Faker::Internet.unique.email,
     password: "password",
-    role: "0",
+    role: :professional,
     profile_completed: true
   }
 end
 
 13.times do
   user_data << {
+    name: Faker::Name.name,
     email: Faker::Internet.unique.email,
     password: "password",
-    role: "1"
+    role: :client,
   }
 end
 
@@ -49,7 +51,7 @@ puts "✅ Usuários criados com sucesso!"
 # --- 2. CRIANDO SERVIÇOS PROFISSIONAIS ---
 puts "Criando 50 serviços..."
 
-professional_users = User.where(role: "0")
+professional_users = User.where(role: :professional)
 
 
 CATEGORIES = ["Serviços Domésticos", "Reparos e Manutenção", "Saúde e Bem-Estar", "Aulas e Cursos", "Consultoria", "Eventos"]
@@ -82,7 +84,7 @@ puts "✅ #{Service.count} serviços criados com sucesso!"
 # --- 3. CRIANDO AGENDAMENTOS (SCHEDULES) ---
 puts "Criando 30 agendamentos..."
 
-client_users = User.where(role: "1")
+client_users = User.where(role: :client)
 services = Service.all
 
 30.times do
