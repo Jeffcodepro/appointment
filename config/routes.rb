@@ -1,5 +1,4 @@
 Rails.application.routes.draw do
-  get 'services/index'
   devise_for :users
   # root to: "pages#home"
   root to: "services#index"
@@ -13,7 +12,7 @@ Rails.application.routes.draw do
   # root "posts#index"
 
   resources :services, only: [:index]
-  root to: "services#index"
+
   get "dashboard", to: "dashboards#show"
 
   scope "users/:user_id" do
