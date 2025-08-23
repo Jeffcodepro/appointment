@@ -1,0 +1,30 @@
+<h2>Complete seu perfil profissional</h2>
+
+<%= simple_form_for @profile, url: profile_path(@profile), html: { multipart: true } do |f| %>
+  <%= f.error_notification %>
+
+  <div class="row">
+    <div class="col-md-4">
+      <% if @profile.avatar.attached? %>
+        <%= image_tag @profile.avatar.variant(resize_to_fill: [200, 200]) %>
+      <% end %>
+      <%= f.input :avatar, as: :file, label: "Sua foto" %>
+    </div>
+
+    <div class="col-md-8">
+      <%= f.input :name,        label: "Nome",        input_html: { value: @profile.name } %>
+      <%= f.input :description, label: "Descrição",   as: :text, input_html: { rows: 4 } %>
+
+      <div class="row">
+        <div class="col-md-4"><%= f.input :cep,     label: "CEP" %></div>
+        <div class="col-md-8"><%= f.input :address, label: "Endereço" %></div>
+      </div>
+
+      <%= f.input :phone_number, label: "Telefone" %>
+    </div>
+  </div>
+
+  <div class="mt-3">
+    <%= f.button :submit, "Salvar e ir para o dashboard" %>
+  </div>
+<% end %>

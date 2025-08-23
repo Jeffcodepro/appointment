@@ -34,7 +34,10 @@ Rails.application.configure do
   end
 
   # Store uploaded files on the local file system (see config/storage.yml for options).
-  config.active_storage.service = :local
+  # config.active_storage.service = :local
+
+  # config/environments/development.rb
+  config.active_storage.service = :cloudinary
 
   # Don't care if the mailer can't send.
   config.action_mailer.raise_delivery_errors = false
@@ -75,4 +78,6 @@ Rails.application.configure do
 
   # Raise error when a before_action's only/except options reference missing actions
   config.action_controller.raise_on_missing_callback_actions = true
+
+
 end
