@@ -11,7 +11,11 @@ Rails.application.routes.draw do
   # Defines the root path route ("/")
   # root "posts#index"
 
-  resources :services, only: [:index]
+  resources :services, only: [:index, :show] do
+    collection do
+      get :cities
+    end
+  end
 
   get "dashboard", to: "dashboards#show"
 
