@@ -1,6 +1,6 @@
 <h2>Editar conta</h2>
 
-<%= simple_form_for(resource, as: resource_name, url: registration_path(resource_name), html: { method: :put }) do |f| %>
+<%= simple_form_for(resource, as: resource_name, url: registration_path(resource_name), html: { method: :put, data: { controller: "cep" } }) do |f| %>
   <%= f.error_notification %>
 
   <div class="form-inputs">
@@ -8,15 +8,25 @@
       collection: [["Cliente", "client"], ["Profissional", "professional"]],
       label: "Tipo de usuário" %>
 
-    <%= f.input :name,         label: "Nome completo" %>
+    <%= f.input :name, label: "Nome completo" %>
     <%= f.input :phone_number, label: "Telefone" %>
-    <%= f.input :cep,          label: "CEP" %>
-    <%= f.input :address,      label: "Endereço" %>
-    <%= f.input :description,  label: "Descrição", as: :text %>
+
+    <%= f.input :cep,
+      label: "CEP",
+      input_html: { data: { "cep-target": "cepField", action: "keyup->cep#search" } } %>
+
+    <%= f.input :city,
+      label: "Cidade",
+      input_html: { data: { "cep-target": "cityField" } } %>
+    <%= f.input :state,
+      label: "Estado",
+      input_html: { data: { "cep-target": "stateField" } } %>
+
+    <%= f.input :address, label: "Endereço" %>
+    <%= f.input :description, label: "Descrição", as: :text %>
 
     <%= f.input :email, required: true %>
 
-  
     <%= f.input :current_password, label: "Senha atual", hint: "Necessária para confirmar alterações", required: true %>
   </div>
 

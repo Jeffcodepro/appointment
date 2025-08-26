@@ -4,9 +4,9 @@ class User < ApplicationRecord
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable
 
+  has_many :services, dependent: :destroy
   has_many_attached :images
   enum role: { client: 0, professional: 1 }
-
   has_one_attached :avatar
 
   # No signup: queremos só o essencial (role, name, email, password)
@@ -24,10 +24,18 @@ class User < ApplicationRecord
 
   before_save :normalize_cep, if: -> { will_save_change_to_cep? && cep.present? }
 
+  after_validation :geocode, if: -> { will_save_change_to_address? || will_save_change_to_address_number? || will_save_change_to_cep? }
+  geocoded_by :full_address
+
   private
 
   def normalize_cep
     digits = cep.gsub(/\D/, '')
     self.cep = digits.size == 8 ? "#{digits[0..4]}-#{digits[5..7]}" : cep
   end
+
+  def full_address
+    "#{address}, #{address_number}, #{city}, #{state}, #{cep}"
+  end
+
 end

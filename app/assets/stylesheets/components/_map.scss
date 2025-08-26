@@ -1,0 +1,42 @@
+/* marcador de preço (igual ao que você já usa) */
+.price-marker {
+  background: #111;
+  color: #fff;
+  font-weight: 700;
+  padding: 6px 10px;
+  border-radius: 18px;
+  font-size: 12px;
+  line-height: 1;
+  box-shadow: 0 2px 8px rgba(0,0,0,.25);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  border: 2px solid #fff;
+}
+
+/* âncora de cluster (mostra quantidade) */
+.cluster-marker {
+  background: #fff;
+  color: #111;
+  font-weight: 700;
+  padding: 6px 8px;
+  border-radius: 18px;
+  font-size: 12px;
+  line-height: 1;
+  box-shadow: 0 2px 8px rgba(0,0,0,.25);
+  border: 2px solid #111;
+  cursor: pointer;
+}
+
+.cluster-marker.cluster-open {
+  background: #111;
+  color: #fff;
+}
+
+/* “perninhas” do spiderfy */
+.spider-leg {
+  height: 2px;
+  transform-origin: left center;
+  pointer-events: none;
+  border-radius: 2px;
+}

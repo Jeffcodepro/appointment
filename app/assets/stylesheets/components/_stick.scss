@@ -1,0 +1,41 @@
+/* stick.scss */
+:root {
+  --nav-h: 56px;
+  --search-h: 120px;                 /* será atualizado via JS do layout */
+  --offset-top: calc(var(--nav-h) + var(--search-h));
+}
+
+body { padding-top: var(--nav-h); }
+
+.sticky-search{
+  position: sticky;
+  top: var(--nav-h);
+  z-index: 1030;
+  background: #fff;
+}
+
+.map-sticky{
+  position: sticky;
+  top: var(--offset-top);
+
+  /* altura do mapa visível na viewport */
+  block-size: calc(100svh - var(--offset-top));
+  max-block-size: 720px;     /* evita ficar gigante em telas muito altas */
+  min-block-size: 320px;
+
+  inline-size: 100%;
+  display: block;
+  overflow: hidden;
+}
+
+.map-sticky .mapboxgl-map,
+.map-sticky .mapboxgl-canvas,
+.map-sticky > div {
+  inline-size: 100% !important;
+  block-size: 100% !important;
+}
+
+/* Evita que algum pai quebre o sticky */
+.container, .container-fluid, .row, .col-12, .col-md-6, .col-lg-6 {
+  overflow: visible !important;
+}
