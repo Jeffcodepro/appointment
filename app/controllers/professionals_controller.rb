@@ -4,7 +4,6 @@ class ProfessionalsController < ApplicationController
   before_action :ensure_professional!
 
   def new
-    # formulário pré-preenchido com o que veio do signup (name)
     @profile = @user
   end
 
@@ -18,7 +17,6 @@ class ProfessionalsController < ApplicationController
     end
   end
 
-  # edição futura, via avatar/nome
   def edit
     @profile = @user
   end
@@ -49,6 +47,6 @@ class ProfessionalsController < ApplicationController
 
   # Campos adicionais (do próprio User) + avatar
   def profile_params
-    params.require(:user).permit(:phone_number, :cep, :address, :description, :avatar, :name)
+    params.require(:user).permit( :name, :description, :cep, :address, :phone_number, :avatar, :banner)
   end
 end

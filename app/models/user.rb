@@ -8,6 +8,7 @@ class User < ApplicationRecord
   enum role: { client: 0, professional: 1 }
 
   has_one_attached :avatar
+  has_one_attached :banner
 
   # No signup: queremos só o essencial (role, name, email, password)
   validates :name, presence: true, on: :create

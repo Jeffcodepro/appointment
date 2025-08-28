@@ -54,8 +54,6 @@ gem 'money-rails'
 gem 'faker'
 gem "cloudinary"
 gem "pg_search"
-
-
 gem "activestorage-cloudinary-service"
 
 group :development, :test do
