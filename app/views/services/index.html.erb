@@ -1,3 +1,4 @@
+<%# HERO opcional %>
 <div class="container-fluid banner d-flex align-items-center justify-content-center text-white">
   <div class="text-center">
     <h1 class="display-3 fw-bold">Encontre o Serviço Perfeito</h1>
@@ -5,66 +6,166 @@
   </div>
 </div>
 
+<%# ===================== BARRA DE BUSCA/FILTROS STICKY ===================== %>
+<div class="sticky-search" id="stickySearch">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-10 py-3">
+        <%= form_with url: services_path(anchor: 'results'),
+                      method: :get,
+                      class: "mb-0",
+                      data: {
+                        controller: "location",
+                        turbo_action: "advance",
+                        location_selected_city_value: params[:city].to_s,
+                        location_reset_url_value: services_path(anchor: 'results')
+                      } do |form| %>
 
-<div class="container mt-4">
-  <div class="row justify-content-center">
-    <div class="col-sm-8 my-3">
-      <%= form_with url: services_path, method: :get, class: "mb-4" do |form| %>
-        <div class="input-group">
-          <%= form.text_field :query,
-                              class: "form-control",
-                              placeholder: "Busque por serviço, descrição ou nome do profissional...",
-                              value: params[:query] %>
-          <button class="btn-search" type="submit">
-            <i class="fas fa-search"></i>
-          </button>
-        </div>
-      <% end %>
-    </div>
-  </div>
+          <div class="input-group mb-2">
+            <%= form.text_field :query,
+              class: "form-control form-control-sm",
+              placeholder: "Busque por serviço, descrição ou nome do profissional...",
+              value: params[:query] %>
+            <button class="btn-search" type="submit">
+              <i class="fas fa-search"></i>
+            </button>
+          </div>
 
-  <% if params[:query].present? %>
-    <p mb-4 ml-2>
-      <%= link_to "← Ver todos os serviços", services_path, class: "btn-back-to-services" %>
-    </p>
-  <% end %>
+          <div class="row g-2">
+            <div class="col-12 col-md-4">
+              <%= form.select :category,
+                options_for_select([['Todas as Categorias', '']] + Service::CATEGORIES, selected: params[:category]),
+                {},
+                { class: "form-select form-select-sm", data: { location_target: "category" } } %>
+            </div>
 
-<div class="container mt-4">
-  <h1 class="mb-4">Todos os serviços</h1>
+            <div class="col-12 col-md-4">
+              <%= form.select :state,
+                options_for_select([['Todos os Estados', '']] + @states, selected: params[:state]),
+                {},
+                { data: { location_target: "state" }, class: "form-select form-select-sm" } %>
+            </div>
 
-
-  <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-    <% @services.each do |service| %>
-      <div class="col">
-        <div class="card h-100 shadow-sm">
-          <div class="card-body d-flex p-3">
-            <% if service.user.images.attached? %>
-              <div class="flex-shrink-0 me-3">
-                <%= image_tag service.user.images.first, class: "rounded-circle border", style: "width: 80px; height: 80px; object-fit: cover;" %>
-              </div>
-            <% else %>
-              <div class="flex-shrink-0 me-3">
-                <%= image_tag "servico_eventos.png", class: "rounded-circle border", style: "width: 80px; height: 80px; object-fit: cover;" %>
-              </div>
-            <% end %>
-
-            <div class="flex-grow-1">
-              <h5 class="card-title mb-1"><%= service.user.email %></h5>
-              <p class="card-text text-muted mb-2"><%= service.categories %></p>
-              <p class="card-text"><%= service.subcategories %></p>
-              <div class="mt-auto">
-                <p class="card-text">
-                  <strong>Preço/hora:</strong> <%= number_to_currency(service.price_hour, unit: "R$") %>
-                </p>
-                <p class="card-text">
-                  <strong>Duração média:</strong> <%= service.mean_hours %> horas
-                </p>
-                <%= link_to "Ver detalhes",root_path, class: "btn-see-more w-100 mt-2" %>
-              </div>
+            <div class="col-12 col-md-4">
+              <%= form.select :city,
+                options_for_select([['Todas as Cidades', '']]),
+                {},
+                {
+                  class: "form-select form-select-sm",
+                  data: { location_target: "city" }
+                } %>
             </div>
           </div>
-        </div>
+
+          <% if params[:query].present? || params[:category].present? || params[:state].present? || params[:city].present? %>
+            <div class="mt-2 mb-0 d-flex gap-2">
+              <button type="button"
+                      class="btn btn-outline-secondary btn-sm"
+                      data-action="click->location#resetFilters">
+                Resetar busca
+              </button>
+            </div>
+          <% end %>
+        <% end %>
       </div>
-    <% end %>
+    </div>
+  </div>
+</div>
+
+<%# ============================== CONTEÚDO =============================== %>
+<div class="container main-content">
+  <div class="row">
+    <%# -------- Coluna ESQUERDA: Lista de serviços -------- %>
+    <div class="col-lg-6">
+      <h1 class="mb-3 mt-3">Todos os serviços</h1>
+
+      <%# Fallbacks por categoria (usado quando o user não tem imagens anexadas) %>
+      <% category_fallback = {
+        "Serviços Domésticos"           => "servico_servicos_domesticos.png",
+        "Reparos e Manutenção"          => "servico_reparo_manutencao.png",
+        "Saúde e Bem-Estar"             => "servico_saude.png",
+        "Aulas e Cursos"                => "servico_consultoria.png",
+        "Consultoria"                   => "servico_consultoria.png",
+        "Eventos"                       => "servico_eventos.png",
+        "Serviços de Saúde e Estética"  => "servico_saude.png",
+        "Serviços Automotivos"          => "servico_reparo_manutencao.png"
+      } %>
+
+      <div id="results"><!-- âncora de destino para pós-busca -->
+        <% if @services.empty? %>
+          <div class="search-service" role="alert">
+            Nenhum serviço encontrado com os filtros aplicados.
+          </div>
+        <% else %>
+          <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4">
+            <% @services.each do |service| %>
+              <div class="col">
+                <%= link_to service_path(service), class: "text-decoration-none text-dark",  data: { turbo: false } do%>
+                  <div class="card h-100 border-0">
+                    <%# ======= BLOCO DE IMAGEM / CARROSSEL ======= %>
+                    <% if service.user.images.attached? %>
+                      <% imgs = service.user.images.to_a %>
+
+                      <% if imgs.size > 1 %>
+                        <div id="user-<%= service.user.id %>-carousel" class="carousel slide rounded-4 overflow-hidden" data-bs-ride="carousel">
+                          <div class="carousel-inner ratio ratio-4x3">
+                            <% imgs.each_with_index do |image, i| %>
+                              <div class="carousel-item <%= i.zero? ? 'active' : '' %>">
+                                <%= image_tag image,
+                                      class: "d-block w-100 h-100",
+                                      style: "object-fit: cover;" %>
+                              </div>
+                            <% end %>
+                          </div>
+
+                          <button class="carousel-control-prev" type="button" data-bs-target="#user-<%= service.user.id %>-carousel" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Anterior</span>
+                          </button>
+                          <button class="carousel-control-next" type="button" data-bs-target="#user-<%= service.user.id %>-carousel" data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Próximo</span>
+                          </button>
+                        </div>
+                      <% else %>
+                        <%= image_tag imgs.first,
+                                      class: "rounded-4",
+                                      style: "height: 200px; width: 100%; object-fit: cover;" %>
+                      <% end %>
+                    <% else %>
+                      <%= image_tag(category_fallback[service.categories] || "service_reparo.png",
+                                    class: "rounded-4",
+                                    style: "height: 200px; width: 100%; object-fit: cover;") %>
+                    <% end %>
+
+                    <%# ======= BODY DO CARD ======= %>
+                    <div class="card-body px-0 pt-2">
+                      <p class="card-text fw-bold mb-0"><%= service.user.name %></p>
+                      <p class="card-text text-muted mb-0 categories"><%= service.categories %></p>
+                      <p class="card-text text-muted mb-0 subcategories"><%= service.subcategories %></p>
+                      <p class="card-text text-muted mb-0 address">
+                        <%= "#{service.user.address}, #{service.user.city}, #{service.user.state}" %>
+                      </p>
+                      <p class="card-text mt-2 mb-0">
+                        <span class="fw-bold"><%= number_to_currency(service.price_hour, unit: "R$") %></span> por hora
+                      </p>
+                    </div>
+                  </div><!-- /card -->
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <%# -------- Coluna DIREITA: Mapa (sticky) -------- %>
+    <div class="col-lg-6 d-none d-lg-block">
+      <div class="map-sticky"
+          data-controller="map"
+          data-map-api-key-value="<%= ENV['MAPBOX_API_KEY'] %>"
+          data-map-markers-value="<%= ERB::Util.json_escape(@markers.to_json) %>">
+      </div>
+    </div>
   </div>
 </div>

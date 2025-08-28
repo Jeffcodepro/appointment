@@ -17,6 +17,46 @@
       <%= render "shared/navbar" %>
     <% end %>
     <%= render "shared/flashes" %>
+    <script>
+      function setSearchHeightVar() {
+        const el = document.getElementById('stickySearch');
+        const h = el ? el.offsetHeight : 0;
+        document.documentElement.style.setProperty('--search-h', `${h}px`);
+      }
+
+      function scrollToResultsIfNeeded() {
+        const wantsHash = location.hash === '#results';
+        let wantsFlag = false;
+        try {
+          wantsFlag = sessionStorage.getItem('scrollToResults') === '1';
+          if (wantsFlag) sessionStorage.removeItem('scrollToResults');
+        } catch(_) {}
+
+        if (!wantsHash && !wantsFlag) return;
+
+        const go = () => {
+          const el = document.getElementById('results');
+          if (el) el.scrollIntoView({ behavior: 'auto', block: 'start' });
+        };
+
+        // roda após o layout (sticky bar + mapa)
+        requestAnimationFrame(() => {
+          setSearchHeightVar();
+          // mais um frame garante que o snapshot Turbo aplicou o DOM
+          requestAnimationFrame(go);
+        });
+      }
+
+      document.addEventListener('turbo:load',   () => { setSearchHeightVar(); scrollToResultsIfNeeded(); });
+      document.addEventListener('turbo:render', () => { setSearchHeightVar(); scrollToResultsIfNeeded(); });
+
+      window.addEventListener('resize', setSearchHeightVar);
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(setSearchHeightVar);
+      window.addEventListener('load', () => { setSearchHeightVar(); scrollToResultsIfNeeded(); });
+    </script>
+
+
+
     <%= yield %>
   </body>
 </html>
