@@ -1,3 +1,32 @@
-<!-- app/views/dashboards/show.html.erb -->
-<h2>Bem-vindo, <%= current_user.name || current_user.email %>!</h2>
-<p>Este é o seu dashboard.</p>
+
+<div class="card text-bg-dark banner-card mb-4">
+  <%# Fundo: banner (Cloudinary) ou placeholder %>
+  <% if @user.banner.attached? %>
+    <%= cl_image_tag @user.banner.key,
+          width: 1600, height: 300, crop: :fill, gravity: :auto,
+          fetch_format: :auto, quality: :auto,
+          class: "card-img banner-card__img",
+          alt: "Banner de #{@user.name}" %>
+  <% else %>
+    <div class="card-img banner-card__placeholder"></div>
+  <% end %>
+
+  <%# Overlay: avatar no canto superior esquerdo %>
+  <div class="card-img-overlay p-3 p-md-4">
+    <div class="banner-card__avatar-wrap">
+      <% if @user.avatar.attached? %>
+        <%= cl_image_tag @user.avatar.key,
+              width: 120, height: 120, crop: :fill, gravity: :face,
+              fetch_format: :auto, quality: :auto,
+              class: "rounded-circle shadow banner-card__avatar",
+              alt: @user.name %>
+      <% else %>
+        <% initials = (@user.name.presence || @user.email).split.map { |s| s[0] }.join.first(2).upcase %>
+        <div class="rounded-circle d-flex align-items-center justify-content-center banner-card__avatar-fallback shadow">
+          <%= initials %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
