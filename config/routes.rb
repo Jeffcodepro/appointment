@@ -15,7 +15,10 @@ Rails.application.routes.draw do
     collection do
       get :cities
     end
+    get :availability, on: :member
   end
+
+  resources :schedules, only: [:create]
 
   get "dashboard", to: "dashboards#show"
 

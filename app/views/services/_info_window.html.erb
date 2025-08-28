@@ -1,6 +1,0 @@
-<div class="info-window-card">
-  <p class="text-muted"><%= service.categories %></p>
-  <p><strong><%= service.user.name %></strong></p>
-  <p><strong>Preço/hora:</strong> <%= number_to_currency(service.price_hour, unit: "R$") %></p>
-  <%= link_to "Ver detalhes", root_path , class: "btn btn-primary btn-sm mt-2",  data: { turbo: false }  %>
-</div>

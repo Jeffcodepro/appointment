@@ -1,0 +1,11 @@
+.service-show .service-tile {
+  border: 1px solid rgba(0,0,0,.06);
+  border-radius: 12px;
+  transition: box-shadow .15s ease, transform .15s ease, border-color .15s ease;
+}
+.service-show .service-tile:hover {
+  box-shadow: 0 6px 20px rgba(0,0,0,.06);
+  border-color: rgba(0,0,0,.12);
+  transform: translateY(-1px);
+}
+.cursor-pointer { cursor: pointer; }

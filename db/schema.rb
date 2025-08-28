@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_08_24_203657) do
+ActiveRecord::Schema[7.1].define(version: 2025_08_28_225042) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -57,11 +57,11 @@ ActiveRecord::Schema[7.1].define(version: 2025_08_24_203657) do
     t.bigint "service_id", null: false
     t.boolean "accepted_client"
     t.boolean "accepted_professional"
-    t.time "start_time"
-    t.time "end_time"
     t.boolean "confirmed"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.datetime "start_at"
+    t.datetime "end_at"
     t.index ["service_id"], name: "index_schedules_on_service_id"
     t.index ["user_id"], name: "index_schedules_on_user_id"
   end
@@ -72,7 +72,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_08_24_203657) do
     t.string "categories"
     t.string "subcategories"
     t.decimal "price_hour"
-    t.integer "mean_hours"
+    t.integer "average_hours"
     t.bigint "user_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false

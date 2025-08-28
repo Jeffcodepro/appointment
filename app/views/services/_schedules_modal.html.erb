@@ -1,0 +1,36 @@
+<div class="modal" tabindex="-1" data-schedules-target="modal">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content rounded-4 border-0 shadow">
+      <div class="modal-header">
+        <h5 class="modal-title">Agendar com <%= @provider.name %></h5>
+        <button type="button" class="btn-close" aria-label="Close" data-action="click->schedules#close"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="row g-3 align-items-end">
+          <div class="col-sm-4">
+            <label class="form-label">Dia</label>
+            <input type="date" class="form-control"
+                   data-schedules-target="date"
+                   data-action="change->schedules#changeDate">
+          </div>
+          <div class="col-sm-8">
+            <label class="form-label">Horários disponíveis</label>
+            <div data-schedules-target="slots"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <%= form_with url: schedules_path, method: :post, class: "d-flex gap-2 align-items-center" do |f| %>
+          <%= hidden_field_tag :service_id, @service.id %>
+          <%= hidden_field_tag :start_at, "", data: { schedules_target: "startAt" } %>
+          <%= hidden_field_tag :end_at,   "", data: { schedules_target: "endAt" } %>
+          <%= f.submit "Confirmar agendamento", class: "btn btn-primary",
+                data: { schedules_target: "submit" }, disabled: true %>
+        <% end %>
+        <button type="button" class="btn btn-outline-secondary" data-action="click->schedules#close">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>

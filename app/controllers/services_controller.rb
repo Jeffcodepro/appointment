@@ -47,7 +47,6 @@ class ServicesController < ApplicationController
       {
         lat: service.user.latitude,
         lng: service.user.longitude,
-        info_window_html: render_to_string(partial: "info_window", locals: { service: service }),
         name: service.user.name,
         service_id: service.id,
         price: service.price_hour.format,
@@ -71,7 +70,68 @@ class ServicesController < ApplicationController
     render json: cities
   end
 
+  def availability
+      service  = Service.find(params[:id])
+      provider = service.user
+      date     = params[:date].present? ? Date.parse(params[:date]) : Date.current
+
+      # janela do dia selecionado (entre 09:00 e 18:00)
+      open_h   = 9
+      close_h  = 18
+      duration = (service.average_hours.presence || 1).hours
+
+      day_start = date.in_time_zone.change(hour: open_h,  min: 0)
+      day_end   = date.in_time_zone.change(hour: close_h, min: 0)
+
+      # agendamentos existentes desse provider no dia (confirmados ou não)
+      day_schedules = Schedule
+        .for_provider(provider.id)
+        .where("start_at < ? AND end_at > ?", day_end, day_start)
+        .pluck(:start_at, :end_at)
+
+      # gera slots a cada 30min (ajuste)
+      step = 30.minutes
+      slots = []
+      t = day_start
+      while (t + duration) <= day_end
+        slot_start = t
+        slot_end   = t + duration
+
+        # conflito?
+        conflict = day_schedules.any? do |(s_start, s_end)|
+          s_start < slot_end && s_end > slot_start
+        end
+
+        slots << { start_at: slot_start, end_at: slot_end } unless conflict
+        t += step
+      end
+
+      render json: {
+        date: date.to_s,
+        slots: slots.map { |s|
+          {
+            start_at: s[:start_at].iso8601,
+            end_at:   s[:end_at].iso8601,
+            label:    "#{I18n.l(s[:start_at], format: :short)} – #{I18n.l(s[:end_at], format: :time)}"
+          }
+        }
+      }
+  end
+
+
   def show
-    @service = Service.find(params[:id])
+    @service   = Service.includes(user: { images_attachments: :blob }).find(params[:id])
+    @provider  = @service.user
+    @services_from_provider = @provider.services.order(:categories, :subcategories)
+
+    # mapa: só o local do profissional
+    @markers = [{
+      lat:  @provider.latitude,
+      lng:  @provider.longitude,
+      name: @provider.name,
+      service_id: @service.id,
+      price: @service.price_hour.format,
+      url: service_path(@service),
+    }]
   end
 end
