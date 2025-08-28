@@ -6,3 +6,50 @@
   height: 400px;
   margin-bottom: 32px;
 }
+
+/* Card/Banner base */
+.banner-card {
+  height: 400px;              /* ajuste a altura do banner */
+  overflow: hidden;
+  position: relative;
+}
+
+.banner-card__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.banner-card__placeholder {
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(1200px 220px at 10% 0%, #1e293b 0%, #0f172a 40%, #0b1022 60%, #0b102200 100%);
+}
+
+/* Avatar no canto superior esquerdo */
+.banner-card__avatar-wrap {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+}
+
+@media (min-width: 768px) {
+  .banner-card__avatar-wrap { top: 20px; left: 20px; }
+}
+
+.banner-card__avatar {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border: 4px solid #fff;     /* aro branco */
+}
+
+.banner-card__avatar-fallback {
+  width: 120px;
+  height: 120px;
+  background: #111;
+  color: #fff;
+  font-weight: 700;
+  font-size: 32px;
+  border: 4px solid #fff;
+}

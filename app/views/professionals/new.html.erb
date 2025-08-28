@@ -1,26 +1,40 @@
 <h2>Complete seu perfil profissional</h2>
 
-<%= simple_form_for @profile, url: profile_path(@profile), html: { multipart: true } do |f| %>
+<%= simple_form_for @profile,
+      url: profile_path(user_id: @profile.id),
+      html: { method: :patch, multipart: true, data: { turbo: false } } do |f| %>
+
   <%= f.error_notification %>
+
+  <!-- Preview do banner -->
+  <div class="mb-3">
+    <label>Banner (1920x400 recomendado)</label>
+    <div class="hero__bg <%= 'hero__bg--image' if @profile.banner.attached? %>"
+         style="<%= @profile.banner.attached? ? "background-image:url('#{cl_image_path(@profile.banner.key, width: 1600, height: 220, crop: :fill, gravity: :auto, fetch_format: :auto, quality: :auto)}')" : '' %>"></div>
+    <%= f.input :banner, as: :file, label: false %>
+  </div>
 
   <div class="row">
     <div class="col-md-4">
       <% if @profile.avatar.attached? %>
-        <%= image_tag @profile.avatar.variant(resize_to_fill: [200, 200]) %>
+        <%= cl_image_tag @profile.avatar.key,
+              width: 200, height: 200, crop: :fill, gravity: :face,
+              fetch_format: :auto, quality: :auto,
+              alt: @profile.name, class: "avatar avatar--shadow mb-2" %>
       <% end %>
       <%= f.input :avatar, as: :file, label: "Sua foto" %>
     </div>
 
     <div class="col-md-8">
-      <%= f.input :name,        label: "Nome",        input_html: { value: @profile.name } %>
-      <%= f.input :description, label: "Descrição",   as: :text, input_html: { rows: 4 } %>
+      <%= f.input :name,        label: "Nome" %>
+      <%= f.input :description, label: "Descrição", as: :text, input_html: { rows: 4 } %>
 
       <div class="row">
-        <div class="col-md-4"><%= f.input :cep,     label: "CEP" %></div>
+        <div class="col-md-4"><%= f.input :cep,     label: "CEP",     input_html: { placeholder: "00000-000" } %></div>
         <div class="col-md-8"><%= f.input :address, label: "Endereço" %></div>
       </div>
 
-      <%= f.input :phone_number, label: "Telefone" %>
+      <%= f.input :phone_number, label: "Telefone", input_html: { placeholder: "(11) 99999-9999" } %>
     </div>
   </div>
 
