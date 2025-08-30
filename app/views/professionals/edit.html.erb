@@ -60,11 +60,45 @@
     <div class="col-md-8">
       <%= f.input :name,        label: "Nome" %>
       <%= f.input :description, label: "Descrição", as: :text, input_html: { rows: 4 } %>
+
       <div class="row">
-        <div class="col-md-4"><%= f.input :cep,     label: "CEP",     input_html: { placeholder: "00000-000" } %></div>
-        <div class="col-md-8"><%= f.input :address, label: "Endereço" %></div>
+        <div class="col-md-4">
+          <%= f.input :cep,
+                      label: "CEP",
+                      input_html: { placeholder: "00000-000", autocomplete: "postal-code" } %>
+        </div>
+        <div class="col-md-8">
+          <%= f.input :address,
+                      label: "Endereço (rua/avenida)",
+                      hint: "Não inclua número, cidade ou UF aqui.",
+                      input_html: { placeholder: "Ex.: Praça da Sé", autocomplete: "address-line1" } %>
+        </div>
       </div>
-      <%= f.input :phone_number, label: "Telefone", input_html: { placeholder: "(11) 99999-9999" } %>
+
+      <div class="row">
+        <div class="col-md-4">
+          <%= f.input :address_number,
+                      label: "Número",
+                      input_html: { placeholder: "Ex.: 252", autocomplete: "address-line2" } %>
+        </div>
+        <div class="col-md-5">
+          <%= f.input :city,
+                      label: "Cidade",
+                      input_html: { placeholder: "Ex.: São Paulo", autocomplete: "address-level2" } %>
+        </div>
+        <div class="col-md-3">
+          <%= f.input :state,
+                      label: "UF",
+                      as: :select,
+                      collection: User::BRAZIL_UF,
+                      prompt: "Selecione",
+                      input_html: { autocomplete: "address-level1" } %>
+        </div>
+      </div>
+
+      <%= f.input :phone_number,
+                  label: "Telefone",
+                  input_html: { placeholder: "(11) 99999-9999", autocomplete: "tel" } %>
     </div>
   </div>
 
@@ -102,7 +136,7 @@
         el.src = url;
         if (opts.onShow) opts.onShow();
         el.classList.remove("d-none");
-        return url; // para podermos revoke depois
+        return url;
       }
 
       if (bannerInput) {

@@ -1,0 +1,36 @@
+<div class="container">
+  <%= simple_form_for :service, url: services_path do |f| %>
+    <%= f.error_notification %>
+
+    <div class="row">
+      <div class="col-md-8">
+        <%= f.input :name, label: "Nome do serviço" %>
+      </div>
+      <div class="col-md-4">
+        <%= f.input :price_hour, label: "Preço por hora (R$)", input_html: { step: "0.01" } %>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-6">
+        <%= f.input :categories, as: :select,
+              collection: Service::CATEGORIES,
+              include_blank: "Selecione uma categoria",
+              input_html: { data: { controller: "service-category", action: "change->service-category#change", "service-category-target": "category" } } %>
+      </div>
+      <div class="col-md-6">
+        <%= f.input :subcategories, as: :select,
+              collection: (Service::SUBCATEGORIES || 'Selecionar subcategoria' ),
+              include_blank: "Selecione uma subcategoria",
+              input_html: { data: { "service-category-target": "subcategory" } } %>
+      </div>
+    </div>
+
+    <%= f.input :description, as: :text, input_html: { rows: 5 }, label: "Descrição" %>
+
+    <div class="mt-3">
+      <%= f.button :submit, class: "btn btn-primary" %>
+      <%= link_to "Cancelar", services_path, class: "btn btn-link" %>
+    </div>
+  <% end %>
+</div>

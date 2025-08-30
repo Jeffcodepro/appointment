@@ -114,11 +114,11 @@ SUBCATEGORIES = {
   subcategory = SUBCATEGORIES[category].sample
 
   service_name = if category == "Serviços de Saúde e Estética"
-    "#{subcategory} - #{Faker::Company.name}"
-  elsif category == "Serviços Automotivos"
-    "Oficina de #{subcategory} - #{Faker::Company.name}"
-  else
-    Faker::Job.unique.title
+      "#{subcategory} - #{Faker::Company.name}"
+    elsif category == "Serviços Automotivos"
+      "Oficina de #{subcategory} - #{Faker::Company.name}"
+    else
+      Faker::Job.unique.title
   end
 
   Service.create!(
@@ -127,7 +127,7 @@ SUBCATEGORIES = {
     categories: category,
     subcategories: subcategory,
     price_hour_cents: (Faker::Commerce.price(range: 40.0..200.0) * 100).to_i,
-    mean_hours: Faker::Number.between(from: 1, to: 10),
+    average_hours: Faker::Number.between(from: 1, to: 10),
     user: professional_users.sample
   )
 end
@@ -139,32 +139,71 @@ puts "✅ #{Service.count} serviços criados com sucesso!"
 puts "Criando 30 agendamentos..."
 
 client_users = User.where(role: :client)
-services = Service.all
+services     = Service.all
 
-30.times do
-  client = client_users.sample
-  service = services.sample
+# helper: acha um slot livre para o profissional (dono do service)
+def free_slot_for_provider(provider_id, duration_hours:, days_ahead: 15, open_hour: 8, close_hour: 20)
+  raise ArgumentError, "duration_hours precisa ser >= 1" if duration_hours.to_i < 1
 
-  start_hour = Faker::Number.between(from: 8, to: 18)
-  start_time = Time.zone.parse("#{start_hour}:00 AM")
-  end_time = start_time + service.mean_hours.hours
+  40.times do
+    date = Date.current + rand(0...days_ahead).days
 
-  accepted_client = Faker::Boolean.boolean
-  accepted_professional = Faker::Boolean.boolean
-  confirmed = accepted_client && accepted_professional
+    # garante que termine antes de close_hour
+    latest_start = [close_hour - duration_hours.to_i, open_hour].max
+    next if latest_start < open_hour
 
-  Schedule.create!(
-    user: client,
-    service: service,
-    accepted_client: accepted_client,
-    accepted_professional: accepted_professional,
-    start_time: start_time,
-    end_time: end_time,
-    confirmed: confirmed
-  )
+    hour = rand(open_hour..latest_start)
+    start_at = Time.zone.local(date.year, date.month, date.day, hour, 0)
+    end_at   = start_at + duration_hours.to_i.hours
+
+    conflict = Schedule
+                 .for_provider(provider_id)
+                 .where("start_at < ? AND end_at > ?", end_at, start_at)
+                 .exists?
+
+    return [start_at, end_at] unless conflict
+  end
+
+  nil
 end
-puts "✅ #{Schedule.count} agendamentos criados com sucesso!"
 
+created = 0
+attempts = 0
+
+while created < 30 && attempts < 120
+  attempts += 1
+
+  service = services.sample
+  client  = client_users.sample
+  dur     = (service.average_hours.presence || rand(1..3)).to_i
+
+  slot = free_slot_for_provider(service.user_id, duration_hours: dur)
+  next unless slot
+
+  start_at, end_at = slot
+
+  accepted_client       = Faker::Boolean.boolean
+  accepted_professional = Faker::Boolean.boolean
+  confirmed             = accepted_client && accepted_professional
+
+  begin
+    Schedule.create!(
+      user:  client,                 # cliente
+      service: service,              # profissional é service.user
+      start_at: start_at,
+      end_at:   end_at,
+      accepted_client: accepted_client,
+      accepted_professional: accepted_professional,
+      confirmed: confirmed
+    )
+    created += 1
+  rescue ActiveRecord::RecordInvalid
+    # Em caso de validação por algum outro motivo, só tenta de novo
+    next
+  end
+end
+
+puts "✅ #{created} agendamentos criados com sucesso!"
 
 # --- 4. CRIANDO MENSAGENS PARA OS AGENDAMENTOS ---
 puts "Criando 50 mensagens..."

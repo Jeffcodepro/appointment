@@ -133,9 +133,11 @@
                                       style: "height: 200px; width: 100%; object-fit: cover;" %>
                       <% end %>
                     <% else %>
-                      <%= image_tag(category_fallback[service.categories] || "service_reparo.png",
+                      <%= image_tag(
+                                    category_fallback[service.categories] || "servico_reparo_manutencao.png",
                                     class: "rounded-4",
-                                    style: "height: 200px; width: 100%; object-fit: cover;") %>
+                                    style: "height: 200px; width: 100%; object-fit: cover;"
+                                  ) %>
                     <% end %>
 
                     <%# ======= BODY DO CARD ======= %>
