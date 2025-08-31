@@ -1,76 +1,77 @@
 class ServicesController < ApplicationController
   skip_before_action :authenticate_user!, only: [:index, :cities, :show, :availability, :calendar, :availability_summary]
+  skip_before_action :authenticate_user!, only: [:index, :cities, :show, :availability]
+  before_action :ensure_professional!, only: [:new, :create]
+  before_action :ensure_provider_geocoded!, only: [:new, :create]
 
   include ActionView::Helpers::NumberHelper
 
   BRAZIL_BOUNDING_BOX = {
     min_lat: -34.0, max_lat: 5.5,
     min_lng: -74.0, max_lng: -34.5
-  }
+  }.freeze
 
+  # GET /services
   def index
-    @states = User.where.not(state: [nil, '']).distinct.pluck(:state).sort
+    @states = User.where.not(state: [nil, ""])
+                  .distinct
+                  .pluck(:state)
+                  .sort
 
-    # Base scope já com eager loading de imagens do user e join de users
+    # Base scope com eager loading das imagens do user
     @services = Service
-                  .includes(user: { images_attachments: :blob }) # evita N+1 nas imagens
+                  .includes(user: { images_attachments: :blob })
                   .joins(:user)
 
-    # Busca textual
+    # busca por service_id explícito (por ex. vindo de clique no mapa)
     if params[:service_id].present?
       @services = @services.where(id: params[:service_id])
-    else
-      # busca textual
-      if params[:query].present?
-        searched_ids = Service.global_search(params[:query]).select(:id)
-        @services = @services.where(id: searched_ids)
-      end
+    elsif params[:query].present?
+      # busca textual (ajuste para seu pg_search / search interno)
+      searched_ids = Service.global_search(params[:query]).select(:id)
+      @services = @services.where(id: searched_ids)
     end
 
-    # Filtro por categoria
+    # filtros por categoria e por localização do usuário (provider)
     @services = @services.where(categories: params[:category]) if params[:category].present?
-
-    # Filtros em users
     @services = @services.where(users: { state: params[:state] }) if params[:state].present?
     @services = @services.where(users: { city:  params[:city]  }) if params[:city].present?
 
-    # Bounding box + coords válidas
-    @services = @services
-                  .where.not(users: { latitude: [nil, 0], longitude: [nil, 0] })
-                  .where(users: {
-                    latitude:  BRAZIL_BOUNDING_BOX[:min_lat]..BRAZIL_BOUNDING_BOX[:max_lat],
-                    longitude: BRAZIL_BOUNDING_BOX[:min_lng]..BRAZIL_BOUNDING_BOX[:max_lng]
-                  })
-                  .distinct
+    @services = @services.distinct
 
-    # Markers do mapa
-    @markers = @services.map do |service|
+    # ---- Markers SOMENTE para quem tem geocoding válido e dentro do bounding box
+    @markers = @services.filter { |service|
+      u = service.user
+      u.latitude.present? && u.longitude.present? &&
+        u.latitude.between?(BRAZIL_BOUNDING_BOX[:min_lat], BRAZIL_BOUNDING_BOX[:max_lat]) &&
+        u.longitude.between?(BRAZIL_BOUNDING_BOX[:min_lng], BRAZIL_BOUNDING_BOX[:max_lng])
+    }.map do |service|
       {
         lat: service.user.latitude,
         lng: service.user.longitude,
         name: service.user.name,
         service_id: service.id,
-        price: service.price_hour.format,
-        url: service_path(service),
+        price: format_price(service),
+        url: service_path(service)
       }
     end
   end
 
+  # GET /services/cities.json?state=SP
   def cities
-    cities =
-      if params[:state].present?
-        User.where(state: params[:state])
-      else
-        User.all
-      end
-      .where.not(city: [nil, ''])
-      .distinct
-      .order(:city)
-      .pluck(:city)
+    scope = User.where(role: :professional)
+    scope = scope.where(state: params[:state]) if params[:state].present?
+
+    cities = scope
+               .where.not(city: [nil, ""])
+               .distinct
+               .order(:city)
+               .pluck(:city)
 
     render json: cities
   end
 
+  # GET /services/:id/availability.json?date=2025-09-02
   def availability
     service  = Service.find(params[:id])
     provider = service.user
@@ -135,7 +136,7 @@ class ServicesController < ApplicationController
     render partial: "services/calendar", locals: { start_date: @start_date }
   end
 
-
+  # GET /services/:id
   def show
     @service   = Service.includes(user: { images_attachments: :blob }).find(params[:id])
     @provider  = @service.user
@@ -153,6 +154,84 @@ class ServicesController < ApplicationController
       price: @service.price_hour.format,
       url: service_path(@service),
     }]
+    # marcador do provider (só cria se tiver geo válido)
+    @markers = []
+    if @provider.latitude.present? && @provider.longitude.present?
+      @markers << {
+        lat:  @provider.latitude,
+        lng:  @provider.longitude,
+        name: @provider.name,
+        service_id: @service.id,
+        price: format_price(@service),
+        url: service_path(@service)
+      }
+    end
+  end
+
+  # POST /services
+  def create
+    @service = Service.new(service_params)
+    @service.user = current_user
+
+    if @service.save
+      redirect_to dashboard_path, notice: "Serviço criado com sucesso."
+    else
+      flash.now[:alert] = "Não foi possível criar o serviço. Verifique os campos."
+      render :new, status: :unprocessable_entity
+    end
+  end
+
+  private
+
+  # Apenas PROFESSIONAL pode criar serviços
+  def ensure_professional!
+    return unless user_signed_in?
+
+    unless current_user.professional?
+      redirect_to root_path, alert: "Somente profissionais podem criar serviços."
+    end
+  end
+
+  # Profissional precisa ter endereço geocodado para criar serviços
+  def ensure_provider_geocoded!
+    return unless user_signed_in? && current_user.professional?
+
+    if current_user.latitude.blank? || current_user.longitude.blank?
+      begin
+        current_user.inject_coordinates
+      rescue => _e
+        redirect_to edit_user_registration_path,
+                    alert: "Complete e valide seu endereço (CEP, rua, número, cidade e estado) para criar serviços e aparecer no mapa."
+      end
+    end
+  end
+
+  def service_params
+    # Alinhado ao seu seed/model:
+    # - categories / subcategories (strings)
+    # - price_hour (MoneyRails -> monetized :price_hour_cents)
+    # - average_hours (integer)
+    params.require(:service).permit(
+      :name, :description,
+      :categories, :subcategories,
+      :price_hour, :average_hours
+    )
+  end
+
+  def format_price(service)
+    if service.respond_to?(:price_hour) && service.price_hour.present?
+      service.price_hour.format
+    else
+      cents = service.try(:price_hour_cents).to_i
+      number_to_currency(cents / 100.0, unit: "R$ ", separator: ",", delimiter: ".")
+    end
+  end
+
+  def safe_date(value)
+    return Date.current if value.blank?
+    Date.parse(value)
+  rescue ArgumentError
+    Date.current
   end
 
   def availability_summary

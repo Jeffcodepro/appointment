@@ -3,8 +3,22 @@ class Service < ApplicationRecord
 
   monetize :price_hour_cents
 
-  CATEGORIES = ["Serviços Domésticos", "Reparos e Manutenção", "Saúde e Bem-Estar", "Aulas e Cursos", "Consultoria", "Eventos"]
+  CATEGORIES = [
+    "Serviços Domésticos", "Reparos e Manutenção", "Saúde e Bem-Estar",
+    "Aulas e Cursos", "Consultoria", "Eventos",
+    "Serviços de Saúde e Estética", "Serviços Automotivos"
+  ].freeze
 
+  SUBCATEGORIES = {
+    "Serviços Domésticos" => ["Limpeza", "Jardinagem", "Cozinhar"],
+    "Reparos e Manutenção" => ["Elétrica", "Hidráulica", "Pintura", "Montagem de Móveis"],
+    "Saúde e Bem-Estar" => ["Massagem", "Personal Trainer", "Fisioterapia"],
+    "Aulas e Cursos" => ["Música", "Idiomas", "Artes Marciais"],
+    "Consultoria" => ["Financeira", "Tecnológica", "Marketing"],
+    "Eventos" => ["Fotografia", "Catering", "Decoração"],
+    "Serviços de Saúde e Estética" => ["Dentista", "Cabeleireiro", "Barbeiro", "Manicure"],
+    "Serviços Automotivos" => ["Mecânica", "Lavagem", "Funilaria", "Pintura"]
+  }.freeze
 
   include PgSearch::Model
   pg_search_scope :global_search,
