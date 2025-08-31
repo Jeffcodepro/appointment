@@ -1,35 +1,82 @@
-<div class="modal" tabindex="-1" data-schedules-target="modal">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
+<div
+  class="custom-modal"
+  role="dialog"
+  aria-modal="true"
+  aria-hidden="true"
+  aria-labelledby="scheduleModalTitle"
+  data-schedules-target="modal"
+  data-action="click->schedules#onBackdrop keydown->schedules#onKeydown"
+>
+  <!-- overlay (fundo escurecido+blur) -->
+  <div class="custom-modal__overlay"></div>
+
+  <!-- caixa do modal -->
+  <div class="custom-modal__dialog" role="document">
     <div class="modal-content rounded-4 border-0 shadow">
-      <div class="modal-header">
-        <h5 class="modal-title">Agendar com <%= @provider.name %></h5>
-        <button type="button" class="btn-close" aria-label="Close" data-action="click->schedules#close"></button>
+
+      <!-- HEADER com ícone e subtítulo -->
+      <div class="modal-header align-items-start">
+        <div class="d-flex align-items-center gap-2">
+          <!-- ícone calendário (inline SVG para não depender de libs) -->
+          <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="currentColor" d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1V3a1 1 0 0 1 1-1m12 7H5v10h14V9Z"/>
+          </svg>
+          <div>
+            <h5 id="scheduleModalTitle" class="modal-title mb-0">Agendar com <%= @provider.name %></h5>
+            <small class="text-muted">Escolha um dia útil e um horário livre</small>
+          </div>
+        </div>
+
+        <button type="button" class="btn-close" aria-label="Fechar" data-action="click->schedules#close"></button>
       </div>
 
       <div class="modal-body">
-        <div class="row g-3 align-items-end">
-          <div class="col-sm-4">
-            <label class="form-label">Dia</label>
-            <input type="date" class="form-control"
-                   data-schedules-target="date"
-                   data-action="change->schedules#changeDate">
+        <div class="row g-4">
+          <!-- COLUNA ESQUERDA: Calendário com skeleton -->
+          <div class="col-lg-6">
+            <div class="simple-calendar-wrap">
+              <turbo-frame id="calendar_frame"
+                           data-turbo-cache="false"
+                           src="<%= calendar_service_path(@service, start_date: Date.current) %>">
+                <!-- Skeleton shimmer enquanto carrega -->
+                <div class="calendar-skeleton">
+                  <div class="skeleton skeleton-title"></div>
+                  <div class="skeleton skeleton-row"></div>
+                  <div class="skeleton skeleton-row"></div>
+                  <div class="skeleton skeleton-row"></div>
+                  <div class="skeleton skeleton-row"></div>
+                  <div class="skeleton skeleton-row"></div>
+                </div>
+              </turbo-frame>
+            </div>
           </div>
-          <div class="col-sm-8">
-            <label class="form-label">Horários disponíveis</label>
-            <div data-schedules-target="slots"></div>
+
+          <!-- COLUNA DIREITA: Slots -->
+          <div class="col-lg-6">
+              <h6 class="form-label" id="slotsLabel">Horários disponíveis</h6>
+            <div class="mb-2" aria-live="polite">
+              <span class="badge text-bg-light" data-schedules-target="pickedDateLabel" aria-describedby="slotsLabel"></span>
+            </div>
+            <div data-schedules-target="slots" aria-labelledby="slotsLabel"></div>
           </div>
         </div>
       </div>
 
       <div class="modal-footer">
-        <%= form_with url: schedules_path, method: :post, class: "d-flex gap-2 align-items-center" do |f| %>
-          <%= hidden_field_tag :service_id, @service.id %>
-          <%= hidden_field_tag :start_at, "", data: { schedules_target: "startAt" } %>
-          <%= hidden_field_tag :end_at,   "", data: { schedules_target: "endAt" } %>
-          <%= f.submit "Confirmar agendamento", class: "btn btn-primary",
-                data: { schedules_target: "submit" }, disabled: true %>
+        <%= form_with url: schedules_path,
+                      method: :post,
+                      class: "d-flex gap-2 align-items-center",
+                      data: { action: "submit->schedules#submit" } do |f| %>
+          <%= hidden_field_tag :service_id, @service.id, id: "service_id" %>
+          <%= hidden_field_tag :start_at, "", id: "start_at", data: { schedules_target: "startAt" } %>
+          <%= hidden_field_tag :end_at,   "", id: "end_at",   data: { schedules_target: "endAt" } %>
+
+          <%= f.submit "Confirmar agendamento",
+                class: "btn btn-confirm-appointment",
+                data: { schedules_target: "submit" },
+                disabled: true,
+                'aria-describedby': "slotsLabel" %>
         <% end %>
-        <button type="button" class="btn btn-outline-secondary" data-action="click->schedules#close">Fechar</button>
       </div>
     </div>
   </div>

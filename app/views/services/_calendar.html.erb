@@ -1,0 +1,32 @@
+<turbo-frame id="calendar_frame">
+  <%= month_calendar(
+        events: @provider_schedules,
+        start_date: @start_date,
+        previous_link: ->(date) {
+          link_to "‹", calendar_service_path(@service, start_date: date),
+                  data: { turbo_frame: "calendar_frame" }
+        },
+        next_link: ->(date) {
+          link_to "›", calendar_service_path(@service, start_date: date),
+                  data: { turbo_frame: "calendar_frame" }
+        }
+      ) do |date, schedules| %>
+
+    <% weekend = date.saturday? || date.sunday? %>
+    <% past    = date < Date.current %>
+    <% classes = ["day"]; classes << "weekend" if weekend; classes << "past" if past %>
+    <% clickable = !(weekend || past) %>
+
+    <div class="<%= classes.join(' ') %>"
+        data-date="<%= date.iso8601 %>"
+        data-action="click->schedules#pickDate"
+        <%= 'aria-disabled="true"' unless clickable %>>
+      <div class="d-flex justify-content-between align-items-start">
+        <span class="small fw-600"><%= date.day %></span>
+        <% if schedules.any? %>
+          <span class="visually-hidden">tem agendamentos</span>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</turbo-frame>

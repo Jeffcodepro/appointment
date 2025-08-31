@@ -19,7 +19,7 @@ CITIES_BY_STATE = {
     { city: "Guarulhos", address: "Rua Doutor João de Deus, 33", cep: "07020-090" }
   ],
   "RJ" => [
-    { city: "Rio de Janeiro", address: "Rua do Catete, 110", cep: "22220-001" },
+    { city: "Rio dee Janeiro", address: "Rua do Catete, 110", cep: "22220-001" },
     { city: "Niterói", address: "Rua Visconde do Rio Branco, 250", cep: "24020-006" }
   ],
   "MG" => [
@@ -145,6 +145,9 @@ services     = Service.all
 def free_slot_for_provider(provider_id, duration_hours:, days_ahead: 15, open_hour: 8, close_hour: 20)
   raise ArgumentError, "duration_hours precisa ser >= 1" if duration_hours.to_i < 1
 
+  start_hour = Faker::Number.between(from: 8, to: 18)
+  start_time = Time.zone.parse("#{start_hour}:00 AM")
+  end_time = start_time + service.average_hours.hours
   40.times do
     date = Date.current + rand(0...days_ahead).days
 
@@ -152,6 +155,15 @@ def free_slot_for_provider(provider_id, duration_hours:, days_ahead: 15, open_ho
     latest_start = [close_hour - duration_hours.to_i, open_hour].max
     next if latest_start < open_hour
 
+  Schedule.create!(
+    user: client,
+    service: service,
+    accepted_client: accepted_client,
+    accepted_professional: accepted_professional,
+    start_at: start_time,
+    end_at: end_time,
+    confirmed: confirmed
+  )
     hour = rand(open_hour..latest_start)
     start_at = Time.zone.local(date.year, date.month, date.day, hour, 0)
     end_at   = start_at + duration_hours.to_i.hours
