@@ -15,12 +15,18 @@ Rails.application.routes.draw do
     collection do
       get :cities
     end
-    get :availability, on: :member
+
+    member do
+      get :availability, defaults: { format: :json }
+      get :availability_summary, defaults: { format: :json }
+      get :calendar
+    end
   end
 
   resources :schedules, only: [:create]
 
   get "dashboard", to: "dashboards#show"
+  get "login_and_return", to: "pages#login_and_return", as: :login_and_return
 
   scope "users/:user_id" do
     get   "profile/edit", to: "professionals#edit",   as: :edit_profile

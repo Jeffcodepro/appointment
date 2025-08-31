@@ -6,6 +6,7 @@ require "rails/all"
 # you've limited to :test, :development, or :production.
 Bundler.require(*Rails.groups)
 
+
 module Appointment
   class Application < Rails::Application
     config.action_controller.raise_on_missing_callback_actions = false if Rails.version >= "7.1.0"
@@ -13,6 +14,10 @@ module Appointment
       generate.assets false
       generate.helper false
       generate.test_framework :test_unit, fixture: false
+
+    config.time_zone = "Brasilia"
+    config.i18n.available_locales = [:'pt-BR', :en]
+    config.i18n.default_locale = :'pt-BR'
     end
 
     # Initialize configuration defaults for originally generated Rails version.

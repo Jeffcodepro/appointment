@@ -61,8 +61,8 @@
   padding: 0.5rem 1.5rem;
 
   &:hover {
-    background-color: #04343d;
-    border-color: #04343d;
+    background-color: #0A5764;
+    border-color: #0A5764;
     color: #ffffff;
     font-size: 16px;
     padding: 0.5rem 1.5rem;
@@ -71,17 +71,42 @@
 
 .btn-send-a-message {
   @extend .btn;
-  background-color: #2c2d30;
-  border-color: #2c2d30;
+  background-color: #6d6f76;
+  border-color: #6d6f76;
   color: #ffffff;
   font-size: 16px;
   padding: 0.5rem 1.5rem;
 
   &:hover {
-    background-color: #101112;
-    border-color: #101112;
+    background-color: #4b4d52;
+    border-color: #4b4d52;
     color: #ffffff;
     font-size: 16px;
     padding: 0.5rem 1.5rem;
   }
+}
+
+.btn-close {
+  cursor: pointer;
+}
+
+.custom-modal .btn.btn-confirm-appointment {
+  background-color: #137d8e;
+  border-color:     #137d8e;
+  color: #fff;
+}
+.custom-modal .btn.btn-confirm-appointment:hover:not(:disabled) {
+  background-color: #0A5764;
+  border-color:     #0A5764;
+}
+
+/* botão desabilitado: cinza */
+.custom-modal .btn.btn-confirm-appointment:disabled,
+.custom-modal .btn.btn-confirm-appointment[disabled] {
+  background-color: #b9babf;
+  border-color:     #b9babf;
+  color: #92949b;              /* cinza escuro no texto */
+  opacity: 1;                  /* evita o fade padrão do bootstrap */
+  cursor: not-allowed;
+  box-shadow: none;
 }

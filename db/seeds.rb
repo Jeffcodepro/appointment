@@ -19,7 +19,7 @@ CITIES_BY_STATE = {
     { city: "Guarulhos", address: "Rua Doutor João de Deus, 33", cep: "07020-090" }
   ],
   "RJ" => [
-    { city: "Rio de Janeiro", address: "Rua do Catete, 110", cep: "22220-001" },
+    { city: "Rio dee Janeiro", address: "Rua do Catete, 110", cep: "22220-001" },
     { city: "Niterói", address: "Rua Visconde do Rio Branco, 250", cep: "24020-006" }
   ],
   "MG" => [
@@ -127,7 +127,7 @@ SUBCATEGORIES = {
     categories: category,
     subcategories: subcategory,
     price_hour_cents: (Faker::Commerce.price(range: 40.0..200.0) * 100).to_i,
-    mean_hours: Faker::Number.between(from: 1, to: 10),
+    average_hours: Faker::Number.between(from: 1, to: 10),
     user: professional_users.sample
   )
 end
@@ -147,7 +147,7 @@ services = Service.all
 
   start_hour = Faker::Number.between(from: 8, to: 18)
   start_time = Time.zone.parse("#{start_hour}:00 AM")
-  end_time = start_time + service.mean_hours.hours
+  end_time = start_time + service.average_hours.hours
 
   accepted_client = Faker::Boolean.boolean
   accepted_professional = Faker::Boolean.boolean
@@ -158,8 +158,8 @@ services = Service.all
     service: service,
     accepted_client: accepted_client,
     accepted_professional: accepted_professional,
-    start_time: start_time,
-    end_time: end_time,
+    start_at: start_time,
+    end_at: end_time,
     confirmed: confirmed
   )
 end

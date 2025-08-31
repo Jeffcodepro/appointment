@@ -1,0 +1,128 @@
+/* ====== LAYOUT DO TÍTULO + NAVEGAÇÃO ====== */
+.simple-calendar .calendar-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* título à esquerda, navegação à direita */
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+/* Título (mês e ano) */
+.simple-calendar .calendar-heading .calendar-title {
+  text-transform: capitalize;   /* Agosto 2025 */
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.2;
+  margin: 0; /* remove espaçamento extra */
+}
+
+/* Navegação */
+.simple-calendar .calendar-heading nav {
+  display: flex;
+  gap: .5rem; /* espaço entre os botões */
+}
+
+/* Botões */
+.simple-calendar .calendar-heading nav a {
+  display: inline-block;
+  padding: 6px 12px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #2c2d30;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.simple-calendar .calendar-heading nav a:hover {
+  background-color: #137d8e;
+  color: #fff;
+  border-color: #137d8e;
+}
+
+/* ====== ESTILO DOS BOTÕES DE NAVEGAÇÃO ====== */
+.simple-calendar .calendar-heading nav a {
+  display: inline-block;
+  padding: 6px 12px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #2c2d30;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+.simple-calendar .calendar-heading nav a:hover {
+  background-color: #137d8e;
+  color: #fff;
+  border-color: #137d8e;
+}
+
+.simple-calendar .day { cursor: pointer; padding: .25rem; border-radius: .5rem; transition: background-color .15s ease; }
+.simple-calendar .day:hover { background: #f1f3f5; }
+.simple-calendar .day.today { outline: 2px solid #137d8e20; background: #f5f8ff; }
+.simple-calendar .has-event { background: #fff7e6; }
+.simple-calendar .weekend { opacity: .5; pointer-events: none; }
+
+/* ===== Espaço no topo dentro do modal (em px) ===== */
+
+/* Calendário (esquerda): dá um respiro acima do mês + navegação */
+.custom-modal .simple-calendar .calendar-heading {
+  margin-top: 12px;      /* antes estava 0 */
+}
+
+/* Coluna de slots (direita): alinha com o topo do título do calendário */
+.custom-modal .form-label#slotsLabel {
+  margin-top: 12px;      /* sobe o rótulo para bater com o título */
+  padding-top: 0;        /* zera o ajuste anterior */
+}
+
+/* (opcional) se quiser um respiro igual em ambas as colunas */
+.custom-modal .modal-body .col-lg-6 {
+  padding-top: 8px;      /* leve afastamento do topo do modal */
+}
+
+/* mantém alinhamento vertical no topo entre as duas colunas */
+.custom-modal .modal-body .row {
+  align-items: flex-start;
+}
+
+/* destaque do dia selecionado */
+.simple-calendar .day.selected {
+  outline: 2px solid #137d8e55;
+  background: #f2f8f9;
+}
+
+/* dias passados: riscado e não clicável */
+.simple-calendar .day.past {
+  opacity: .5;
+  pointer-events: none;
+  cursor: default;
+}
+.simple-calendar .day.past:hover { background: transparent; }
+
+.simple-calendar td > .day { display: block; }
+
+.simple-calendar .day.past,
+.simple-calendar .day.past * {
+  text-decoration: line-through;
+}
+
+/* finais de semana: não clicáveis */
+.simple-calendar .day.weekend {
+  opacity: .5;
+  pointer-events: none;
+}
+
+/* dia 100% esgotado: riscado, mas clicável */
+.simple-calendar .day.fully-booked,
+.simple-calendar .day.fully-booked * {
+  text-decoration: line-through;
+}
+.simple-calendar .day.fully-booked {
+  opacity: .85;
+  cursor: pointer;       /* continua clicável (mostra "Sem horários") */
+}

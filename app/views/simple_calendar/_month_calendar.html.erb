@@ -1,0 +1,21 @@
+<div class="simple-calendar">
+  <div class="calendar-heading">
+    <time datetime="<%= start_date.strftime('%Y-%m') %>" class="calendar-title">
+      <%= l(start_date, format: "%B %Y") %>
+    </time>
+
+    <nav>
+      <%= link_to t("simple_calendar.previous", default: "Anterior"),
+                  calendar.url_for_previous_view,
+                  data: { turbo_frame: "calendar_frame" } %>
+      <%= link_to t("simple_calendar.today", default: "Hoje"),
+                  calendar.url_for_today_view,
+                  data: { turbo_frame: "calendar_frame" } %>
+      <%= link_to t("simple_calendar.next", default: "Próximo"),
+                  calendar.url_for_next_view,
+                  data: { turbo_frame: "calendar_frame" } %>
+    </nav>
+  </div>
+
+  <%= render partial: "simple_calendar/calendar", locals: local_assigns %>
+</div>
