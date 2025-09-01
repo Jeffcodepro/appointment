@@ -6,9 +6,10 @@ class Schedule < ApplicationRecord
   validate  :ends_after_start
   validate  :no_overlap
 
-  scope :for_provider, ->(pro_user_id) {
-    joins(:service).where(services: { user_id: pro_user_id })
-  }
+  # ---- Scopes: sempre no nível da classe ----
+  scope :for_provider,     ->(provider_id) { joins(:service).where(services: { user_id: provider_id }) }
+  scope :for_professional, ->(pro_user_id) { joins(:service).where(services: { user_id: pro_user_id }) }
+
 
   scope :on_day, ->(date) {
     start_range = date.beginning_of_day
@@ -22,17 +23,7 @@ class Schedule < ApplicationRecord
 
   def end_time
     end_at
-  belongs_to :user          # cliente
-  belongs_to :service       # service.user é o profissional
-
-  validates :start_at, :end_at, presence: true
-  validate  :end_after_start
-  validate  :no_overlap_for_provider
-
-  # ---- Scopes: sempre no nível da classe ----
-  scope :for_provider,     ->(provider_id) { joins(:service).where(services: { user_id: provider_id }) }
-  scope :for_professional, ->(pro_user_id) { joins(:service).where(services: { user_id: pro_user_id }) }
-  scope :on_day,           ->(date) { where(start_at: date.beginning_of_day..date.end_of_day) }
+  end
 
   # ---- Helpers de instância ----
   def extend_end!(extra_minutes)
@@ -60,6 +51,8 @@ class Schedule < ApplicationRecord
 
   def extend_end!(extra_minutes)
     return unless end_time.present? update!(end_time: end_time + extra_minutes.to_i.minutes)
+  end
+
   def end_after_start
     return if start_at.blank? || end_at.blank?
     errors.add(:end_at, "deve ser maior que o início") if end_at <= start_at
