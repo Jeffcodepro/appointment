@@ -19,3 +19,13 @@
 #results{
   scroll-margin-top: calc(var(--nav-h) + var(--search-h) + 8px);
 }
+
+[hidden] { display: none !important; }
+
+:root {
+  --text: #222;
+  --muted: #6b7280;
+  --line: #e5e8ef;
+  --surface-1: #fff;
+  --nav-h: 64px;          /* fallback */
+}

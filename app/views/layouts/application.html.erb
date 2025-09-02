@@ -10,15 +10,25 @@
 
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
+
+    <!-- injeta metas/estilos específicos de páginas (ex.: services/show) -->
+    <%= yield :head %>
   </head>
 
-  <body>
+  <!-- classe no body para definirmos --nav-h via CSS (role-pro vs role-default) -->
+  <body class="<%= user_signed_in? && current_user.professional? ? 'role-pro' : 'role-default' %>">
+    <%# Navbar: profissional x padrão %>
     <% if user_signed_in? && current_user.professional? %>
       <%= render "shared/pro_navbar" %>
     <% else %>
       <%= render "shared/navbar" %>
     <% end %>
-    <%= render "shared/flashes" %>
+
+    <main class="app-main">
+      <%= render "shared/flashes" %>
+      <%= yield %>
+    </main>
+
     <script>
       function setSearchHeightVar() {
         const el = document.getElementById('stickySearch');
@@ -41,10 +51,8 @@
           if (el) el.scrollIntoView({ behavior: 'auto', block: 'start' });
         };
 
-        // roda após o layout (sticky bar + mapa)
         requestAnimationFrame(() => {
           setSearchHeightVar();
-          // mais um frame garante que o snapshot Turbo aplicou o DOM
           requestAnimationFrame(go);
         });
       }
@@ -56,9 +64,5 @@
       if (document.fonts && document.fonts.ready) document.fonts.ready.then(setSearchHeightVar);
       window.addEventListener('load', () => { setSearchHeightVar(); scrollToResultsIfNeeded(); });
     </script>
-
-
-
-    <%= yield %>
   </body>
 </html>

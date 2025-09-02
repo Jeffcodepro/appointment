@@ -1,0 +1,90 @@
+<div class="container py-4">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h1 class="h5 mb-0">Minhas Conversas</h1>
+    <% if params[:service_id].present? %>
+      <%= link_to "Limpar filtro", conversations_path, class: "btn btn-outline-secondary btn-sm" %>
+    <% end %>
+  </div>
+
+  <% if params[:service_id].present? %>
+    <div class="alert alert-light border small">
+      Filtrando por serviço #<code><%= params[:service_id] %></code>
+    </div>
+  <% end %>
+
+  <div class="row g-4">
+    <!-- COMO PROFISSIONAL -->
+    <div class="col-lg-6">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <h2 class="h6 mb-3">Como profissional</h2>
+
+          <% if @as_professional.any? %>
+            <div class="list-group list-group-flush">
+              <% @as_professional.each do |c| %>
+                <%= link_to conversation_path(c), class: "list-group-item list-group-item-action py-3" do %>
+                  <div class="d-flex justify-content-between">
+                    <div>
+                      <div class="fw-semibold">
+                        <%= c.client.name %> •
+                        <%= c.service.categories.presence || "Serviço" %>
+                        <% if c.service.subcategories.present? %>
+                          / <%= c.service.subcategories %>
+                        <% end %>
+                      </div>
+                      <div class="small text-muted">
+                        <%= truncate(c.messages.last&.content.to_s, length: 120) %>
+                      </div>
+                    </div>
+                    <small class="text-muted ms-2">
+                      <%= l((c.messages.last&.created_at || c.updated_at), format: :short) %>
+                    </small>
+                  </div>
+                <% end %>
+              <% end %>
+            </div>
+          <% else %>
+            <div class="text-muted">Nenhuma conversa como profissional.</div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMO CLIENTE -->
+    <div class="col-lg-6">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <h2 class="h6 mb-3">Como cliente</h2>
+
+          <% if @as_client.any? %>
+            <div class="list-group list-group-flush">
+              <% @as_client.each do |c| %>
+                <%= link_to conversation_path(c), class: "list-group-item list-group-item-action py-3" do %>
+                  <div class="d-flex justify-content-between">
+                    <div>
+                      <div class="fw-semibold">
+                        <%= c.professional.name %> •
+                        <%= c.service.categories.presence || "Serviço" %>
+                        <% if c.service.subcategories.present? %>
+                          / <%= c.service.subcategories %>
+                        <% end %>
+                      </div>
+                      <div class="small text-muted">
+                        <%= truncate(c.messages.last&.content.to_s, length: 120) %>
+                      </div>
+                    </div>
+                    <small class="text-muted ms-2">
+                      <%= l((c.messages.last&.created_at || c.updated_at), format: :short) %>
+                    </small>
+                  </div>
+                <% end %>
+              <% end %>
+            </div>
+          <% else %>
+            <div class="text-muted">Nenhuma conversa como cliente.</div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

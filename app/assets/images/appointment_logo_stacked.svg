@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 780" role="img" aria-label="appointment logo stacked">
+  <style>
+    :root {
+      --brand: #2569e4;
+      --brand-2: #7a70f2;
+      --accent: #137d8e;
+      --ink: #6d6f76;
+      --paper: #ffffff;
+      --line: #e5e7eb;
+    }
+    .cal { fill: var(--paper); stroke: var(--brand); stroke-width: 16; }
+    .bar { fill: var(--brand-2); }
+    .ring { fill: var(--brand-2); }
+    .tick { fill: none; stroke: var(--accent); stroke-width: 36; stroke-linecap: round; stroke-linejoin: round; }
+    .type { fill: var(--ink); font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; font-weight: 900; }
+  </style>
+  <g transform="translate(94,40)">
+    <rect x="0" y="0" width="512" height="512" rx="48" class="cal"/>
+    <rect x="0" y="0" width="512" height="112" rx="48" class="bar"/>
+    <circle cx="172" cy="0" r="18" class="ring"/>
+    <circle cx="340" cy="0" r="18" class="ring"/>
+    <path d="M160 292 L240 372 L380 220" class="tick"/>
+  </g>
+  <g transform="translate(350, 640)" text-anchor="middle">
+    <text class="type" font-size="88">appointment</text>
+  </g>
+</svg>

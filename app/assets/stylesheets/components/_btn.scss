@@ -110,3 +110,14 @@
   cursor: not-allowed;
   box-shadow: none;
 }
+
+/* Botão utilitário usado no header */
+.btn{
+  -webkit-appearance:none; appearance:none;
+  border:0; border-radius:12px;
+  padding:.6rem 1rem; font-weight:600; line-height:1;
+  cursor:pointer; text-decoration:none; color:inherit;
+  display:inline-flex; align-items:center; gap:.5rem;
+}
+.btn--ghost{ background:transparent; border:1px solid var(--line); }
+.btn--ghost:hover{ background:#f8f9fc; }

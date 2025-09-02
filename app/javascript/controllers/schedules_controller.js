@@ -10,6 +10,17 @@ export default class extends Controller {
     this._onCalendarFrameLoad = this._onCalendarFrameLoad.bind(this)
     document.addEventListener("turbo:frame-load", this._onCalendarFrameLoad)
 
+    // 🔒 garante estado fechado no mount
+    this._forceCloseModalAndReset();
+
+    // fecha também em qualquer carregamento turbo
+    this._onTurboLoad = () => this._forceCloseModalAndReset();
+    document.addEventListener("turbo:load", this._onTurboLoad);
+
+    // fecha quando a página é restaurada do bfcache
+    this._onPageShow = (evt) => { if (evt.persisted) this._forceCloseModalAndReset() }
+    window.addEventListener("pageshow", this._onPageShow);
+
     document.documentElement.classList.remove("custom-modal-open")
 
     this._onVisit = () => document.documentElement.classList.remove("custom-modal-open")
@@ -18,15 +29,16 @@ export default class extends Controller {
     this._onBeforeCache = () => { this._forceCloseModalAndReset() }
     document.addEventListener("turbo:before-cache", this._onBeforeCache)
 
-    this._slotsAbortController = null; // controla cancelamento
-    this._slotsReqId = 0;              // id incremental de requisições
-
+    this._slotsAbortController = null;
+    this._slotsReqId = 0;
   }
 
-   disconnect() {
+  disconnect() {
     document.removeEventListener("turbo:frame-load", this._onCalendarFrameLoad)
     window.removeEventListener("turbo:visit", this._onVisit)
     document.removeEventListener("turbo:before-cache", this._onBeforeCache)
+    document.removeEventListener("turbo:load", this._onTurboLoad)
+    window.removeEventListener("pageshow", this._onPageShow)
     document.documentElement.classList.remove("custom-modal-open")
   }
 
@@ -38,9 +50,14 @@ export default class extends Controller {
   submit(e) {
     if (!this._isLoggedIn()) {
       e.preventDefault()
-      const back = location.pathname + location.search   // ⬅️ sem hash
+      const back = location.pathname + location.search
       const to   = `/users/sign_in?return_to=${encodeURIComponent(back)}`
-      document.documentElement.classList.remove("custom-modal-open")
+
+      this._forceCloseModalAndReset()
+
+      // 👇 limpa snapshots do Turbo antes de sair
+      try { window.Turbo?.session?.clearCache?.() } catch (_) {}
+
       window.location.assign(to)
       return
     }
@@ -85,6 +102,7 @@ export default class extends Controller {
     if (this.hasModalTarget) {
       this.modalTarget.classList.remove("is-open")
       this.modalTarget.setAttribute("aria-hidden", "true")
+      this.modalTarget.hidden = true 
     }
     document.documentElement.classList.remove("custom-modal-open")
     if (this.hasStartAtTarget) this.startAtTarget.value = ""
@@ -254,6 +272,7 @@ export default class extends Controller {
   // ===== MODAL (PURO CSS/JS) =====
   _openModal() {
     if (!this.hasModalTarget) return
+    this.modalTarget.hidden = false
     this.modalTarget.classList.add("is-open")
     this.modalTarget.setAttribute("aria-hidden", "false")
     document.documentElement.classList.add("custom-modal-open")
@@ -267,6 +286,7 @@ export default class extends Controller {
     if (!this.hasModalTarget) return
     this.modalTarget.classList.remove("is-open")
     this.modalTarget.setAttribute("aria-hidden", "true")
+    this.modalTarget.hidden = true                      // 👈 esconde
     document.documentElement.classList.remove("custom-modal-open")
     this.modalOpen = false
     if (this._rememberedFocus?.focus) this._rememberedFocus.focus()
