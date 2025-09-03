@@ -51,3 +51,7 @@
   align-items: center;
   padding-inline: 16px;
 }
+
+/* Garanta que a navbar e seus dropdowns fiquem acima do resumo */
+.navbar-lewagon.fixed-top { z-index: 1400; }
+.dropdown-menu             { z-index: 1500; } /* por via das dúvidas */

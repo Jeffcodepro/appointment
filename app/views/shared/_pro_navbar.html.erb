@@ -1,22 +1,63 @@
-<%# Fallbacks de rota (mantidos) %>
-<% schedule_path ||= edit_profile_path(current_user) %>
-<% agenda_path   ||= dashboard_path %>
-<% history_path  ||= dashboard_path %>
+<%# Fallbacks de rota para não quebrar enquanto você cria as páginas reais %>
+<% schedule_path ||= edit_profile_path(current_user) %>    <%# "Cadastro de horários" (ajuste depois) %>
+<% agenda_path   ||= dashboard_path %>                     <%# "Minha Agenda" %>
+<% history_path  ||= dashboard_path %>                     <%# "Histórico" %>
 
-<nav class="app-navbar navbar navbar-expand-lg pro-navbar">
+<nav class="navbar navbar-expand-lg bg-body-tertiary pro-navbar">
   <div class="container-fluid">
 
     <%= link_to root_path, class: "navbar-brand d-flex align-items-center gap-2" do %>
+      <%# Se tiver um logo em app/assets/images/logo.svg, descomente a linha abaixo %>
       <%#= image_tag "logo.svg", alt: "Logo", class: "pro-navbar__logo" %>
-      <span>Appointment app</span>
+      <span>MyApp</span>
     <% end %>
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#proNavbar"
-            aria-controls="proNavbar" aria-expanded="false" aria-label="Alternar navegação">
+            aria-controls="proNavbar" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
 
     <div class="collapse navbar-collapse" id="proNavbar">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-        <li class="nav-item"><%= link_to "Cadastro de horários", schedule_path, class: "nav-link" %></li>
-        <li class="nav-item"><%= link_to "Minha Agenda", agenda_path, class: "nav-link" %></li>
+        <li class="nav-item">
+          <%= link_to "Cadastro de horários", schedule_path, class: "nav-link" %>
+        </li>
+        <li class="nav-item">
+          <%= link_to "Minha Agenda", agenda_path, class: "nav-link" %>
+        </li>
+        <li class="nav-item">
+          <%= link_to "Histórico", history_path, class: "nav-link" %>
+        </li>
+      </ul>
+
+      <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+        <%# Avatar + dropdown %>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" role="button"
+             data-bs-toggle="dropdown" aria-expanded="false">
+            <% if current_user.avatar.attached? %>
+              <%= cl_image_tag current_user.avatar.key,
+                    width: 32, height: 32, crop: :fill, gravity: :face,
+                    fetch_format: :auto, quality: :auto,
+                    class: "rounded-circle pro-navbar__avatar", alt: current_user.name %>
+            <% else %>
+              <% initials = (current_user.name.presence || current_user.email).split.map { |s| s[0] }.join.first(2).upcase %>
+              <span class="rounded-circle pro-navbar__avatar-fallback"><%= initials %></span>
+            <% end %>
+            <span class="d-none d-md-inline"><%= current_user.name.presence || current_user.email %></span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><%= link_to "Editar perfil", edit_profile_path(current_user), class: "dropdown-item" %></li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+              <%= link_to "Sair", destroy_user_session_path,
+                           data: { turbo_method: :delete },
+                           class: "dropdown-item text-danger" %>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+
+  </div>
+</nav>

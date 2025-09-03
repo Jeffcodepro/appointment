@@ -1,6 +1,5 @@
 class ServicesController < ApplicationController
   skip_before_action :authenticate_user!, only: [:index, :cities, :show, :availability, :calendar, :availability_summary]
-  skip_before_action :authenticate_user!, only: [:index, :cities, :show, :availability]
   before_action :ensure_professional!, only: [:new, :create]
   before_action :ensure_provider_geocoded!, only: [:new, :create]
 
@@ -57,7 +56,6 @@ class ServicesController < ApplicationController
     end
   end
 
-  # GET /services/cities.json?state=SP
   def cities
     scope = User.where(role: :professional)
     scope = scope.where(state: params[:state]) if params[:state].present?
@@ -71,12 +69,11 @@ class ServicesController < ApplicationController
     render json: cities
   end
 
-  # GET /services/:id/availability.json?date=2025-09-02
   def availability
     service  = Service.find(params[:id])
     provider = service.user
 
-    # parse seguro
+    # parse seguro da data
     date_str = params[:date].to_s
     date =
       if date_str.match?(/\A\d{4}-\d{2}-\d{2}\z/)
@@ -92,17 +89,19 @@ class ServicesController < ApplicationController
 
     open_h   = 9
     close_h  = 18
-
     avg_h    = [service.average_hours.to_i, 1].max
     duration = avg_h.hours
 
     day_start = date.in_time_zone.change(hour: open_h,  min: 0)
     day_end   = date.in_time_zone.change(hour: close_h, min: 0)
 
+    # agendamentos do provider que conflitam com o dia
     day_schedules = Schedule
       .for_provider(provider.id)
       .where("start_at < ? AND end_at > ?", day_end, day_start)
       .pluck(:start_at, :end_at)
+
+    now = Time.zone.now
 
     slots = []
     t = day_start
@@ -110,20 +109,83 @@ class ServicesController < ApplicationController
       slot_start = t
       slot_end   = t + duration
 
-      conflict = day_schedules.any? { |(s_start, s_end)| s_start < slot_end && s_end > slot_start }
+      conflict  = day_schedules.any? { |(s_start, s_end)| s_start < slot_end && s_end > slot_start }
+      after_now = (date > Date.current) || (slot_start > now)
+      available = !conflict && after_now
 
-      slots << {
-        start_at: slot_start.iso8601,
-        end_at:   slot_end.iso8601,
-        label:    "#{I18n.l(slot_start, format: :short, default: slot_start.strftime('%d/%m %H:%M'))} – " \
-                  "#{I18n.l(slot_end,   format: :time,  default: slot_end.strftime('%H:%M'))}",
-        available: !conflict
-      }
+      # 👉 Só inclui se disponível e (se for hoje) depois do horário atual
+      if available
+        slots << {
+          start_at: slot_start.iso8601,
+          end_at:   slot_end.iso8601,
+          label:    "#{I18n.l(slot_start, format: :short, default: slot_start.strftime('%d/%m %H:%M'))} – " \
+                    "#{I18n.l(slot_end,   format: :time,  default: slot_end.strftime('%H:%M'))}",
+          available: true
+        }
+      end
 
       t += duration
     end
 
     render json: { date: date.to_s, slots: slots }
+  end
+
+
+  def availability_summary
+    service   = Service.find(params[:id])
+    provider  = service.user
+
+    open_h   = 9
+    close_h  = 18
+    avg_h    = [service.average_hours.to_i, 1].max
+    duration = avg_h.hours
+
+    start_date = params[:start].present? ? Date.iso8601(params[:start]) : Date.current.beginning_of_month
+    end_date   = params[:end].present?   ? Date.iso8601(params[:end])   : start_date.end_of_month
+
+    range_start = start_date.in_time_zone.change(hour: open_h,  min: 0)
+    range_end   = end_date.in_time_zone.change(  hour: close_h, min: 0)
+
+    all_sched = Schedule
+                  .for_provider(provider.id)
+                  .where("start_at < ? AND end_at > ?", range_end, range_start)
+                  .pluck(:start_at, :end_at)
+
+    now = Time.zone.now
+    fully_booked = []
+
+    (start_date..end_date).each do |date|
+      next if date.saturday? || date.sunday?
+
+      day_start = date.in_time_zone.change(hour: open_h,  min: 0)
+      day_end   = date.in_time_zone.change(hour: close_h, min: 0)
+
+      day_sched = all_sched.select { |s_start, s_end| s_start < day_end && s_end > day_start }
+
+      any_available = false
+      t = day_start
+      while (t + duration) <= day_end
+        slot_start = t
+        slot_end   = t + duration
+        conflict   = day_sched.any? { |s_start, s_end| s_start < slot_end && s_end > slot_start }
+
+        # 👇 mesma regra do availability: se for hoje, só conta depois de agora
+        after_now  = (date > Date.current) || (slot_start > now)
+
+        if !conflict && after_now
+          any_available = true
+          break
+        end
+
+        t += duration
+      end
+
+      fully_booked << date.to_s unless any_available
+    end
+
+    render json: { fully_booked: fully_booked }
+  rescue ArgumentError
+    render json: { error: "invalid dates" }, status: :bad_request
   end
 
 
@@ -232,59 +294,6 @@ class ServicesController < ApplicationController
     Date.parse(value)
   rescue ArgumentError
     Date.current
-  end
-
-  def availability_summary
-    service   = Service.find(params[:id])
-    provider  = service.user
-
-    start_date = params[:start].present? ? Date.iso8601(params[:start]) : Date.current.beginning_of_month
-    end_date   = params[:end].present?   ? Date.iso8601(params[:end])   : start_date.end_of_month
-
-    # janelas de trabalho (ajuste se tiver config por profissional)
-    open_h  = 9
-    close_h = 18
-    avg_h   = [service.average_hours.to_i, 1].max
-    duration = avg_h.hours
-
-    range_start = start_date.in_time_zone.change(hour: open_h,  min: 0)
-    range_end   = end_date.in_time_zone.change(  hour: close_h, min: 0)
-
-    # puxa tudo de uma vez e filtra em memória por dia
-    all_sched = Schedule
-                  .for_provider(provider.id)
-                  .where("start_at < ? AND end_at > ?", range_end, range_start)
-                  .pluck(:start_at, :end_at)
-
-    fully_booked = []
-
-    (start_date..end_date).each do |date|
-      next if date.saturday? || date.sunday?
-
-      day_start = date.in_time_zone.change(hour: open_h,  min: 0)
-      day_end   = date.in_time_zone.change(hour: close_h, min: 0)
-
-      day_sched = all_sched.select { |s_start, s_end| s_start < day_end && s_end > day_start }
-
-      any_available = false
-      t = day_start
-      while (t + duration) <= day_end
-        slot_start = t
-        slot_end   = t + duration
-        conflict = day_sched.any? { |s_start, s_end| s_start < slot_end && s_end > slot_start }
-        unless conflict
-          any_available = true
-          break
-        end
-        t += duration
-      end
-
-      fully_booked << date.to_s unless any_available
-    end
-
-    render json: { fully_booked: fully_booked }
-  rescue ArgumentError
-    render json: { error: "invalid dates" }, status: :bad_request
   end
 
 end

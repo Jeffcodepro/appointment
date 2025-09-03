@@ -5,7 +5,12 @@
   display:flex; align-items:center; justify-content:space-between;
   margin-bottom: 12px;
 }
-.page-title{ margin:0; font-size:1.125rem; }
+.page-title{
+  margin:0;
+  font-size:1.125rem;
+  color: #92949b;
+  font-weight: 400;
+}
 
 /* Header STICKY com o resumo (fica logo abaixo da navbar) */
 .conv-header{
@@ -39,3 +44,197 @@
   background: var(--surface-1);
 }
 .message-form{ margin-top: 10px; }
+
+/* ===== Bolhas de mensagem ===== */
+
+:root{
+  --bubble-mine: #137d8e;
+  --bubble-mine-text: #ffffff;
+  --bubble-others: #b9babf;
+  --bubble-others-text: #000;
+}
+
+.messages-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Cada linha de mensagem */
+.msg {
+  display: flex;
+}
+
+/* Bolha */
+.msg .bubble{
+  width: 72%;
+  max-width: 640px;
+
+  padding: .6rem .8rem;
+  border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(0,0,0,.06);
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+
+/* Metadados (nome + hora) */
+.msg .meta{
+  font-size: .75rem;
+  margin-bottom: .25rem;
+  opacity: .9;
+}
+.msg .meta .author{ font-weight: 600; }
+.msg .meta .time{ color: rgba(0,0,0,.55); }
+
+/* Alinhamento/controlado por quem visualiza a página */
+.viewer-client .msg.from-client,
+.viewer-professional .msg.from-professional {
+  justify-content: flex-end;      /* minhas mensagens → direita */
+}
+.viewer-client .msg.from-professional,
+.viewer-professional .msg.from-client {
+  justify-content: flex-start;    /* do outro → esquerda */
+}
+
+/* Cores das bolhas */
+.viewer-client .msg.from-client .bubble,
+.viewer-professional .msg.from-professional .bubble {
+  background: var(--bubble-mine);
+  color: var(--bubble-mine-text);
+}
+.viewer-client .msg.from-professional .bubble,
+.viewer-professional .msg.from-client .bubble {
+  background: var(--bubble-others);
+  color: var(--bubble-others-text);
+}
+
+/* Ajuste da cor da hora sobre fundo escuro */
+.viewer-client .msg.from-client .meta .time,
+.viewer-professional .msg.from-professional .meta .time {
+  color: rgba(255,255,255,.9);
+}
+
+/* ====== Composer (form de envio) ====== */
+.composer{
+  background: var(--surface-1, #fff);
+  border: 1px solid var(--line, #e5e7eb);
+  border-radius: 14px;
+  padding: .5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,.03);
+}
+
+.composer__wrap{
+  display: flex;
+  gap: .5rem;
+  align-items: flex-end;
+}
+
+.composer__textarea{
+  flex: 1 1 auto;
+  min-height: 44px;
+  max-height: 160px;
+  padding: .65rem .8rem;
+  border: 1px solid var(--line, #e5e7eb);
+  border-radius: 10px;
+  background: #fff;
+  font: inherit;
+  line-height: 1.35;
+  color: #111827;
+  resize: vertical; /* você pode trocar para none se preferir */
+  outline: none;
+  transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
+}
+
+.composer__textarea::placeholder{
+  color: #9ca3af;
+}
+
+.composer__textarea:focus{
+  border-color: #2569e4;                 /* foco azul */
+  box-shadow: 0 0 0 3px rgba(37,105,228,.15);
+  background: #fff;
+}
+
+.composer__send{
+  -webkit-appearance: none; appearance: none;
+  border: 0;
+  border-radius: 10px;
+  padding: .65rem .9rem;
+  background: #137d8e;
+  color: #fff;
+  font-weight: normal;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform .04s ease, box-shadow .15s ease, background-color .15s ease;
+  box-shadow: 0 2px 6px rgba(19,125,142,.25);
+}
+
+.composer__send:hover{ background: #0A5764; }
+.composer__send:active{ transform: translateY(1px); }
+
+.composer__send:disabled,
+.composer__send[disabled]{
+  background: #b9babf;
+  color: #fff;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Esconde o texto “Enviar” em telas bem estreitas (deixa só o ícone) */
+@media (max-width: 420px){
+  .composer__send-text{
+    display: none;
+    font-weight: normal;
+  }
+}
+
+.composer__error{
+  margin-top: .4rem;
+  font-size: .85rem;
+  color: #b00020;
+}
+
+/* Harmoniza com o bloco abaixo (já existente) */
+.message-form{
+  margin-top: 10px;
+}
+
+.messages-panel{
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-bottom-color: transparent;
+}
+
+.composer{
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  margin-top: -1px; /* costura visual com o painel */
+}
+
+.messages-panel{
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+/* Link do serviço: parece texto normal */
+.conv-summary__service-link,
+.conv-summary__service-link:link,
+.conv-summary__service-link:visited {
+  color: inherit !important;
+  text-decoration: none !important;
+  border: 0 !important;              /* remove a linha pontilhada */
+}
+
+.conv-summary__service-link:hover,
+.conv-summary__service-link:focus {
+  color: inherit !important;
+  text-decoration: none !important;
+  border: 0 !important;
+  outline: none;
+}
+
+.conv-header { z-index: 900; }

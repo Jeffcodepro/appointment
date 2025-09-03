@@ -1,26 +1,15 @@
-<% viewer_id      = local_assigns[:viewer_id] %>
-<% participants   = local_assigns[:participants] || {} %>
-<% client_id      = participants[:client_id] %>
-<% professional_id= participants[:professional_id] %>
+<%# Locals esperados:
+  - message (Message)
+  - participants: { client_id:, professional_id: }
+%>
+<% sender_role = (message.user_id == participants[:client_id]) ? 'from-client' : 'from-professional' %>
 
-<% role =
-     if message.user_id == client_id
-       "Cliente"
-     elsif message.user_id == professional_id
-       "Profissional"
-     end %>
-
-<% mine = viewer_id.present? && message.user_id == viewer_id %>
-
-<div class="d-flex <%= mine ? 'justify-content-end' : 'justify-content-start' %>">
-  <div class="p-2 rounded-3 <%= mine ? 'bg-primary text-white' : 'bg-light' %>" style="max-width: 70%;">
-    <div class="small mb-1 d-flex align-items-center gap-2">
-      <span><%= mine ? 'Você' : message.user.name %></span>
-      <% if role.present? %>
-        <span class="badge <%= mine ? 'text-bg-light' : 'text-bg-secondary' %>"><%= role %></span>
-      <% end %>
-      <span class="text-muted">• <%= l(message.created_at, format: :short) %></span>
+<div class="msg <%= sender_role %>">
+  <div class="bubble">
+    <div class="meta">
+      <span class="author"><%= message.user.name %></span>
+      <span class="time">• <%= l(message.created_at, format: :short) %></span>
     </div>
-    <div><%= simple_format(h(message.content)) %></div>
+    <div class="body"><%= simple_format(h(message.content)) %></div>
   </div>
 </div>

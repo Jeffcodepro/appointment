@@ -1,4 +1,4 @@
-<div class="container conversation-page">
+<div class="container conversation-page <%= current_user.id == @conversation.client_id ? 'viewer-client' : 'viewer-professional' %>">
   <div class="page-header">
     <h1 class="page-title">Conversa</h1>
     <%= link_to "Voltar ao serviço", service_path(@conversation.service), class: "btn btn--ghost" %>

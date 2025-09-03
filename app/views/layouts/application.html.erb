@@ -4,6 +4,9 @@
     <title>Appointment</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="turbo-cache-control" content="no-preview">
+    <%= tag.link  rel: "stylesheet", href: "https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" %>
+    <%= tag.script src: "https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js", defer: true %>
+
 
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
