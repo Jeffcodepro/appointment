@@ -23,7 +23,13 @@ Rails.application.routes.draw do
     end
   end
 
-  resources :schedules, only: [:create]
+  resources :schedules, only: [:create, :show] do
+    resources :messages, only: [:create]
+  end
+
+  resources :conversations, only: [:index, :create, :show] do
+    resources :messages, only: [:create], module: :conversations
+  end
 
   get "dashboard", to: "dashboards#show"
   get "login_and_return", to: "pages#login_and_return", as: :login_and_return

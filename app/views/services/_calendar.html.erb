@@ -1,3 +1,5 @@
+<% close_h = 18 %> 
+
 <turbo-frame id="calendar_frame">
   <%= month_calendar(
         events: @provider_schedules,
@@ -12,15 +14,20 @@
         }
       ) do |date, schedules| %>
 
-    <% weekend = date.saturday? || date.sunday? %>
-    <% past    = date < Date.current %>
-    <% classes = ["day"]; classes << "weekend" if weekend; classes << "past" if past %>
-    <% clickable = !(weekend || past) %>
+    <% weekend      = date.saturday? || date.sunday? %>
+    <% past         = date < Date.current %>
+    <% closed_today = (date == Date.current) && (Time.zone.now >= date.in_time_zone.change(hour: close_h, min: 0)) %>
+
+    <% classes   = ["day"] %>
+    <% classes << "weekend" if weekend %>
+    <% classes << "past"    if past || closed_today %>
+
+    <% clickable = !(weekend || past || closed_today) %>
 
     <div class="<%= classes.join(' ') %>"
-        data-date="<%= date.iso8601 %>"
-        data-action="click->schedules#pickDate"
-        <%= 'aria-disabled="true"' unless clickable %>>
+         data-date="<%= date.iso8601 %>"
+         data-action="click->schedules#pickDate"
+         <%= 'aria-disabled="true"' unless clickable %>>
       <div class="d-flex justify-content-between align-items-start">
         <span class="small fw-600"><%= date.day %></span>
         <% if schedules.any? %>

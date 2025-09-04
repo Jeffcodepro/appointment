@@ -1,7 +1,12 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static values = { serviceId: Number, loggedIn: Boolean }
+  static values = {
+    serviceId: Number,
+    loggedIn: Boolean,
+    openHour:  Number,
+    closeHour: Number,
+  }
   static targets = ["modal", "slots", "submit", "startAt", "endAt", "pickedDateLabel"]
 
 
@@ -9,6 +14,17 @@ export default class extends Controller {
     this._ensureServiceId();
     this._onCalendarFrameLoad = this._onCalendarFrameLoad.bind(this)
     document.addEventListener("turbo:frame-load", this._onCalendarFrameLoad)
+
+    // 🔒 garante estado fechado no mount
+    this._forceCloseModalAndReset();
+
+    // fecha também em qualquer carregamento turbo
+    this._onTurboLoad = () => this._forceCloseModalAndReset();
+    document.addEventListener("turbo:load", this._onTurboLoad);
+
+    // fecha quando a página é restaurada do bfcache
+    this._onPageShow = (evt) => { if (evt.persisted) this._forceCloseModalAndReset() }
+    window.addEventListener("pageshow", this._onPageShow);
 
     document.documentElement.classList.remove("custom-modal-open")
 
@@ -18,15 +34,16 @@ export default class extends Controller {
     this._onBeforeCache = () => { this._forceCloseModalAndReset() }
     document.addEventListener("turbo:before-cache", this._onBeforeCache)
 
-    this._slotsAbortController = null; // controla cancelamento
-    this._slotsReqId = 0;              // id incremental de requisições
-
+    this._slotsAbortController = null;
+    this._slotsReqId = 0;
   }
 
-   disconnect() {
+  disconnect() {
     document.removeEventListener("turbo:frame-load", this._onCalendarFrameLoad)
     window.removeEventListener("turbo:visit", this._onVisit)
     document.removeEventListener("turbo:before-cache", this._onBeforeCache)
+    document.removeEventListener("turbo:load", this._onTurboLoad)
+    window.removeEventListener("pageshow", this._onPageShow)
     document.documentElement.classList.remove("custom-modal-open")
   }
 
@@ -38,9 +55,14 @@ export default class extends Controller {
   submit(e) {
     if (!this._isLoggedIn()) {
       e.preventDefault()
-      const back = location.pathname + location.search   // ⬅️ sem hash
+      const back = location.pathname + location.search
       const to   = `/users/sign_in?return_to=${encodeURIComponent(back)}`
-      document.documentElement.classList.remove("custom-modal-open")
+
+      this._forceCloseModalAndReset()
+
+      // 👇 limpa snapshots do Turbo antes de sair
+      try { window.Turbo?.session?.clearCache?.() } catch (_) {}
+
       window.location.assign(to)
       return
     }
@@ -85,6 +107,7 @@ export default class extends Controller {
     if (this.hasModalTarget) {
       this.modalTarget.classList.remove("is-open")
       this.modalTarget.setAttribute("aria-hidden", "true")
+      this.modalTarget.hidden = true
     }
     document.documentElement.classList.remove("custom-modal-open")
     if (this.hasStartAtTarget) this.startAtTarget.value = ""
@@ -177,7 +200,7 @@ export default class extends Controller {
           return r.json();
         })
         .then(data => {
-          // DESCARTA resposta obsoleta ou de outra data
+          // DESCARTA resposta obsoleta/fora de data
           if (reqId !== this._slotsReqId) return;
           if ((data?.date || expectedDate) !== expectedDate) return;
           if (expectedDate !== this._currentDate) return;
@@ -185,37 +208,32 @@ export default class extends Controller {
           this.slotsTarget.innerHTML = "";
           this.submitTarget.disabled = true;
 
-          if (!data.slots || data.slots.length === 0) {
+          const now = new Date();
+          const isToday = expectedDate === now.toISOString().slice(0,10);
+
+          // defensivo: mostra só disponíveis e, se hoje, somente depois de agora
+          let slots = Array.isArray(data.slots) ? data.slots : [];
+          slots = slots.filter(s => {
+            if (!s.available) return false;
+            if (!isToday) return true;
+            const start = new Date(s.start_at);
+            return start > now;
+          });
+
+          if (slots.length === 0) {
             this.slotsTarget.innerHTML = `<div class="text-muted small">Sem horários livres neste dia.</div>`;
             return;
           }
 
-          let hasAvailable = false;
-
-          data.slots.forEach(s => {
+          // Renderiza APENAS slots clicáveis
+          slots.forEach(s => {
             const btn = document.createElement("button");
             btn.type = "button";
             btn.className = "btn btn-outline-secondary btn-sm me-2 mb-2";
             btn.textContent = s.label;
-
-            if (s.available) {
-              hasAvailable = true;
-              btn.addEventListener("click", () => this.selectSlot(s, btn));
-            } else {
-              btn.disabled = true;
-              btn.setAttribute("aria-disabled", "true");
-              btn.title = "Horário indisponível";
-            }
-
+            btn.addEventListener("click", () => this.selectSlot(s, btn));
             this.slotsTarget.appendChild(btn);
           });
-
-          if (!hasAvailable) {
-            const note = document.createElement("div");
-            note.className = "text-muted small w-100";
-            note.textContent = "Sem horários livres neste dia.";
-            this.slotsTarget.appendChild(note);
-          }
         })
         .catch((err) => {
           if (err?.name === "AbortError") return; // requisição cancelada → ignore
@@ -254,6 +272,7 @@ export default class extends Controller {
   // ===== MODAL (PURO CSS/JS) =====
   _openModal() {
     if (!this.hasModalTarget) return
+    this.modalTarget.hidden = false
     this.modalTarget.classList.add("is-open")
     this.modalTarget.setAttribute("aria-hidden", "false")
     document.documentElement.classList.add("custom-modal-open")
@@ -267,6 +286,7 @@ export default class extends Controller {
     if (!this.hasModalTarget) return
     this.modalTarget.classList.remove("is-open")
     this.modalTarget.setAttribute("aria-hidden", "true")
+    this.modalTarget.hidden = true                      // 👈 esconde
     document.documentElement.classList.remove("custom-modal-open")
     this.modalOpen = false
     if (this._rememberedFocus?.focus) this._rememberedFocus.focus()
@@ -282,52 +302,90 @@ export default class extends Controller {
 
   // ===== Quando o calendário troca de mês via Turbo =====
   _onCalendarFrameLoad(e) {
-    const frame = e.target
-    if (!(frame && frame.id === "calendar_frame")) return
-    if (!this.modalOpen) return
+    const frame = e.target;
+    if (!(frame && frame.id === "calendar_frame")) return;
+    if (!this.modalOpen) return;
 
-    this._bindDayClicks(frame)
-    this._markPastDays(frame)                 // NEW: marca dias passados
+    // rebinds & marca passados
+    this._bindDayClicks(frame);
+    this._markPastDays(frame);
 
-    // Descobre mês dominante mostrado (já existia)
-    const days = Array.from(frame.querySelectorAll(".day"))
-    if (days.length === 0) return
-    const counts = new Map()
-    days.forEach(el => {
-      const dateStr = el.dataset.date
-      if (!dateStr) return
-      const ym = dateStr.slice(0, 7) // YYYY-MM
-      counts.set(ym, (counts.get(ym) || 0) + 1)
-    })
-    if (counts.size === 0) return
-    const shownYM = Array.from(counts.entries()).sort((a,b) => b[1]-a[1])[0][0]
+    // 1) pega mês “dominante” exibido
+    const shownYM = this._dominantMonth(frame); // "YYYY-MM"
+    if (!shownYM) return;
 
-    // NEW: pinta dias esgotados daquele mês
+    // 2) escolhe imediatamente o primeiro dia útil não-passado (ignora fully-booked por enquanto)
+    const firstPick = this._firstWorkingSelectableDay(frame, shownYM);
+    if (firstPick?.dataset.date) {
+      this._applySelectedClass(firstPick);
+      this._currentDate = firstPick.dataset.date;
+      this._updatePickedLabel();   // 👈 atualiza o badge imediatamente
+      this.fetchSlots();           // carrega slots desse novo dia
+    } else {
+      // nenhum dia útil → limpa slots/label
+      this.slotsTarget.innerHTML = `<div class="text-muted small">Sem horários deste mês.</div>`;
+      this.submitTarget.disabled = true;
+      this._currentDate = null;
+      this._updatePickedLabel();
+    }
+
+    // 3) pinta os dias “esgotados” e, se o escolhido ficou fully-booked, troca por outro
     this._fetchMonthSummary(frame, shownYM).then(() => {
-      // Seleciona automaticamente o 1º dia útil NÃO esgotado; se não houver, pega o 1º dia útil
-      const firstAvailable = days
-        .filter(el => el.dataset.date?.startsWith(shownYM))
-        .find(el => !el.classList.contains("weekend")
-                 && !el.classList.contains("past")
-                 && !el.classList.contains("fully-booked"))
+      if (!this._currentDate) return;
 
-      const pick = firstAvailable ||
-                  days.filter(el => el.dataset.date?.startsWith(shownYM))
-                      .find(el => !el.classList.contains("weekend")
-                                && !el.classList.contains("past"));
-
-      if (pick?.dataset.date) {
-        this._applySelectedClass(pick)
-        this._currentDate = pick.dataset.date
-        this._updatePickedLabel()
-        this.fetchSlots()
-      } else {
-        this.slotsTarget.innerHTML = `<div class="text-muted small">Sem horários deste mês.</div>`
-        this.submitTarget.disabled = true
+      const selectedEl = frame.querySelector(`.day.selected[data-date="${this._currentDate}"]`);
+      if (selectedEl?.classList.contains("fully-booked")) {
+        const alt = this._firstWorkingSelectableDay(frame, shownYM, { requireFree: true });
+        if (alt?.dataset.date) {
+          this._applySelectedClass(alt);
+          this._currentDate = alt.dataset.date;
+          this._updatePickedLabel();  // 👈 garante badge correto após pintar fully-booked
+          this.fetchSlots();
+        } else {
+          this.slotsTarget.innerHTML = `<div class="text-muted small">Sem horários livres neste mês.</div>`;
+          this.submitTarget.disabled = true;
+        }
       }
-    })
+    });
   }
 
+  _dominantMonth(frameEl) {
+    const days = Array.from(frameEl.querySelectorAll(".day[data-date]"));
+    if (!days.length) return null;
+    const count = new Map();
+    days.forEach(el => {
+      const d = el.dataset.date; if (!d) return;
+      const ym = d.slice(0, 7);
+      count.set(ym, (count.get(ym) || 0) + 1);
+    });
+    return Array.from(count.entries()).sort((a,b)=>b[1]-a[1])[0]?.[0] || null;
+  }
+
+  _firstWorkingSelectableDay(frameEl, ym, options = {}) {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const requireFree = !!options.requireFree;
+
+    const candidates = Array.from(
+      frameEl.querySelectorAll(`.day[data-date^="${ym}"]`)
+    ).filter(el => {
+      const d = el.dataset.date;
+      if (!d) return false;
+
+      // evita fim de semana e passado
+      if (el.classList.contains("weekend")) return false;
+      const dObj = new Date(d + "T00:00:00");
+      if (dObj < today) return false;
+
+      // se quiser só os livres (após pintar), evita fully-booked
+      if (requireFree && el.classList.contains("fully-booked")) return false;
+
+      return true;
+    });
+
+    // menor data primeiro (lexicográfico funciona em YYYY-MM-DD)
+    candidates.sort((a, b) => a.dataset.date.localeCompare(b.dataset.date));
+    return candidates[0] || null;
+  }
 
   // ===== Helpers p/ clique em dias dentro do frame =====
   _bindDayClicks(frameEl) {
@@ -353,10 +411,27 @@ export default class extends Controller {
   // NEW: marca .past client-side (comparação YYYY-MM-DD é lexicográfica)
   _markPastDays(frameEl) {
     const today = new Date(); today.setHours(0,0,0,0);
+    const now   = new Date();
+
+    // fallbacks caso não venha via data-*
+    const openHour  = this.hasOpenHourValue  ? this.openHourValue  : 9;
+    const closeHour = this.hasCloseHourValue ? this.closeHourValue : 18;
+
     frameEl.querySelectorAll(".day").forEach(el => {
       const d = el.dataset.date; if (!d) return;
-      const dObj = new Date(d + "T00:00:00");
-      if (dObj < today) el.classList.add("past"); else el.classList.remove("past");
+      const dStart = new Date(d + "T00:00:00");
+      const isPast = dStart < today;
+
+      // se é hoje e já fechou, trata como passado
+      const isClosedToday =
+        dStart.getTime() === today.getTime() &&
+        (now.getHours() > closeHour || (now.getHours() === closeHour && now.getMinutes() >= 0));
+
+      if (isPast || isClosedToday) {
+        el.classList.add("past");
+      } else {
+        el.classList.remove("past");
+      }
     });
   }
 

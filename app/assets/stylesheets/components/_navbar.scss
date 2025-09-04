@@ -10,3 +10,48 @@
 .navbar-lewagon .navbar-brand img {
   width: 40px;
 }
+
+/* altura por papel, usada na posição do header sticky da conversa */
+.role-default { --nav-h: 64px; }
+.role-pro     { --nav-h: 72px; }
+
+/* navbar colada no topo usando STICKY */
+.app-navbar{
+  position: sticky;
+  top: 0;
+  z-index: 1200;
+  background: #fff; /* ou var(--surface-1) */
+  border-bottom: 1px solid #e5e8ef; /* var(--line) */
+  min-height: var(--nav-h);
+  display: flex;
+  align-items: center;
+  padding-inline: 16px;
+}
+
+/* header fixo do resumo na conversa */
+.conv-header{
+  position: sticky;
+  top: calc(var(--nav-h) + 8px);
+  z-index: 1100;
+}
+
+/* Altura por papel (ajuste se a pro navbar for maior) */
+.role-default { --nav-h: 64px; }
+.role-pro     { --nav-h: 72px; }
+
+/* ===== Navbar colada no topo (sem fixed-top) ===== */
+.app-navbar{
+  position: sticky;
+  top: 0;
+  z-index: 1200;
+  background: var(--surface-1);
+  border-bottom: 1px solid var(--line);
+  min-height: var(--nav-h);
+  display: flex;
+  align-items: center;
+  padding-inline: 16px;
+}
+
+/* Garanta que a navbar e seus dropdowns fiquem acima do resumo */
+.navbar-lewagon.fixed-top { z-index: 1400; }
+.dropdown-menu             { z-index: 1500; } /* por via das dúvidas */

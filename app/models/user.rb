@@ -9,6 +9,7 @@ class User < ApplicationRecord
   has_many_attached :images
   has_one_attached  :avatar
   has_one_attached  :banner
+  has_many :messages, dependent: :destroy
 
   # Papéis
   enum role: { client: 0, professional: 1 }

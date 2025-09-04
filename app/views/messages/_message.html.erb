@@ -1,0 +1,15 @@
+<%# Locals esperados:
+  - message (Message)
+  - participants: { client_id:, professional_id: }
+%>
+<% sender_role = (message.user_id == participants[:client_id]) ? 'from-client' : 'from-professional' %>
+
+<div class="msg <%= sender_role %>">
+  <div class="bubble">
+    <div class="meta">
+      <span class="author"><%= message.user.name %></span>
+      <span class="time">• <%= l(message.created_at, format: :short) %></span>
+    </div>
+    <div class="body"><%= simple_format(h(message.content)) %></div>
+  </div>
+</div>

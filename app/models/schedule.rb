@@ -1,6 +1,7 @@
 class Schedule < ApplicationRecord
   belongs_to :user        # cliente
   belongs_to :service     # contém o profissional via service.user
+  has_many :messages, dependent: :destroy
 
   validates :start_at, :end_at, presence: true
   validate  :ends_after_start
@@ -9,13 +10,7 @@ class Schedule < ApplicationRecord
   # ---- Scopes: sempre no nível da classe ----
   scope :for_provider,     ->(provider_id) { joins(:service).where(services: { user_id: provider_id }) }
   scope :for_professional, ->(pro_user_id) { joins(:service).where(services: { user_id: pro_user_id }) }
-
-
-  scope :on_day, ->(date) {
-    start_range = date.beginning_of_day
-    end_range   = date.end_of_day
-    where("start_at < ? AND end_at > ?", end_range, start_range)
-  }
+  scope :on_day,           ->(date) { where(start_at: date.beginning_of_day..date.end_of_day) }
 
   def start_time
     start_at

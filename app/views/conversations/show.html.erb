@@ -1,0 +1,45 @@
+<div class="container conversation-page <%= current_user.id == @conversation.client_id ? 'viewer-client' : 'viewer-professional' %>">
+  <div class="page-header">
+    <h1 class="page-title">Conversa</h1>
+    <%= link_to "Voltar ao serviço", service_path(@conversation.service), class: "btn btn--ghost" %>
+  </div>
+
+  <!-- HEADER STICKY logo abaixo da navbar -->
+  <div class="conv-header" role="region" aria-label="Resumo da conversa">
+    <div class="conv-summary">
+      <div class="conv-summary__row">
+        <div><span class="label">Cliente:</span> <%= @conversation.client.name %></div>
+        <div><span class="label">Profissional:</span> <%= @conversation.professional.name %></div>
+        <div>
+          <span class="label">Serviço:</span>
+          <%= link_to(@conversation.service.categories.presence || "Serviço",
+                      service_path(@conversation.service),
+                      class: "conv-summary__service-link") %>
+          <% if @conversation.service.subcategories.present? %>
+            / <%= @conversation.service.subcategories %>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <%= turbo_stream_from [@conversation, :messages] %>
+
+  <div id="messages_for_conversation_<%= @conversation.id %>" class="messages-panel">
+    <%= render partial: "messages/message",
+               collection: @messages,
+               as: :message,
+               locals: {
+                 viewer_id: current_user.id,
+                 participants: {
+                   client_id: @conversation.client_id,
+                   professional_id: @conversation.professional_id
+                 }
+               } %>
+  </div>
+
+  <div id="<%= dom_id(@conversation, :form) %>" class="message-form">
+    <%= render "messages/form_conversation",
+               conversation: @conversation, message: @message %>
+  </div>
+</div>

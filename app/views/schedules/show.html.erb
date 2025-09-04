@@ -1,0 +1,26 @@
+<div class="container py-4">
+  <h1 class="h5 mb-3">
+    Chat do agendamento com
+    <% if current_user.id == @schedule.user_id %>
+      <%= @schedule.service.user.name %> (profissional)
+    <% else %>
+      <%= @schedule.user.name %> (cliente)
+    <% end %>
+  </h1>
+
+  <!-- Assina o stream desse schedule -->
+  <%= turbo_stream_from [@schedule, :messages] %>
+
+  <!-- Lista de mensagens -->
+  <div id="messages_for_schedule_<%= @schedule.id %>" class="vstack gap-2 border rounded p-3 mb-3" style="min-height: 300px;">
+    <%= render partial: "messages/message",
+           collection: @messages,
+           as: :message,
+           locals: { viewer_id: current_user.id } %>
+  </div>
+
+  <!-- Formulário -->
+  <div id="<%= dom_id(@schedule, :form) %>">
+    <%= render "messages/form", schedule: @schedule, message: @message %>
+  </div>
+</div>
