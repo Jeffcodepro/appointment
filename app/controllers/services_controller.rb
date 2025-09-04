@@ -130,7 +130,6 @@ class ServicesController < ApplicationController
     render json: { date: date.to_s, slots: slots }
   end
 
-
   def availability_summary
     service   = Service.find(params[:id])
     provider  = service.user
