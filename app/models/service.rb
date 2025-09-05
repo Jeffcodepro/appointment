@@ -2,6 +2,7 @@ class Service < ApplicationRecord
   belongs_to :user
 
   monetize :price_hour_cents
+  has_many :conversations, dependent: :destroy
 
   CATEGORIES = [
     "Serviços Domésticos", "Reparos e Manutenção", "Saúde e Bem-Estar",

@@ -111,14 +111,7 @@
   box-shadow: none;
 }
 
-/* Botão utilitário usado no header */
-// .btn{
-//   -webkit-appearance:none; appearance:none;
-//   border:0; border-radius:12px;
-//   padding:.6rem 1rem; font-weight:600; line-height:1;
-//   cursor:pointer; text-decoration:none; color:inherit;
-//   display:inline-flex; align-items:center; gap:.5rem;
-// }
+
 .btn--ghost{
   background:#e1e2e4;
   border-color: #e1e2e4;
@@ -131,4 +124,60 @@
   background:#2c2d30;
   border-color: #2c2d30;
   color: white;
+}
+
+
+.btn-chat{
+  @extend .btn;
+  background-color:#fff;
+  border:1px solid #137d8e;
+  color:#137d8e;
+}
+.btn-chat:hover{
+  background-color:#137d8e;
+  border-color:#137d8e;
+  color:#fff;
+}
+
+/* Cancelar (abrir modal) */
+.btn-cancel-appointment{
+  @extend .btn;
+  background-color:#fff;
+  border:1px solid rgb(213,114,114);
+  color: rgb(193,45,45);
+}
+.btn-cancel-appointment:hover{
+  background-color: rgb(193,45,45);
+  border-color: rgb(193,45,45);
+  color:#fff; }
+
+/* Confirmar cancelamento (no modal) */
+.cancel-modal .btn-cancel-confirm{
+  background-color: #c12d2d;
+  border: 1px solid #c12d2d;
+  color:#fff;
+  padding:.5rem 1rem;
+  border-radius:.5rem;
+}
+.cancel-modal .btn-cancel-confirm:hover{
+  background-color:#a52525;
+  border-color:#a52525;
+  color:#fff; }
+
+/* Exportar CSV - look de ação secundária com brand */
+.btn-export-csv{
+  @extend .btn;
+  display:inline-flex;
+  align-items:center;
+  gap:.5rem;
+  background:#f0f9fb;
+  border:1px solid #a5f3fc;
+  color:#0e7490;
+  padding: .5rem .9rem;
+  border-radius: .5rem;
+}
+.btn-export-csv:hover{
+  background:#e6f6f9;
+  border-color:#67e8f9;
+  color:#075985;
 }

@@ -25,6 +25,7 @@ Rails.application.routes.draw do
 
   resources :schedules, only: [:create, :show] do
     resources :messages, only: [:create]
+    member { patch :cancel }
   end
 
   resources :conversations, only: [:index, :create, :show] do
@@ -33,6 +34,8 @@ Rails.application.routes.draw do
 
   get "dashboard", to: "dashboards#show"
   get "login_and_return", to: "pages#login_and_return", as: :login_and_return
+  get "history", to: "schedules#history", as: :service_history
+
 
   scope "users/:user_id" do
     get   "profile/edit", to: "professionals#edit",   as: :edit_profile

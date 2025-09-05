@@ -1,0 +1,151 @@
+/* ===== Página: Conversations (Index) ===== */
+.conversations-index {
+  padding-block: 16px; /* harmoniza com .conversation-page */
+
+  /* Cabeçalho (reusa o padrão da página de conversa) */
+  .page-header{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom: 12px;
+  }
+  .page-title{
+    margin:0;
+    font-size:1.125rem;
+    color:#92949b;
+    font-weight:400;
+    letter-spacing:.2px;
+  }
+
+  /* Barra de filtro */
+  .filter-box{
+    background: var(--surface-1, #fff);
+    border: 1px solid var(--line, #e5e7eb);
+    border-radius: 12px;
+    padding: .75rem 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,.03);
+    margin-bottom: 12px;
+
+    code{
+      background: rgba(19,125,142,.06);
+      color: #137d8e;
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+  }
+
+  /* Cartões colunas esquerda/direita */
+  .card {
+    background: var(--surface-1, #fff);
+    border: 1px solid var(--line, #e5e7eb);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.03);
+  }
+  .card-body { padding: 1rem 1rem; }
+
+  h2.section-title{
+    font-size:.875rem;
+    font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    color: var(--muted, #6b7280);
+    margin-bottom: .75rem;
+  }
+
+  /* Lista de conversas */
+  .list-group.list-group-flush .list-group-item{
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid var(--line, #e5e7eb);
+    padding: 14px 0;
+    transition: background .15s ease, transform .04s ease;
+  }
+  .list-group.list-group-flush .list-group-item:last-child{
+    border-bottom: 0;
+  }
+  .list-group .list-group-item:hover{
+    background: rgba(0,0,0,.02);
+  }
+  .list-group .list-group-item:active{
+    transform: translateY(1px);
+  }
+
+  /* Linha principal (nome • serviço) */
+  .conv-title{
+    font-weight:600;
+    color:#111827;
+    display:flex; flex-wrap:wrap; gap:6px;
+  }
+  .list-group .list-group-item:hover .conv-title{
+    color:#137d8e; /* mesmo accent usado nas bolhas */
+  }
+
+  /* Categoria / subcategoria como “chip” leve */
+  .conv-chip{
+    display:inline-block;
+    padding: 2px 8px;
+    border: 1px solid var(--line, #e5e7eb);
+    border-radius: 999px;
+    font-size: .75rem;
+    line-height: 1.1;
+    color:#111827;
+    background: #fff;
+    margin-left: 6px;
+  }
+
+  /* Snippet da última mensagem */
+  .conv-snippet{
+    color: var(--muted, #6b7280);
+    font-size: .875rem;
+    margin-top: 2px;
+
+    display: -webkit-box;
+    -webkit-line-clamp: 1;    /* 1 linha; mude para 2 se quiser */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Horário em estilo “pill” discreto */
+  .conv-time{
+    align-self: start;
+    padding: 4px 8px;
+    border: 1px solid var(--line, #e5e7eb);
+    border-radius: 999px;
+    font-size: .75rem;
+    color: var(--muted, #6b7280);
+    white-space: nowrap;
+    background: #f8fafc;
+    margin-left: 8px;
+  }
+
+  /* Estado vazio */
+  .empty{
+    color: var(--muted, #6b7280);
+    padding: .25rem 0;
+  }
+
+  /* Botão “Limpar filtro” no mesmo tom das páginas */
+  .btn-outline-secondary.btn-sm{
+    border-color: var(--line, #e5e7eb);
+    color: #111827;
+  }
+  .btn-outline-secondary.btn-sm:hover{
+    background: rgba(0,0,0,.02);
+    border-color: #cfd4da;
+  }
+}
+
+/* ===== Fallbacks para sua marcação atual =====
+   (funciona mesmo sem mudar o HTML) */
+.container.py-4.conversations-index .page-header,
+.container.py-4 > .d-flex.align-items-center.justify-content-between.mb-3{
+  display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;
+}
+.container.py-4.conversations-index .page-title,
+.container.py-4 > .d-flex.align-items-center.justify-content-between.mb-3 .h5{
+  margin:0; font-size:1.125rem; color:#92949b; font-weight:400;
+}
+.container.py-4 .alert.alert-light.border.small{ @extend .filter-box; }
+
+/* Conecta seletores utilitários à sua marcação */
+.list-group .fw-semibold{ @extend .conv-title; }
+.list-group .small.text-muted{ @extend .conv-snippet; }
+.list-group small.text-muted.ms-2{ @extend .conv-time; }

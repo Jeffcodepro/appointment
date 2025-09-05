@@ -1,0 +1,267 @@
+<!-- app/views/schedules/history.html.erb -->
+<div class="container py-4 history-index">
+  <div class="page-header">
+    <h1 class="page-title">Histórico de serviços</h1>
+  </div>
+
+  <%= form_with url: service_history_path, method: :get, local: true,
+        class: "history-filters",
+        data: { controller: "history-filters",
+                "history-filters-reset-url-value": service_history_path } do %>
+
+    <div class="filters-row">
+      <!-- Date dropdown -->
+      <div class="filters-group filters-group--wide">
+        <label class="label">Período</label>
+        <div class="date-dropdown">
+          <button type="button"
+                  class="btn btn-light btn-sm date-dropdown__toggle"
+                  data-action="history-filters#toggleDateDropdown"
+                  aria-expanded="false" aria-haspopup="dialog">
+            <i class="fa-regular fa-calendar"></i>
+            <% if params[:start_date].present? || params[:end_date].present? %>
+              <span>
+                <%= (params[:start_date].presence || "—") %>
+                –
+                <%= (params[:end_date].presence   || "—") %>
+              </span>
+            <% else %>
+              <span>Todos</span>
+            <% end %>
+          </button>
+
+
+          <div class="date-dropdown__menu" data-history-filters-target="dateDropdown" role="dialog" aria-hidden="true">
+            <div class="date-dropdown__columns">
+              <div class="date-dropdown__left">
+                <div class="preset-list" role="list">
+                  <button type="button" class="chip-btn" data-preset="today"     data-action="history-filters#applyPreset" aria-pressed="false">Hoje</button>
+                  <button type="button" class="chip-btn" data-preset="yesterday" data-action="history-filters#applyPreset" aria-pressed="false">Ontem</button>
+                  <button type="button" class="chip-btn" data-preset="last7"     data-action="history-filters#applyPreset" aria-pressed="false">Últimos 7 dias</button>
+                  <button type="button" class="chip-btn" data-preset="last30"    data-action="history-filters#applyPreset" aria-pressed="false">Últimos 30 dias</button>
+                  <button type="button" class="chip-btn" data-preset="last90"    data-action="history-filters#applyPreset" aria-pressed="false">Últimos 90 dias</button>
+                  <button type="button" class="chip-btn" data-preset="thisMonth" data-action="history-filters#applyPreset" aria-pressed="false">Este mês</button>
+                  <button type="button" class="chip-btn" data-preset="lastMonth" data-action="history-filters#applyPreset" aria-pressed="false">Mês passado</button>
+                </div>
+              </div>
+
+              <div class="date-dropdown__right">
+                <div class="grid-2">
+                  <div>
+                    <label class="label small mb-1">Início</label>
+                    <%= date_field_tag :start_date, params[:start_date],
+                          class: "form-control form-control-sm",
+                          data: { "history-filters-target": "startDate" } %>
+                  </div>
+                  <div>
+                    <label class="label small mb-1">Fim</label>
+                    <%= date_field_tag :end_date, params[:end_date],
+                          class: "form-control form-control-sm",
+                          data: { "history-filters-target": "endDate" } %>
+                  </div>
+                </div>
+                <div class="date-dropdown__actions">
+                  <button type="button" class="btn btn-light btn-sm" data-action="history-filters#clearCustomRange">Limpar</button>
+                  <button type="button" class="btn-search btn-sm" data-action="history-filters#applyCustomRange">Aplicar</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div> <!-- /date-dropdown -->
+      </div>
+
+      <!-- Texto / Papel / Status -->
+      <div class="filters-group">
+        <label class="label">Buscar</label>
+        <%= text_field_tag :query, params[:query], class: "form-control form-control-sm",
+              placeholder: "Texto (serviço, pessoa, mensagem…)",
+              data: { "history-filters-target": "query" } %>
+      </div>
+
+      <div class="filters-group">
+        <label class="label">Papel</label>
+        <%= select_tag :role,
+              options_for_select([["Todos", "all"], ["Como cliente", "client"], ["Como profissional", "professional"]], @role),
+              include_blank: false,
+              class: "form-select form-select-sm",
+              data: { "history-filters-target": "role" } %>
+      </div>
+
+      <div class="filters-group">
+        <label class="label">Status</label>
+        <%= select_tag :status,
+              options_for_select([["Todos", ""], ["Concluído", "completed"], ["Cancelado", "canceled"], ["No-show", "no_show"], ["Confirmado", "confirmed"], ["Pendente", "pending"]], @status),
+              class: "form-select form-select-sm",
+              data: { "history-filters-target": "status" } %>
+      </div>
+
+      <div class="filters-actions">
+        <button class="btn-search btn-sm" type="submit">
+          <i class="fa-solid fa-magnifying-glass"></i> Filtrar
+        </button>
+
+        <button type="button" class="btn--ghost btn-sm" data-action="history-filters#resetFilters">Limpar</button>
+
+        <%= link_to service_history_path(request.query_parameters.merge(format: :csv)),
+            class: "btn-export-csv btn-sm", data: { turbo: false } do %>
+          <i class="fa-solid fa-file-csv"></i> Exportar CSV
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <% if params[:query].present? || params[:status].present? || (params[:role].present? && params[:role] != "all") || params[:start_date].present? || params[:end_date].present? %>
+    <div class="filter-box">
+      <% if params[:query].present? %>Texto: <code><%= params[:query] %></code><% end %>
+      <% if params[:status].present? %> • Status: <code><%= params[:status] %></code><% end %>
+      <% if params[:role].present? && params[:role] != "all" %> • Papel: <code><%= params[:role] %></code><% end %>
+      <% if params[:start_date].present? || params[:end_date].present? %>
+        • Data: <code><%= params[:start_date].presence || "—" %> → <%= params[:end_date].presence || "—" %></code>
+      <% end %>
+    </div>
+  <% end %>
+
+  <div id="results" class="card border-0 shadow-sm">
+    <div class="card-body">
+      <% if @schedules.any? %>
+        <div class="list-group list-group-flush">
+          <% @schedules.each do |s| %>
+            <div class="list-group-item py-3 history-item">
+              <div class="row-line">
+                <div class="left">
+                  <div class="title">
+                    <%= s.service&.categories.presence || s.service&.name || "Serviço" %>
+                    <% if s.service&.subcategories.present? %>
+                      <span class="chip"><%= s.service.subcategories %></span>
+                    <% end %>
+                  </div>
+
+                  <div class="meta">
+                    <% if s.client_id == current_user.id %>
+                      <span class="label">Profissional:</span> <%= s.professional&.name || "-" %>
+                    <% elsif s.professional_id == current_user.id %>
+                      <span class="label">Cliente:</span> <%= s.client&.name || "-" %>
+                    <% else %>
+                      <span class="label">Participante:</span> <%= s.client&.name || s.professional&.name || "-" %>
+                    <% end %>
+
+                    • <span class="label">Quando:</span>
+                    <%= schedule_time_range_compact(s) %>
+                  </div>
+
+                  <!-- Accordion / detalhes com cards e ícones -->
+                  <div class="mt-2">
+                    <button class="btn btn-light btn-sm has-caret"
+                            type="button"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#sch_<%= s.id %>_details"
+                            aria-expanded="false"
+                            aria-controls="sch_<%= s.id %>_details">
+                      Ver detalhes
+                      <i class="fa-solid fa-chevron-down caret-icon" aria-hidden="true"></i>
+                    </button>
+                  </div>
+
+                  <div id="sch_<%= s.id %>_details" class="collapse mt-2 history-details">
+                    <div class="details-cards">
+                      <div class="dcard">
+                        <i class="fa-regular fa-clock"></i>
+                        <div class="dcard-info">
+                          <div class="dcard-title">Horário</div>
+                          <div class="dcard-value">
+                            <%= schedule_time_range_compact(s) %>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="dcard">
+                        <i class="fa-solid fa-hourglass-half"></i>
+                        <div class="dcard-info">
+                          <div class="dcard-title">Duração</div>
+                          <div class="dcard-value"><%= schedule_duration_human(s) %></div>
+                        </div>
+                      </div>
+                      <div class="dcard">
+                        <i class="fa-solid fa-tag"></i>
+                        <div class="dcard-info">
+                          <div class="dcard-title">Preço/h</div>
+                          <div class="dcard-value"><%= service_hour_price_currency(s) %></div>
+                        </div>
+                      </div>
+                      <div class="dcard">
+                        <i class="fa-solid fa-wallet"></i>
+                        <div class="dcard-info">
+                          <div class="dcard-title">Total</div>
+                          <div class="dcard-value total"><%= schedule_total_price(s) %></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <hr class="details-sep">
+
+                    <div class="details-meta">
+                      <div><span class="label">Serviço:</span> <%= s.service&.name || "-" %></div>
+                      <div><span class="label">Categoria:</span> <%= s.service&.categories || "-" %></div>
+                      <div><span class="label">Subcategoria:</span> <%= s.service&.subcategories || "-" %></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="right">
+                  <span class="status-pill <%= status_pill_class(s.status) %>"><%= status_label(s.status) %></span>
+
+                  <div class="actions">
+                    <% if (conv = Conversation.find_by(service_id: s.service_id, client_id: s.client_id, professional_id: s.professional_id)) %>
+                      <%= link_to "Conversar", conversation_path(conv), class: "btn-chat btn-sm" %>
+                    <% end %>
+
+                    <% if s.pending? || s.confirmed? %>
+                      <button type="button"
+                              class="btn-cancel-appointment btn-sm"
+                              data-bs-toggle="modal"
+                              data-bs-target="#cancelModal_<%= s.id %>">
+                        Cancelar
+                      </button>
+                    <% end %>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Modal de confirmação de cancelamento (com mensagem opcional) -->
+              <div class="modal fade" id="cancelModal_<%= s.id %>" tabindex="-1" aria-labelledby="cancelLabel_<%= s.id %>" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                  <div class="modal-content cancel-modal">
+                    <div class="modal-header">
+                      <h5 class="modal-title" id="cancelLabel_<%= s.id %>">Cancelar agendamento</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    </div>
+                    <%= form_with url: cancel_schedule_path(s), method: :patch, local: true do %>
+                      <div class="modal-body">
+                        <p class="mb-2">Tem certeza que deseja cancelar este agendamento?</p>
+                        <div class="small text-muted mb-3">
+                          <strong>Quando:</strong> <%= l(s.start_at, format: :short) %>
+                          <% if s.end_at %> – <%= l(s.end_at, format: :short) %><% end %>
+                        </div>
+
+                        <label class="form-label small">Mensagem para o outro participante (opcional)</label>
+                        <textarea name="note" class="form-control" rows="3" placeholder="Ex.: surgiu um imprevisto..."></textarea>
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn--ghost" data-bs-dismiss="modal">Fechar</button>
+                        <button class="btn-cancel-confirm" type="submit">Confirmar cancelamento</button>
+                      </div>
+                    <% end %>
+                  </div>
+                </div>
+              </div>
+              <!-- /Modal -->
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="empty">Nenhum atendimento no período selecionado.</div>
+      <% end %>
+    </div>
+  </div>
+
+  <%#= paginate @schedules %>
+</div>
