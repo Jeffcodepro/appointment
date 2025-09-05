@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_09_01_150044) do
+ActiveRecord::Schema[7.1].define(version: 2025_09_04_220717) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -77,7 +77,13 @@ ActiveRecord::Schema[7.1].define(version: 2025_09_01_150044) do
     t.datetime "updated_at", null: false
     t.datetime "start_at"
     t.datetime "end_at"
+    t.integer "status", default: 0, null: false
+    t.bigint "client_id", null: false
+    t.bigint "professional_id", null: false
+    t.index ["client_id"], name: "index_schedules_on_client_id"
+    t.index ["professional_id"], name: "index_schedules_on_professional_id"
     t.index ["service_id"], name: "index_schedules_on_service_id"
+    t.index ["status"], name: "index_schedules_on_status"
     t.index ["user_id"], name: "index_schedules_on_user_id"
   end
 
@@ -132,5 +138,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_09_01_150044) do
   add_foreign_key "messages", "users"
   add_foreign_key "schedules", "services"
   add_foreign_key "schedules", "users"
+  add_foreign_key "schedules", "users", column: "client_id"
+  add_foreign_key "schedules", "users", column: "professional_id"
   add_foreign_key "services", "users"
 end

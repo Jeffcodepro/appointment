@@ -224,3 +224,14 @@
     transition: none !important;
   }
 }
+
+/* Modal custom (confirmação de cancelamento) */
+.cancel-modal .modal-header { border-bottom: 1px solid var(--line, #e5e7eb); }
+.cancel-modal .modal-footer { border-top: 1px solid var(--line, #e5e7eb); }
+.cancel-modal .btn-cancel-confirm{
+  background-color: #c12d2d; border: 1px solid #c12d2d; color:#fff;
+  padding:.5rem 1rem; border-radius:.5rem;
+}
+.cancel-modal .btn-cancel-confirm:hover{
+  background-color:#a52525; border-color:#a52525; color:#fff;
+}
