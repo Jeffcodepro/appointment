@@ -10,51 +10,45 @@ class ServicesController < ApplicationController
     min_lng: -74.0, max_lng: -34.5
   }.freeze
 
-  # GET /services
   def index
-    @states = User.where.not(state: [nil, ""])
-                  .distinct
-                  .pluck(:state)
-                  .sort
+    # estados com serviço (ver item 3 abaixo)
+    @states = Service.joins(:user)
+                    .where.not(users: { state: [nil, ""] })
+                    .distinct
+                    .order('users.state')
+                    .pluck('users.state')
 
-    # Base scope com eager loading das imagens do user
-    @services = Service
-                  .includes(user: { images_attachments: :blob })
-                  .joins(:user)
+    scope = Service.with_user
 
-    # busca por service_id explícito (por ex. vindo de clique no mapa)
-    if params[:service_id].present?
-      @services = @services.where(id: params[:service_id])
-    elsif params[:query].present?
-      # busca textual (ajuste para seu pg_search / search interno)
-      searched_ids = Service.global_search(params[:query]).select(:id)
-      @services = @services.where(id: searched_ids)
+    if params[:query].present?
+      q = params[:query].to_s.squish
+
+      if looks_like_address?(q)
+        # só endereço, com AND entre termos
+        scope = scope.merge(Service.address_ilike(q))
+      else
+        # busca geral (texto e nome)
+        scope = scope.merge(Service.global_search(q))
+      end
     end
 
-    # filtros por categoria e por localização do usuário (provider)
-    @services = @services.where(categories: params[:category]) if params[:category].present?
-    @services = @services.where(users: { state: params[:state] }) if params[:state].present?
-    @services = @services.where(users: { city:  params[:city]  }) if params[:city].present?
+    scope = scope.where(id: params[:service_id]) if params[:service_id].present?
+    scope = scope.where(categories: params[:category]) if params[:category].present?
+    scope = scope.joins(:user).where(users: { state: params[:state] }) if params[:state].present?
+    scope = scope.joins(:user).where(users: { city:  params[:city]  }) if params[:city].present?
 
-    @services = @services.distinct
-
-    # ---- Markers SOMENTE para quem tem geocoding válido e dentro do bounding box
-    @markers = @services.filter { |service|
-      u = service.user
-      u.latitude.present? && u.longitude.present? &&
-        u.latitude.between?(BRAZIL_BOUNDING_BOX[:min_lat], BRAZIL_BOUNDING_BOX[:max_lat]) &&
-        u.longitude.between?(BRAZIL_BOUNDING_BOX[:min_lng], BRAZIL_BOUNDING_BOX[:max_lng])
-    }.map do |service|
+    @services = scope.order(created_at: :desc).limit(60)
+    @markers  = @services.map { |s|
+      next unless s.user.latitude && s.user.longitude
       {
-        lat: service.user.latitude,
-        lng: service.user.longitude,
-        name: service.user.name,
-        service_id: service.id,
-        price: format_price(service),
-        url: service_path(service)
+        lat: s.user.latitude, lng: s.user.longitude,
+        price: ActionController::Base.helpers.number_to_currency(s.price_hour, unit: "R$"),
+        name: s.name, url: service_path(s), service_id: s.id,
+        info_window_html: "<strong>#{ERB::Util.h(s.name)}</strong><br>#{ERB::Util.h(s.user.address)}"
       }
-    end
+    }.compact
   end
+
 
   def cities
     scope = User.where(role: :professional)
@@ -293,6 +287,12 @@ class ServicesController < ApplicationController
     Date.parse(value)
   rescue ArgumentError
     Date.current
+  end
+
+  def looks_like_address?(q)
+    # tem números (ex.: "123") OU começa com prefixos comuns
+    return true if q =~ /\d/
+    q =~ /\b(rua|r\.|avenida|av\.?|alameda|praça|praca|estrada|rod\.?|rodovia)\b/i
   end
 
 end
