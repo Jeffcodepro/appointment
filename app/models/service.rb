@@ -35,6 +35,14 @@ class Service < ApplicationRecord
     ]
   }.freeze
 
+  CATEGORY_IMAGE = {
+  "Salão de beleza"          => "servico_saude.png",
+  "Fotografia"               => "servico_eventos.png",
+  "Consultório odontológico" => "servico_saude.png",
+  "Serviços domésticos"      => "servico_servicos_domesticos.png",
+  "Pequenos reparos em casa" => "servico_reparo_manutencao.png"
+  }.freeze
+
   include PgSearch::Model
   pg_search_scope :global_search,
     against: [:name, :description],
@@ -59,5 +67,9 @@ class Service < ApplicationRecord
   }
 
   scope :with_user, -> { joins(:user) }
+
+  def self.fallback_image_for(category)
+    CATEGORY_IMAGE[category] || "servico_reparo_manutencao.png"
+  end
 
 end

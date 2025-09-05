@@ -4,13 +4,6 @@
 
 <div class="container py-4 service-show">
   <% imgs = @provider.images.to_a %>
-  <% category_fallback = {
-    "Salão de beleza"           => "servico_saude.png",
-    "Fotografia"                => "servico_eventos.png",
-    "Consultório odontológico"  => "servico_saude.png",
-    "Serviços domésticos"       => "servico_servicos_domesticos.png",
-    "Pequenos reparos em casa"  => "servico_reparo_manutencao.png"
-  } %>
 
   <!-- ===== BLOCO SUPERIOR: ESQ (conteúdo) + DIR (mapa) ===== -->
   <div class="row g-4">
@@ -68,8 +61,11 @@
               </button>
             </div>
           <% else %>
-            <%= image_tag(imgs.first.presence || category_fallback[@service.categories] || "servico_reparo_manutencao.png",
-                          class: "rounded-4 w-100", style: "height: 360px; object-fit: cover;") %>
+            <%= image_tag(
+                  imgs.first.presence || Service.fallback_image_for(@service.categories),
+                  class: "rounded-4 w-100",
+                  style: "height: 360px; object-fit: cover;"
+                ) %>
           <% end %>
         </div>
       </div>
@@ -152,7 +148,8 @@
           <div class="map-service-show"
                data-controller="map"
                data-map-api-key-value="<%= ENV['MAPBOX_API_KEY'] %>"
-               data-map-markers-value="<%= ERB::Util.json_escape(@markers.to_json) %>">
+               data-map-markers-value="<%= ERB::Util.json_escape(@markers.to_json) %>"
+               data-map-clickable-pins-value="false">
           </div>
         </div>
         <small class="text-muted d-block mt-2">
@@ -169,44 +166,33 @@
 
       <div class="vstack gap-3">
         <% @services_from_provider.each do |s| %>
-          <% service_img =
-              if @provider.images.attached?
-                @provider.images.first
-              else
-                category_fallback[s.categories] || "servico_reparo_manutencao.png"
-              end %>
-
+          <% service_img = @provider.images.attached? ? @provider.images.first : Service.fallback_image_for(s.categories) %>
           <% dur = s.average_hours.to_i %>
 
           <%= link_to service_path(s), class: "text-decoration-none text-dark" do %>
             <div class="card border-0 service-tile">
               <div class="card-body">
-
-                <!-- PRIMEIRA LINHA (grid 3 colunas: esquerda | centro (imagem) | direita) -->
+                <!-- PRIMEIRA LINHA -->
                 <div class="d-grid align-items-center" style="grid-template-columns: 1fr 72px auto; gap: .75rem;">
-
-                  <!-- Esquerda: categoria/subcategoria -->
                   <div class="fw-semibold">
                     <%= s.categories.presence %>
                     •
                     <%= s.subcategories.presence || s.categories %>
                   </div>
 
-                  <!-- Centro: imagem SEMPRE centralizada e com tamanho fixo -->
                   <div class="d-flex justify-content-center align-items-center">
                     <div class="rounded-circle overflow-hidden" style="width:64px; height:64px; border:1px solid #eee;">
                       <%= image_tag service_img, class: "w-100 h-100", style: "object-fit: cover;" %>
                     </div>
                   </div>
 
-                  <!-- Direita: preço + botão na MESMA linha, alinhados à direita -->
                   <div class="d-flex justify-content-end align-items-center gap-2 text-nowrap">
                     <div class="fw-bold mb-0"><%= humanized_money_with_symbol(s.price_hour) %></div>
                     <span class="btn btn-select-service">Selecionar</span>
                   </div>
                 </div>
 
-                <!-- SEGUNDA LINHA: descrição + duração alinhados à esquerda -->
+                <!-- SEGUNDA LINHA -->
                 <div class="mt-2">
                   <div class="small text-muted">
                     <%= s.description.present? ? truncate(s.description, length: 140) : "Descrição breve não informada." %>
@@ -217,7 +203,6 @@
                     </div>
                   <% end %>
                 </div>
-
               </div>
             </div>
           <% end %>
@@ -225,4 +210,5 @@
       </div>
     </div>
   <% end %>
+
 </div>

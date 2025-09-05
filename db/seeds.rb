@@ -78,15 +78,6 @@ SUBCATEGORIES = {
   ]
 }.freeze
 
-# Fallbacks de imagem por categoria (use as imagens que você já tem em app/assets/images)
-CATEGORY_IMAGE = {
-  "Salão de beleza"            => "servico_saude.png",
-  "Fotografia"                 => "servico_eventos.png",
-  "Consultório odontológico"   => "servico_saude.png",
-  "Serviços domésticos"        => "servico_servicos_domesticos.png",
-  "Pequenos reparos em casa"   => "servico_reparo_manutencao.png"
-}.freeze
-
 
 # --- helpers de texto --- #
 def pro_bio_for(category, city:)
@@ -243,7 +234,7 @@ Service::CATEGORIES.each do |cat|
   guaranteed_services << srv
 
   # imagem fallback por categoria
-  if (img = CATEGORY_IMAGE[cat])
+  if (img = Service.fallback_image_for(cat))
     path = Rails.root.join("app/assets/images", img)
     if File.exist?(path)
       pro.images.attach(io: File.open(path), filename: img, content_type: "image/png")
@@ -290,7 +281,7 @@ professionals.each do |pro|
   end
 
   # Anexa 1 imagem por profissional (fallback por categoria)
-  img = CATEGORY_IMAGE[category]
+  img = Service.fallback_image_for(category)
   img_path = Rails.root.join("app/assets/images", img)
   if File.exist?(img_path)
     pro.images.attach(
