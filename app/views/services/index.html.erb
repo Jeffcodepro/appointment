@@ -24,7 +24,7 @@
           <div class="input-group mb-2">
             <%= form.text_field :query,
               class: "form-control form-control-sm",
-              placeholder: "Busque por serviço, descrição ou nome do profissional...",
+              placeholder: "Busque por serviço, descrição, nome do profissional ou endereço (rua/bairro/cidade)…",
               value: params[:query] %>
             <button class="btn-search" type="submit">
               <i class="fas fa-search"></i>
@@ -79,17 +79,14 @@
     <div class="col-lg-6">
       <h1 class="mb-3 mt-3">Todos os serviços</h1>
 
-      <%# Fallbacks por categoria (usado quando o user não tem imagens anexadas) %>
-      <% category_fallback = {
-        "Serviços Domésticos"           => "servico_servicos_domesticos.png",
-        "Reparos e Manutenção"          => "servico_reparo_manutencao.png",
-        "Saúde e Bem-Estar"             => "servico_saude.png",
-        "Aulas e Cursos"                => "servico_consultoria.png",
-        "Consultoria"                   => "servico_consultoria.png",
-        "Eventos"                       => "servico_eventos.png",
-        "Serviços de Saúde e Estética"  => "servico_saude.png",
-        "Serviços Automotivos"          => "servico_reparo_manutencao.png"
-      } %>
+        <%# Fallbacks por categoria (para quando o usuário não tem imagens anexadas) %>
+        <% category_fallback = {
+          "Salão de beleza"            => "servico_saude.png",
+          "Fotografia"                 => "servico_eventos.png",
+          "Consultório odontológico"   => "servico_saude.png",
+          "Serviços domésticos"        => "servico_servicos_domesticos.png",
+          "Pequenos reparos em casa"   => "servico_reparo_manutencao.png"
+        } %>
 
       <div id="results"><!-- âncora de destino para pós-busca -->
         <% if @services.empty? %>
@@ -149,7 +146,7 @@
                         <%= "#{service.user.address}, #{service.user.city}, #{service.user.state}" %>
                       </p>
                       <p class="card-text mt-2 mb-0">
-                        <span class="fw-bold"><%= number_to_currency(service.price_hour, unit: "R$") %></span> por hora
+                        <span class="fw-bold"><%= humanized_money_with_symbol(service.price_hour) %></span> por hora
                       </p>
                     </div>
                   </div><!-- /card -->
@@ -163,11 +160,15 @@
 
     <%# -------- Coluna DIREITA: Mapa (sticky) -------- %>
     <div class="col-lg-6 d-none d-lg-block">
-      <div class="map-sticky"
+      <div id="services-map"
+          class="map-sticky"
           data-controller="map"
+          data-turbo-permanent
           data-map-api-key-value="<%= ENV['MAPBOX_API_KEY'] %>"
-          data-map-markers-value="<%= ERB::Util.json_escape(@markers.to_json) %>">
+          data-map-markers-value="<%= ERB::Util.json_escape(@markers.to_json) %>"
+          data-map-spider-value='{"4":50,"6":70, "8":90,"12":110,"default":140}'>
       </div>
     </div>
+
   </div>
 </div>

@@ -28,10 +28,6 @@
   cursor: pointer;
 }
 
-.cluster-marker.cluster-open {
-  background: #111;
-  color: #fff;
-}
 
 /* “perninhas” do spiderfy */
 .spider-leg {
@@ -40,3 +36,28 @@
   pointer-events: none;
   border-radius: 2px;
 }
+
+.map-sticky, .map-service-show {
+  opacity: 0;
+  transition: opacity .24s ease;
+}
+.map-sticky.is-ready, .map-service-show.is-ready {
+  opacity: 1;
+}
+
+#services-map { height: 550px; }
+
+.map-service-show[data-controller="map"] {
+  height: 438px; // ajuste aqui se quiser
+}
+
+#services-map { height: 800px; } // index
+
+/* show: dá uma altura confortável se quiser */
+.map-service-show { min-height: 360px; }
+
+.price-marker, .cluster-marker {
+  pointer-events: auto;
+  z-index: 3; }
+
+.mapboxgl-canvas { z-index: 1; }
