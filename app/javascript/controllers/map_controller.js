@@ -3,20 +3,25 @@ import { Controller } from "@hotwired/stimulus"
 import mapboxgl from "mapbox-gl"
 
 export default class extends Controller {
-  // spider: objeto JSON com breakpoints → ex.: {"4":70,"8":90,"12":110,"default":140}
-  static values = { apiKey: String, markers: Array, spider: Object }
+  static values = {
+    apiKey: String,
+    markers: Array,
+    spiderRadii: Object,       // { "4": 60, "8": 80, "12": 100, "*": 120 }
+    clickablePins: Boolean     // true no index, false no show
+  }
 
   connect() {
     mapboxgl.accessToken = this.apiKeyValue
 
-    // container vazio para evitar warning e overlay
     try { this.element.replaceChildren() } catch { this.element.innerHTML = "" }
 
-    // respeita CSS; fallback se sem altura computada
     const h = parseFloat(getComputedStyle(this.element).height)
     if (!(h > 0)) this.element.style.height = "420px"
     this.element.style.width = this.element.style.width || "100%"
     this.element.classList.remove("is-ready")
+
+    // 👇 base para comportamento do index/show (fallback: id === "services-map")
+    this._isIndex = this.hasClickablePinsValue ? this.clickablePinsValue : (this.element.id === "services-map")
 
     const initial = this._loadViewState() || this._initialFromMarkers() || { center: [-46.6333, -23.55], zoom: 9 }
 
@@ -45,7 +50,6 @@ export default class extends Controller {
       this._viewInitialized = true
     })
 
-    // eventos
     this._onMoveEnd = () => this._saveViewState()
     this._onZoomEnd = () => this._saveViewState()
     this._onMove    = () => this._repositionSpiderfied()
@@ -58,7 +62,7 @@ export default class extends Controller {
     this.map.on("zoom",    this._onZoom)
     this.map.on("click",   this._onClick)
 
-    // sync de markers para o elemento permanente (index)
+    // turbo permanent sync
     this._syncPermanent = (ev) => {
       const incoming = ev.detail.newBody?.querySelector("#services-map")
       if (!incoming) return
@@ -69,7 +73,7 @@ export default class extends Controller {
         this.element.setAttribute("data-map-api-key-value", newApiKey)
       }
       if (newMarkers && newMarkers !== this.element.getAttribute("data-map-markers-value")) {
-        this.element.setAttribute("data-map-markers-value", newMarkers) // → dispara markersValueChanged()
+        this.element.setAttribute("data-map-markers-value", newMarkers)
       }
     }
     document.addEventListener("turbo:before-render", this._syncPermanent)
@@ -163,7 +167,7 @@ export default class extends Controller {
   }
 
   _addGroupedMarkers() {
-    const isIndex = (this.element.id === "services-map")
+    const isIndex = this._isIndex
 
     this.groups.forEach((items, key) => {
       const [lat, lng] = key.split(",").map(Number)
@@ -172,6 +176,7 @@ export default class extends Controller {
         const m  = items[0]
         const el = this._buildPriceMarker(m.price, m.name, m.url, m.service_id, { clickable: isIndex })
         const mk = new mapboxgl.Marker({ element: el }).setLngLat([lng, lat])
+        // sem popup em ambos (para não “roubar” clique)
         mk.addTo(this.map)
         this.allMarkers.push(mk)
       } else {
@@ -195,23 +200,31 @@ export default class extends Controller {
       if (!res.ok) throw new Error("bad response")
       const html = await res.text()
       const doc = new DOMParser().parseFromString(html, "text/html")
+
+      // 1) substitui os cards (#results)
       const newResults = doc.querySelector("#results")
       const currentResults = document.querySelector("#results")
-      if (newResults && currentResults) {
-        currentResults.replaceWith(newResults)
-        // atualiza a URL (back/forward funcionam) e rola suave para o bloco
-        window.history.pushState({}, "", url)
-        newResults.scrollIntoView({ behavior: "smooth", block: "start" })
-        return
+      if (newResults && currentResults) currentResults.replaceWith(newResults)
+
+      // 2) sincroniza markers do mapa (mantém o mesmo container/permanente)
+      const incomingMap = doc.querySelector("#services-map")
+      const existingMap = document.querySelector("#services-map")
+      if (incomingMap && existingMap) {
+        const newMarkers = incomingMap.getAttribute("data-map-markers-value")
+        if (newMarkers) existingMap.setAttribute("data-map-markers-value", newMarkers)
       }
-      // fallback: navegação turbo
-      if (window.Turbo?.visit) window.Turbo.visit(url, { action: "advance" })
-      else window.location.assign(url)
+
+      // 3) atualiza URL e rola suave pro bloco
+      window.history.pushState({}, "", url)
+      const target = document.querySelector("#results")
+      if (target) target.scrollIntoView({ behavior: "smooth", block: "start" })
     } catch (_) {
+      // fallback: navegação turbo caso algo dê ruim
       if (window.Turbo?.visit) window.Turbo.visit(url, { action: "advance" })
       else window.location.assign(url)
     }
   }
+
 
   _buildPriceMarker(priceText, title, url, serviceId, opts = {}) {
     const clickable = !!opts.clickable
@@ -229,19 +242,13 @@ export default class extends Controller {
         const path = window.location.pathname.split("?")[0].split("#")[0]
         const base = /^\/services\/\d+/.test(path) ? "/services" : path
         const filterUrl = `${base}?service_id=${encodeURIComponent(serviceId)}#results`
-
-        // se estamos no INDEX, aplica filtro suave; no SHOW nem chega aqui (não-clickable)
-        if (this.element.id === "services-map") {
-          this._smoothFilterTo(serviceId, filterUrl)
-        } else {
-          // fallback teórico
-          if (window.Turbo?.visit) window.Turbo.visit(filterUrl, { action: "advance" })
-          else window.location.assign(filterUrl)
-        }
+        // 👇 suavão: sem reload, troca #results e atualiza markers do mapa
+        this._smoothFilterTo(serviceId, filterUrl)
       }
 
       el.addEventListener("click", (e) => {
         e.stopPropagation()
+        // Ctrl / ⌘ abre a página do serviço em nova aba (comportamento útil)
         if ((e.metaKey || e.ctrlKey) && url) { window.open(url, "_blank"); return }
         navigateToFiltered()
       })
@@ -249,13 +256,13 @@ export default class extends Controller {
         if (e.key === "Enter" || e.key === " ") { e.preventDefault(); navigateToFiltered() }
       })
     } else {
-      // SHOW: sem clique
       el.style.cursor = "default"
       el.setAttribute("aria-disabled", "true")
     }
 
     return el
   }
+
 
   _buildClusterMarker(count) {
     const el = document.createElement("div")
@@ -270,7 +277,7 @@ export default class extends Controller {
     if (this.spiderfied.has(key)) return
     const [lat, lng] = key.split(",").map(Number)
     const center = new mapboxgl.LngLat(lng, lat)
-    const isIndex = (this.element.id === "services-map")
+    const isIndex = this._isIndex
 
     const children = []
     const lines = []
@@ -307,26 +314,32 @@ export default class extends Controller {
   }
 
   // raio configurável via data-map-spider-value
-  _spiderRadius(n){
-    const cfg = this.spiderValue || null
-    if (!cfg) { // defaults antigos
-      if (n<=4) return 60
-      if (n<=8) return 80
-      if (n<=12) return 100
-      return 120
-    }
-    // usa o menor breakpoint >= n; senão cai no default
-    const entries = Object.entries(cfg)
-      .filter(([k]) => k !== "default")
-      .map(([k,v]) => [Number(k), Number(v)])
-      .filter(([k,v]) => Number.isFinite(k) && Number.isFinite(v))
-      .sort((a,b) => a[0]-b[0])
+  _spiderRadius(n) {
+    if (this.hasSpiderRadiiValue) {
+      const map = this.spiderRadiiValue || {}
+      const thresholds = Object.keys(map)
+        .filter(k => k !== "*")
+        .map(k => parseInt(k, 10))
+        .filter(Number.isFinite)
+        .sort((a, b) => a - b)
 
-    for (const [thr, val] of entries) {
-      if (n <= thr) return val
+      for (const t of thresholds) {
+        if (n <= t) return Number(map[t]) || 0
+      }
+      if (map["*"] != null) return Number(map["*"]) || 0
+      if (thresholds.length) return Number(map[String(thresholds[thresholds.length - 1])]) || 0
+      return this._defaultSpiderRadius(n)
     }
-    return Number(cfg.default) || 120
+    return this._defaultSpiderRadius(n)
   }
+
+  _defaultSpiderRadius(n) {
+    if (n <= 4)  return 60
+    if (n <= 8)  return 80
+    if (n <= 12) return 100
+    return 120
+  }
+
 
   _angleForIndex(i,total){ const off=15; return (i*(360/total))-90+off }
   _offsetLngLatByPixels(center,r,deg){

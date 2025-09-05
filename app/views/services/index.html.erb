@@ -16,6 +16,7 @@
                       class: "mb-0",
                       data: {
                         controller: "location",
+                        turbo: false,
                         turbo_action: "advance",
                         location_selected_city_value: params[:city].to_s,
                         location_reset_url_value: services_path(anchor: 'results')
@@ -79,14 +80,7 @@
     <div class="col-lg-6">
       <h1 class="mb-3 mt-3">Todos os serviços</h1>
 
-        <%# Fallbacks por categoria (para quando o usuário não tem imagens anexadas) %>
-        <% category_fallback = {
-          "Salão de beleza"            => "servico_saude.png",
-          "Fotografia"                 => "servico_eventos.png",
-          "Consultório odontológico"   => "servico_saude.png",
-          "Serviços domésticos"        => "servico_servicos_domesticos.png",
-          "Pequenos reparos em casa"   => "servico_reparo_manutencao.png"
-        } %>
+
 
       <div id="results"><!-- âncora de destino para pós-busca -->
         <% if @services.empty? %>
@@ -131,10 +125,10 @@
                       <% end %>
                     <% else %>
                       <%= image_tag(
-                                    category_fallback[service.categories] || "servico_reparo_manutencao.png",
-                                    class: "rounded-4",
-                                    style: "height: 200px; width: 100%; object-fit: cover;"
-                                  ) %>
+                            Service.fallback_image_for(service.categories),
+                            class: "rounded-4",
+                            style: "height: 200px; width: 100%; object-fit: cover;"
+                          ) %>
                     <% end %>
 
                     <%# ======= BODY DO CARD ======= %>
@@ -146,7 +140,7 @@
                         <%= "#{service.user.address}, #{service.user.city}, #{service.user.state}" %>
                       </p>
                       <p class="card-text mt-2 mb-0">
-                        <span class="fw-bold"><%= humanized_money_with_symbol(service.price_hour) %></span> por hora
+                        <span class="fw-bold"><%= number_to_currency(service.price_hour, unit: "R$") %></span> por hora
                       </p>
                     </div>
                   </div><!-- /card -->
@@ -164,11 +158,12 @@
           class="map-sticky"
           data-controller="map"
           data-turbo-permanent
+          data-turbo="false" 
           data-map-api-key-value="<%= ENV['MAPBOX_API_KEY'] %>"
           data-map-markers-value="<%= ERB::Util.json_escape(@markers.to_json) %>"
-          data-map-spider-value='{"4":50,"6":70, "8":90,"12":110,"default":140}'>
+          data-map-clickable-pins-value="true"
+          data-map-spider-radii-value='<%= { 4 => 56, 8 => 84, 12 => 112, "*" => 148 }.to_json %>'>
       </div>
     </div>
-
   </div>
 </div>

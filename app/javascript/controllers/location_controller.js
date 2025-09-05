@@ -6,12 +6,18 @@ export default class extends Controller {
   static values = { selectedCity: String, resetUrl: String }
 
   connect() {
+    this.element.setAttribute("data-turbo", "false")
+
     if (this.hasStateTarget)    this.stateTarget.addEventListener("change", this.onStateChange)
     if (this.hasCityTarget)     this.cityTarget.addEventListener("change", this.onCityChange)
     if (this.hasCategoryTarget) this.categoryTarget.addEventListener("change", this.onCategoryChange)
 
     // Intercepta o submit da lupa/Enter
-    this.element.addEventListener("submit", this.onFormSubmit)
+    this.element.addEventListener("submit", this.onFormSubmit, { capture: true })
+
+    // back/forward mantém a UX suave
+    this._onPopState = () => this.swapResultsAndMarkersFrom(window.location.href)
+    window.addEventListener("popstate", this._onPopState)
 
     // Carrega a lista de cidades (usa selectedCityValue vindo dos params via data-*)
     this.updateCities()
@@ -22,12 +28,15 @@ export default class extends Controller {
     if (this.hasCityTarget)     this.cityTarget.removeEventListener("change", this.onCityChange)
     if (this.hasCategoryTarget) this.categoryTarget.removeEventListener("change", this.onCategoryChange)
 
-    this.element.removeEventListener("submit", this.onFormSubmit) // <- remover, não adicionar
+    this.element.removeEventListener("submit", this.onFormSubmit, { capture: true })
+    window.removeEventListener("popstate", this._onPopState)
   }
 
   // ===== Handlers =====
   onFormSubmit = (e) => {
     e.preventDefault()
+    e.stopPropagation()
+    e.stopImmediatePropagation()
     try { sessionStorage.setItem("scrollToResults", "1") } catch (_) {}
     this.visitWithParams()
   }
@@ -91,46 +100,63 @@ export default class extends Controller {
     }
   }
 
-  // ===== Navegação com Turbo =====
-  visitWithParams() {
+  // ===== Navegação SUAVE =====
+  async visitWithParams() {
     const form = this.element
-    if (!form) return
-
     const fd = new FormData(form)
     const params = new URLSearchParams()
     for (const [k, v] of fd.entries()) {
       if (v !== null && String(v).trim() !== "") params.append(k, String(v))
     }
-
     const base = form.action.split("#")[0]
-    const url  = params.toString()
-      ? `${base}?${params.toString()}#results`
-      : `${base}#results`
-
-    if (window.Turbo && typeof window.Turbo.visit === "function") {
-      window.Turbo.visit(url, { action: "advance" })
-    } else {
-      window.location.assign(url)
-    }
+    const url  = params.toString() ? `${base}?${params.toString()}#results` : `${base}#results`
+    await this.swapResultsAndMarkersFrom(url)
   }
 
-  // ===== Reset =====
-  resetFilters = () => {
+  async resetFilters() {
     const q = this.element.querySelector('input[name="query"]')
     if (q) q.value = ''
     if (this.hasCategoryTarget) this.categoryTarget.value = ''
     if (this.hasStateTarget)    this.stateTarget.value = ''
     if (this.hasCityTarget)     this.cityTarget.innerHTML = '<option value="">Todas as Cidades</option>'
     this.selectedCityValue = ""
-
-    // ✅ marca que devemos rolar até #results após a navegação
     try { sessionStorage.setItem("scrollToResults", "1") } catch (_) {}
 
     const baseUrl = this.hasResetUrlValue ? this.resetUrlValue : this.element.action.split('?')[0].split('#')[0]
     const url = `${baseUrl}#results`
+    await this.swapResultsAndMarkersFrom(url)
+  }
 
-    if (window.Turbo?.visit) window.Turbo.visit(url, { action: "replace" })
-    else window.location.assign(url)
+  // Faz fetch da página e troca #results e markers do mapa
+  async swapResultsAndMarkersFrom(url) {
+    try {
+      const res = await fetch(url, { headers: { Accept: "text/html" } })
+      if (!res.ok) throw new Error("bad response")
+      const html = await res.text()
+      const doc  = new DOMParser().parseFromString(html, "text/html")
+
+      // 1) swap de #results
+      const newResults = doc.querySelector("#results")
+      const curResults = document.querySelector("#results")
+      if (newResults && curResults) curResults.replaceWith(newResults)
+
+      // 2) sincroniza markers no mapa permanente
+      const incomingMap = doc.querySelector("#services-map")
+      const existingMap = document.querySelector("#services-map")
+      if (incomingMap && existingMap) {
+        const newMarkers = incomingMap.getAttribute("data-map-markers-value")
+        if (newMarkers) existingMap.setAttribute("data-map-markers-value", newMarkers)
+      }
+
+      // 3) atualiza URL + scroll suave
+      window.history.pushState({}, "", url)
+      document.querySelector("#results")?.scrollIntoView({ behavior: "smooth", block: "start" })
+    } catch (e) {
+      console.error(e)
+      // fallback seguro
+      if (window.Turbo?.visit) window.Turbo.visit(url, { action: "advance" })
+      else window.location.assign(url)
+    }
   }
 
   // ===== util =====
