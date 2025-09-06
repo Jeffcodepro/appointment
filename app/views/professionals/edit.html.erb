@@ -1,111 +1,113 @@
-<h2>Complete seu perfil profissional</h2>
+<section class="container pt-3">
+  <h2>Complete seu perfil profissional</h2>
 
-<%# ===== PREVIEW (idêntico ao show) ===== %>
-<div class="card text-bg-dark banner-card mb-4" id="profile-preview">
-  <%# Fundo: banner atual (Cloudinary) ou placeholder %>
-  <% if @profile.banner.attached? %>
-    <%= cl_image_tag @profile.banner.key,
-          width: 1600, height: 300, crop: :fill, gravity: :auto,
-          fetch_format: :auto, quality: :auto,
-          class: "card-img banner-card__img",
-          id: "preview-banner-img",
-          alt: "Banner de #{@profile.name}" %>
-  <% else %>
-    <div class="card-img banner-card__placeholder" id="preview-banner-placeholder"></div>
-    <img id="preview-banner-img" class="card-img banner-card__img d-none" alt="">
+  <%# ===== PREVIEW (idêntico ao show) ===== %>
+  <div class="card text-bg-dark banner-card mb-4" id="profile-preview">
+    <%# Fundo: banner atual (Cloudinary) ou placeholder %>
+    <% if @profile.banner.attached? %>
+      <%= cl_image_tag @profile.banner.key,
+            width: 1600, height: 300, crop: :fill, gravity: :auto,
+            fetch_format: :auto, quality: :auto,
+            class: "card-img banner-card__img",
+            id: "preview-banner-img",
+            alt: "Banner de #{@profile.name}" %>
+    <% else %>
+      <div class="card-img banner-card__placeholder" id="preview-banner-placeholder"></div>
+      <img id="preview-banner-img" class="card-img banner-card__img d-none" alt="">
+    <% end %>
+
+    <%# Overlay: avatar canto superior esquerdo %>
+    <div class="card-img-overlay p-3 p-md-4">
+      <div class="banner-card__avatar-wrap">
+        <% if @profile.avatar.attached? %>
+          <%= cl_image_tag @profile.avatar.key,
+                width: 120, height: 120, crop: :fill, gravity: :face,
+                fetch_format: :auto, quality: :auto,
+                class: "rounded-circle shadow banner-card__avatar",
+                id: "preview-avatar-img",
+                alt: @profile.name %>
+        <% else %>
+          <img id="preview-avatar-img"
+              class="rounded-circle shadow banner-card__avatar d-none" alt="">
+          <% initials = (@profile.name.presence || @profile.email).split.map { |s| s[0] }.join.first(2).upcase %>
+          <div id="preview-avatar-fallback"
+              class="rounded-circle d-flex align-items-center justify-content-center banner-card__avatar-fallback shadow">
+            <%= initials %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <%# ===== FORM ===== %>
+  <%= simple_form_for @profile,
+        url: profile_path(user_id: @profile.id),
+        html: { method: :patch, multipart: true, data: { turbo: false } } do |f| %>
+
+    <%= f.error_notification %>
+
+    <div class="mb-3">
+      <label>Banner (1920x400 recomendado)</label>
+      <%= f.input :banner, as: :file, label: false,
+                input_html: { id: "user_banner_input", accept: "image/*" } %>
+    </div>
+
+    <div class="row">
+      <div class="col-md-4">
+        <%= f.input :avatar, as: :file, label: "Sua foto",
+                  input_html: { id: "user_avatar_input", accept: "image/*" } %>
+      </div>
+
+      <div class="col-md-8">
+        <%= f.input :name,        label: "Nome" %>
+        <%= f.input :description, label: "Descrição", as: :text, input_html: { rows: 4 } %>
+
+        <div class="row">
+          <div class="col-md-4">
+            <%= f.input :cep,
+                        label: "CEP",
+                        input_html: { placeholder: "00000-000", autocomplete: "postal-code" } %>
+          </div>
+          <div class="col-md-8">
+            <%= f.input :address,
+                        label: "Endereço (rua/avenida)",
+                        hint: "Não inclua número, cidade ou UF aqui.",
+                        input_html: { placeholder: "Ex.: Praça da Sé", autocomplete: "address-line1" } %>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-4">
+            <%= f.input :address_number,
+                        label: "Número",
+                        input_html: { placeholder: "Ex.: 252", autocomplete: "address-line2" } %>
+          </div>
+          <div class="col-md-5">
+            <%= f.input :city,
+                        label: "Cidade",
+                        input_html: { placeholder: "Ex.: São Paulo", autocomplete: "address-level2" } %>
+          </div>
+          <div class="col-md-3">
+            <%= f.input :state,
+                        label: "UF",
+                        as: :select,
+                        collection: User::BRAZIL_UF,
+                        prompt: "Selecione",
+                        input_html: { autocomplete: "address-level1" } %>
+          </div>
+        </div>
+
+        <%= f.input :phone_number,
+                    label: "Telefone",
+                    input_html: { placeholder: "(11) 99999-9999", autocomplete: "tel" } %>
+      </div>
+    </div>
+
+    <div class="mt-3">
+      <%= f.button :submit, "Salvar e ir para o dashboard", class: "btn-select-service" %>
+    </div>
   <% end %>
-
-  <%# Overlay: avatar canto superior esquerdo %>
-  <div class="card-img-overlay p-3 p-md-4">
-    <div class="banner-card__avatar-wrap">
-      <% if @profile.avatar.attached? %>
-        <%= cl_image_tag @profile.avatar.key,
-              width: 120, height: 120, crop: :fill, gravity: :face,
-              fetch_format: :auto, quality: :auto,
-              class: "rounded-circle shadow banner-card__avatar",
-              id: "preview-avatar-img",
-              alt: @profile.name %>
-      <% else %>
-        <img id="preview-avatar-img"
-             class="rounded-circle shadow banner-card__avatar d-none" alt="">
-        <% initials = (@profile.name.presence || @profile.email).split.map { |s| s[0] }.join.first(2).upcase %>
-        <div id="preview-avatar-fallback"
-             class="rounded-circle d-flex align-items-center justify-content-center banner-card__avatar-fallback shadow">
-          <%= initials %>
-        </div>
-      <% end %>
-    </div>
-  </div>
-</div>
-
-<%# ===== FORM ===== %>
-<%= simple_form_for @profile,
-      url: profile_path(user_id: @profile.id),
-      html: { method: :patch, multipart: true, data: { turbo: false } } do |f| %>
-
-  <%= f.error_notification %>
-
-  <div class="mb-3">
-    <label>Banner (1920x400 recomendado)</label>
-    <%= f.input :banner, as: :file, label: false,
-              input_html: { id: "user_banner_input", accept: "image/*" } %>
-  </div>
-
-  <div class="row">
-    <div class="col-md-4">
-      <%= f.input :avatar, as: :file, label: "Sua foto",
-                input_html: { id: "user_avatar_input", accept: "image/*" } %>
-    </div>
-
-    <div class="col-md-8">
-      <%= f.input :name,        label: "Nome" %>
-      <%= f.input :description, label: "Descrição", as: :text, input_html: { rows: 4 } %>
-
-      <div class="row">
-        <div class="col-md-4">
-          <%= f.input :cep,
-                      label: "CEP",
-                      input_html: { placeholder: "00000-000", autocomplete: "postal-code" } %>
-        </div>
-        <div class="col-md-8">
-          <%= f.input :address,
-                      label: "Endereço (rua/avenida)",
-                      hint: "Não inclua número, cidade ou UF aqui.",
-                      input_html: { placeholder: "Ex.: Praça da Sé", autocomplete: "address-line1" } %>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="col-md-4">
-          <%= f.input :address_number,
-                      label: "Número",
-                      input_html: { placeholder: "Ex.: 252", autocomplete: "address-line2" } %>
-        </div>
-        <div class="col-md-5">
-          <%= f.input :city,
-                      label: "Cidade",
-                      input_html: { placeholder: "Ex.: São Paulo", autocomplete: "address-level2" } %>
-        </div>
-        <div class="col-md-3">
-          <%= f.input :state,
-                      label: "UF",
-                      as: :select,
-                      collection: User::BRAZIL_UF,
-                      prompt: "Selecione",
-                      input_html: { autocomplete: "address-level1" } %>
-        </div>
-      </div>
-
-      <%= f.input :phone_number,
-                  label: "Telefone",
-                  input_html: { placeholder: "(11) 99999-9999", autocomplete: "tel" } %>
-    </div>
-  </div>
-
-  <div class="mt-3">
-    <%= f.button :submit, "Salvar e ir para o dashboard" %>
-  </div>
-<% end %>
+</section>
 
 <%# ===== JS: live preview do banner e avatar ===== %>
 <script>
