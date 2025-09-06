@@ -1,18 +1,28 @@
-<h2>Forgot your password?</h2>
+<div class="auth-page clean">
+  <div class="auth-card clean">
+    <h1 class="auth-title clean">Recuperar senha</h1>
 
-<%= simple_form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :post }) do |f| %>
-  <%= f.error_notification %>
+    <%= simple_form_for(
+          resource,
+          as: resource_name,
+          url: password_path(resource_name),
+          html: { data: { turbo: false }, class: "auth-form clean" }
+        ) do |f| %>
 
-  <div class="form-inputs">
-    <%= f.input :email,
-                required: true,
-                autofocus: true,
-                input_html: { autocomplete: "email" } %>
+      <%= f.error_notification %>
+
+      <div class="form-inputs">
+        <%= f.input :email,
+              label: "E-mail",
+              required: true,
+              autofocus: true,
+              input_html: { class: "auth-input clean", autocomplete: "email" } %>
+      </div>
+
+      <div class="form-actions stack">
+        <%= f.button :submit, "Enviar instruções", class: "btn-auth clean" %>
+        <%= link_to "Voltar ao entrar", new_session_path(resource_name), class: "btn-auth-outline clean" %>
+      </div>
+    <% end %>
   </div>
-
-  <div class="form-actions">
-    <%= f.button :submit, "Send me reset password instructions" %>
-  </div>
-<% end %>
-
-<%= render "devise/shared/links" %>
+</div>
