@@ -3,6 +3,7 @@ class ServicesController < ApplicationController
   before_action :ensure_professional!, only: [:new, :create]
   before_action :ensure_provider_geocoded!, only: [:new, :create]
 
+
   include ActionView::Helpers::NumberHelper
 
   BRAZIL_BOUNDING_BOX = {
@@ -235,6 +236,11 @@ class ServicesController < ApplicationController
       render :new, status: :unprocessable_entity
     end
   end
+
+  def new
+    @service = current_user.services.new
+  end
+
 
   private
 

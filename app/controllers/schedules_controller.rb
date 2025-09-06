@@ -2,7 +2,7 @@
 require "csv"
 
 class SchedulesController < ApplicationController
-  before_action :authenticate_user!, only: [:create, :show, :history, :cancel]
+  before_action :authenticate_user!, only: [:create, :show, :history, :cancel, :accept, :reject]
 
   def create
     service = Service.find(params[:service_id])
@@ -28,13 +28,24 @@ class SchedulesController < ApplicationController
   end
 
 
-
   def show
     @schedule = Schedule.includes(:service, :client, :professional, :messages).find(params[:id])
     authorize_participation!(@schedule)
-    @messages = @schedule.messages.includes(:user).order(:created_at)
+
+    @conversation = Conversation.find_by(
+      client_id:       @schedule.client_id,
+      professional_id: @schedule.professional_id,
+      service_id:      @schedule.service_id
+    )
+
+    conv_msgs_ids = @conversation ? @conversation.messages.select(:id) : Message.none
+    @messages = Message.where(id: @schedule.messages.select(:id)).or(Message.where(id: conv_msgs_ids))
+                      .includes(:user).order(:created_at)
+
     @message  = Message.new
   end
+
+
 
   def history
     base = Schedule.includes(:service, :client, :professional)
@@ -127,6 +138,69 @@ class SchedulesController < ApplicationController
     msg = params[:note].present? ? "Agendamento cancelado e mensagem enviada." : "Agendamento cancelado."
     redirect_back fallback_location: service_history_path, notice: msg
   end
+
+  def accept
+    schedule = Schedule.find(params[:id])
+    authorize_participation!(schedule)
+
+    unless current_user.id == schedule.professional_id
+      redirect_back fallback_location: schedule_path(schedule), alert: "Apenas o profissional pode confirmar." and return
+    end
+    if schedule.canceled? || schedule.completed? || schedule.no_show?
+      redirect_back fallback_location: schedule_path(schedule), alert: "Este agendamento não pode ser confirmado." and return
+    end
+
+    Schedule.transaction do
+      attrs = { accepted_professional: true }
+      attrs[:confirmed] = true if schedule.has_attribute?(:confirmed)
+
+      # seta o melhor status disponível no enum
+      if Schedule.respond_to?(:statuses)
+        if Schedule.statuses.key?("confirmed")
+          attrs[:status] = :confirmed
+        elsif Schedule.statuses.key?("accepted")
+          attrs[:status] = :accepted
+        end
+      end
+
+      schedule.update!(attrs)
+    end
+
+    redirect_to schedule_path(schedule), notice: "Agendamento confirmado."
+  end
+
+  def reject
+    schedule = Schedule.find(params[:id])
+    authorize_participation!(schedule)
+
+    unless current_user.id == schedule.professional_id
+      redirect_back fallback_location: schedule_path(schedule), alert: "Apenas o profissional pode recusar." and return
+    end
+    if schedule.canceled? || schedule.completed? || schedule.no_show?
+      redirect_back fallback_location: schedule_path(schedule), alert: "Este agendamento não pode ser recusado." and return
+    end
+
+    note = params[:note].to_s.strip
+
+    Schedule.transaction do
+      attrs = { accepted_professional: false, confirmed: false }
+      attrs.delete(:confirmed) unless schedule.has_attribute?(:confirmed)
+
+      if Schedule.respond_to?(:statuses)
+        if Schedule.statuses.key?("rejected")
+          attrs[:status] = :rejected
+        else
+          attrs[:status] = :canceled if Schedule.statuses.key?("canceled")
+        end
+      end
+
+      schedule.update!(attrs)
+      schedule.messages.create!(user: current_user, content: "Recusado pelo profissional#{": #{note}" if note.present?}") if note.present?
+    end
+
+    redirect_to schedule_path(schedule), notice: "Agendamento recusado."
+  end
+
 
   private
 

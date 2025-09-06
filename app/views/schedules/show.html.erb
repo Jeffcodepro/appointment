@@ -1,26 +1,151 @@
-<div class="container py-4">
-  <h1 class="h5 mb-3">
-    Chat do agendamento com
-    <% if current_user.id == @schedule.user_id %>
-      <%= @schedule.service.user.name %> (profissional)
-    <% else %>
-      <%= @schedule.user.name %> (cliente)
-    <% end %>
-  </h1>
+<!-- app/views/schedules/show.html.erb -->
+<% content_for :head do %>
+  <meta name="turbo-cache-control" content="no-preview">
+<% end %>
 
-  <!-- Assina o stream desse schedule -->
+<div class="container conversation-page <%= current_user.id == @schedule.client_id ? 'viewer-client' : 'viewer-professional' %>">
+
+  <!-- ===== Detalhes do agendamento (mostra para todos) ===== -->
+  <div class="card border-0 shadow-sm mb-3">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+        <div>
+          <h1 class="h5 mb-1">Agendamento #<%= @schedule.id %></h1>
+          <div class="text-muted">
+            <%= I18n.l(@schedule.start_at, format: :long) %>
+            <% if @schedule.end_at.present? %>
+              — <%= I18n.l(@schedule.end_at, format: :time) %>
+            <% end %>
+          </div>
+        </div>
+
+      <div class="text-end">
+        <% if @schedule.respond_to?(:status) && @schedule.status.present? %>
+          <% s = @schedule.status.to_s %>
+          <% klass = {
+            "pending"   => "is-pending",
+            "accepted"  => "is-accepted",
+            "confirmed" => "is-confirmed",
+            "completed" => "is-completed",
+            "canceled"  => "is-canceled",
+            "rejected"  => "is-rejected",
+            "no_show"   => "is-no-show"
+          }[s] || "is-default" %>
+          <span class="status-badge <%= klass %>"><%= @schedule.status.humanize %></span>
+        <% elsif @schedule.respond_to?(:confirmed) && @schedule.confirmed? %>
+          <span class="status-badge is-confirmed">Confirmado</span>
+        <% end %>
+      </div>
+
+      </div>
+
+      <hr>
+
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="small text-muted">Serviço</div>
+          <div class="fw-semibold"><%= @schedule.service&.name %></div>
+          <div class="text-muted">
+            <%= @schedule.service&.categories %> • <%= @schedule.service&.subcategories %>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="small text-muted">Cliente</div>
+          <div><%= @schedule.client&.name %></div>
+        </div>
+        <div class="col-md-3">
+          <div class="small text-muted">Profissional</div>
+          <div><%= @schedule.professional&.name %></div>
+        </div>
+
+        <div class="col-md-3">
+          <div class="small text-muted">Preço/hora</div>
+          <div class="fw-semibold">
+            <% if (ph = @schedule.service&.price_hour).present? %>
+              <%= humanized_money_with_symbol(ph) %>
+            <% else %>
+              —
+            <% end %>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="small text-muted">Duração</div>
+          <div>
+            <% if @schedule.start_at && @schedule.end_at %>
+              <%= distance_of_time_in_words(@schedule.start_at, @schedule.end_at) %>
+            <% else %>
+              —
+            <% end %>
+          </div>
+        </div>
+      </div>
+
+      <%# ---- Ações do profissional (somente dono e se não bloqueado) ---- %>
+      <% can_act   = current_user&.id == @schedule.professional_id %>
+      <% blocked   = @schedule.canceled? || @schedule.completed? || @schedule.no_show? || (@schedule.respond_to?(:confirmed) && @schedule.confirmed?) %>
+
+      <% if can_act && !blocked %>
+        <hr>
+        <div class="d-flex flex-wrap gap-2">
+          <%= button_to "Confirmar",
+                accept_schedule_path(@schedule),
+                method: :patch,
+                class: "btn btn-accept-schedule"
+          %>
+        <div data-controller="reject-modal" class="d-inline-block">
+          <button type="button" class="btn btn-reject-schedule" data-action="click->reject-modal#open">
+            Recusar
+          </button>
+
+          <div class="rm-overlay" data-reject-modal-target="overlay" hidden>
+            <div class="rm-modal" role="dialog" aria-modal="true" aria-labelledby="rmTitle">
+              <h3 id="rmTitle" class="h6 mb-2">Recusar agendamento?</h3>
+              <p class="text-muted small mb-3">Opcionalmente explique o motivo ao cliente.</p>
+
+              <%= form_with url: reject_schedule_path(@schedule), method: :patch, data: { reject_modal_target: "form" } do |f| %>
+                <%= f.text_field :note, class: "form-control mb-3", placeholder: "Motivo (opcional)" %>
+
+                <div class="d-flex gap-2 justify-content-end">
+                  <button type="button" class="btn btn-light" data-action="reject-modal#close">Cancelar</button>
+                  <button type="submit" class="btn btn-danger">Confirmar recusa</button>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- ===== Chat (idêntico ao que você já tinha) ===== -->
+  <h2 class="h6 mb-3">
+    Chat do agendamento com
+    <% if current_user.id == @schedule.professional_id %>
+      <%= @schedule.client&.name || "Cliente" %> (cliente)
+    <% else %>
+      <%= @schedule.professional&.name || @schedule.service&.user&.name || "Profissional" %> (profissional)
+    <% end %>
+  </h2>
+
   <%= turbo_stream_from [@schedule, :messages] %>
 
-  <!-- Lista de mensagens -->
-  <div id="messages_for_schedule_<%= @schedule.id %>" class="vstack gap-2 border rounded p-3 mb-3" style="min-height: 300px;">
+  <div id="messages_for_schedule_<%= @schedule.id %>"
+      class="messages-panel"
+      data-controller="chat-scroll">
     <%= render partial: "messages/message",
-           collection: @messages,
-           as: :message,
-           locals: { viewer_id: current_user.id } %>
+                collection: @messages,
+                as: :message,
+                locals: {
+                  participants: {
+                    client_id: @schedule.client_id,
+                    professional_id: @schedule.professional_id
+                  }
+                } %>
+  </div>
+  <div id="<%= dom_id(@schedule, :form) %>" class="message-form">
+      <%= render "messages/composer", parent: @schedule, message: @message %>
   </div>
 
-  <!-- Formulário -->
-  <div id="<%= dom_id(@schedule, :form) %>">
-    <%= render "messages/form", schedule: @schedule, message: @message %>
-  </div>
 </div>

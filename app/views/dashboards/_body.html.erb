@@ -1,0 +1,181 @@
+<%# Navegação e alternância de visão %>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div class="btn-group" role="group" aria-label="Período">
+    <%= link_to "Mês",
+                dashboard_path(view: "month", date: date),
+                class: "btn btn-sm #{view == 'month' ? 'btn-primary' : 'btn-outline-primary'}",
+                data: { turbo_frame: "dashboard-body" } %>
+    <%= link_to "Semana",
+                dashboard_path(view: "week", date: date),
+                class: "btn btn-sm #{view == 'week' ? 'btn-primary' : 'btn-outline-primary'}",
+                data: { turbo_frame: "dashboard-body" } %>
+  </div>
+
+  <div class="btn-group" role="group" aria-label="Navegação">
+    <%= link_to "◀",
+                dashboard_path(view: view, date: prev_date),
+                class: "btn btn-sm btn-outline-secondary",
+                data: { turbo_frame: "dashboard-body" } %>
+    <span class="px-3 small text-muted align-self-center">
+      <% if view == "week" %>
+        <%= l(range_start.to_date, format: :long) %> – <%= l(range_end.to_date, format: :long) %>
+      <% else %>
+        <%= l(date, format: "%B de %Y") %>
+      <% end %>
+    </span>
+    <%= link_to "▶",
+                dashboard_path(view: view, date: next_date),
+                class: "btn btn-sm btn-outline-secondary",
+                data: { turbo_frame: "dashboard-body" } %>
+  </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+  <div class="card-body">
+
+    <%# ===== MÉTRICAS NO TOPO ===== %>
+    <div class="row g-3 mb-3">
+      <div class="col-12 col-md-4">
+        <div class="p-3 rounded-4 border bg-light h-100">
+          <div class="small text-muted">Receita no período</div>
+          <div class="fs-4 fw-bold"><%= revenue_human %></div>
+          <div class="small text-muted mt-1">Considera <strong>agendamentos realizados</strong> (início antes de agora).</div>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-4">
+        <div class="p-3 rounded-4 border bg-light h-100">
+          <div class="small text-muted">Receita prevista</div>
+          <div class="fs-4 fw-bold"><%= revenue_future_human %></div>
+          <div class="small text-muted mt-1">Agendamentos com início <strong>a partir de agora</strong>.</div>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-4">
+        <div class="p-3 rounded-4 border bg-light h-100">
+          <div class="small text-muted">Agendamentos no período</div>
+          <div class="d-flex flex-wrap gap-2 mt-1">
+            <span class="badge text-bg-light border">Realizados: <strong><%= appointments_past_count %></strong></span>
+            <span class="badge text-bg-light border">Previstos: <strong><%= appointments_future_count %></strong></span>
+            <span class="badge text-bg-light border">Total: <strong><%= appointments_count %></strong></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <%# ===== CALENDÁRIO ===== %>
+    <% open_h = 9; close_h = 18 %>
+
+    <% if view == "week" %>
+      <%= week_calendar(
+            attribute: :start_at,
+            end_attribute: :end_at,
+            events: schedules,
+            class: "gc-calendar gc-week",
+            start_date: range_start.to_date
+          ) do |date_cell, day_events| %>
+
+        <% day_open  = date_cell.in_time_zone.change(hour: open_h,  min: 0) %>
+        <% day_close = date_cell.in_time_zone.change(hour: close_h, min: 0) %>
+
+        <div class="gc-day-head">
+          <span class="gc-day-num <%= 'is-today' if date_cell == Date.current %>"><%= date_cell.day %></span>
+          <span class="gc-day-label"><%= l(date_cell, format: "%a") %></span>
+        </div>
+
+        <div class="gc-events">
+          <% if date_cell.saturday? || date_cell.sunday? %>
+            <div class="gc-event-chip gc-free" title="Fechado">
+              <span class="gc-time">—</span>
+              <span class="gc-dot">·</span>
+              <span class="gc-client">Fechado</span>
+            </div>
+          <% elsif day_events.any? %>
+            <% day_events.each do |e| %>
+              <% title  = e.service&.subcategories || e.service&.categories || "Serviço" %>
+              <% client = e.try(:client)&.name || e.try(:user)&.name || e.try(:customer_name) || "Cliente" %>
+              <% color_class = calendar_color_for(e) %>
+
+              <%= link_to schedule_path(e),
+                          class: "gc-event-link",
+                          data: { turbo_frame: "_top" } do %>
+                <div class="gc-event-chip <%= color_class %>" title="<%= "#{title} — #{client}" %>">
+                  <div class="gc-line1">
+                    <span class="gc-time"><%= hhmm(e.start_at) %>–<%= hhmm(e.end_at) %></span>
+                    <span class="gc-dot">·</span>
+                    <span class="gc-client"><%= client %></span>
+                  </div>
+                    <div class="gc-line2">
+                      <span class="gc-cat"><%= title %></span>
+                    </div>
+                </div>
+              <% end %>
+            <% end %>
+          <% else %>
+            <div class="gc-event-chip gc-free" title="Sem agendamentos">
+              <span class="gc-time"><%= hhmm(day_open) %>–<%= hhmm(day_close) %></span>
+              <span class="gc-dot">·</span>
+              <span class="gc-client">Livre</span>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+
+    <% else %>
+      <%= month_calendar(
+            attribute: :start_at,
+            events: schedules,
+            class: "gc-calendar gc-month",
+            start_date: date
+          ) do |date_cell, day_events| %>
+
+        <% day_open  = date_cell.in_time_zone.change(hour: open_h,  min: 0) %>
+        <% day_close = date_cell.in_time_zone.change(hour: close_h, min: 0) %>
+
+        <div class="gc-day-head">
+          <span class="gc-day-num <%= 'is-today' if date_cell == Date.current %>"><%= date_cell.day %></span>
+          <span class="gc-day-label"><%= l(date_cell, format: "%a") %></span>
+        </div>
+
+        <div class="gc-events">
+          <% if date_cell.saturday? || date_cell.sunday? %>
+            <div class="gc-event-chip gc-free" title="Fechado">
+              <span class="gc-time">—</span>
+              <span class="gc-dot">·</span>
+              <span class="gc-client">Fechado</span>
+            </div>
+          <% elsif day_events.any? %>
+            <% day_events.each do |e| %>
+              <% title  = e.service&.subcategories || e.service&.categories || "Serviço" %>
+              <% client = e.try(:client)&.name || e.try(:user)&.name || e.try(:customer_name) || "Cliente" %>
+              <% color_class = calendar_color_for(e) %>
+
+              <%= link_to schedule_path(e),
+                          class: "gc-event-link",
+                          data: { turbo_frame: "_top" } do %>
+                <div class="gc-event-chip <%= color_class %>" title="<%= "#{title} — #{client}" %>">
+                  <div class="gc-line1">
+                    <span class="gc-time"><%= hhmm(e.start_at) %>–<%= hhmm(e.end_at) %></span>
+                    <span class="gc-dot">·</span>
+                    <span class="gc-client"><%= client %></span>
+                  </div>
+                  <div class="gc-line2">
+                    <span class="gc-cat"><%= title %></span>
+                  </div>
+                </div>
+              <% end %>
+            <% end %>
+          <% else %>
+            <div class="gc-event-chip gc-free" title="Sem agendamentos">
+              <span class="gc-time"><%= hhmm(day_open) %>–<%= hhmm(day_close) %></span>
+              <span class="gc-dot">·</span>
+              <span class="gc-client">Livre</span>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    <% end %>
+
+  </div>
+</div>

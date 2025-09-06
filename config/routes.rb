@@ -25,11 +25,15 @@ Rails.application.routes.draw do
 
   resources :schedules, only: [:create, :show] do
     resources :messages, only: [:create]
-    member { patch :cancel }
+    member do
+      patch :cancel
+      patch :reject
+      patch :accept
+    end
   end
 
   resources :conversations, only: [:index, :create, :show] do
-    resources :messages, only: [:create], module: :conversations
+    resources :messages, only: [:create], controller: "messages"
   end
 
   get "dashboard", to: "dashboards#show"

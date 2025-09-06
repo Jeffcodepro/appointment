@@ -238,3 +238,11 @@
 }
 
 .conv-header { z-index: 900; }
+
+.conversation-page.viewer-professional .messages-panel { background: #fff; }
+.conversation-page.viewer-professional .composer       { background: #fff; }
+
+.messages-panel{
+  scroll-behavior: smooth;
+  overscroll-behavior-y: contain; /* evita “puxar” a página */
+}

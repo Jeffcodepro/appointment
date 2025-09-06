@@ -1,128 +1,172 @@
-/* ====== LAYOUT DO TÍTULO + NAVEGAÇÃO ====== */
-.simple-calendar .calendar-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between; /* título à esquerda, navegação à direita */
-  margin-top: 1rem;
-  margin-bottom: 1rem;
+/* ====== TÍTULO + NAVEGAÇÃO (padrão) ====== */
+.simple-calendar .calendar-heading{
+  display:flex; align-items:center; justify-content:space-between;
+  margin:1rem 0;
+}
+.simple-calendar .calendar-heading .calendar-title{
+  text-transform:capitalize; font-size:1.25rem; font-weight:600; line-height:1.2; margin:0;
+}
+.simple-calendar .calendar-heading nav{ display:flex; gap:.5rem; }
+.simple-calendar .calendar-heading nav a{
+  display:inline-block; padding:6px 12px; font-size:.875rem; font-weight:500;
+  color:#2c2d30; background:#f8f9fa; border:1px solid #dee2e6; border-radius:6px;
+  text-decoration:none; transition:.2s;
+}
+.simple-calendar .calendar-heading nav a:hover{ background:#137d8e; color:#fff; border-color:#137d8e; }
+
+/* dia básico + estados */
+.simple-calendar td > .day{ display:block; }
+.simple-calendar .day{ cursor:pointer; padding:.25rem; border-radius:.5rem; transition:background-color .15s ease; }
+.simple-calendar .day:hover{ background:#f1f3f5; }
+.simple-calendar .day.today{ outline:2px solid #137d8e20; background:#f5f8ff; }
+.simple-calendar .day.selected{ outline:2px solid #137d8e55; background:#f2f8f9; }
+.simple-calendar .day.past{ opacity:.5; pointer-events:none; cursor:default; }
+.simple-calendar .day.past, .simple-calendar .day.past *{ text-decoration:line-through; }
+.simple-calendar .day.weekend{ opacity:.5; pointer-events:none; }
+.simple-calendar .day.fully-booked, .simple-calendar .day.fully-booked *{ text-decoration:line-through; }
+.simple-calendar .day.fully-booked{ opacity:.85; cursor:pointer; }
+
+/* ====== DASHBOARD: grade do calendário (mês e semana) ====== */
+.dashboard-page {
+
+  /* esconde a navegação interna do simple_calendar (usamos a nossa) */
+  .simple-calendar .calendar-heading nav{ display:none !important; }
+
+  /* Tabela com colunas SEMPRE iguais */
+  .gc-calendar,
+  .gc-calendar table{ width:100%; table-layout:fixed; }
+  .gc-calendar thead th,
+  .gc-calendar tbody td{ width:calc(100%/7); }
+
+  /* Cabeçalho dos dias */
+  .gc-calendar thead th{
+    font-size:.8rem; font-weight:600; color:#6c757d; padding:.5rem;
+    border-bottom:1px solid #e9ecef; text-transform:uppercase; letter-spacing:.02em;
+  }
+
+  /* Células (altura fixa para não “estourar” com chips) */
+  .gc-calendar td.day{
+    vertical-align:top; padding:.5rem;
+    border-right:1px solid #f1f3f5; border-bottom:1px solid #f1f3f5;
+    height:10rem;          /* mês: fixo */
+  }
+  .gc-week td.day{ height:10rem; }  /* semana: também fixo (ANTES era auto) */
+  .gc-calendar td.day:last-child{ border-right:0; }
+
+  .gc-day-head{ display:flex; align-items:baseline; gap:6px; margin-bottom:4px; }
+  .gc-day-num{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:28px; height:28px; border-radius:999px; font-weight:700; font-size:.9rem; color:#212529;
+  }
+  .gc-day-num.is-today{ background:#0b5ed7; color:#fff; }
+  .gc-day-label{ font-size:.8rem; color:#6c757d; text-transform:capitalize; }
+
+  /* Área de eventos: altura controlada e conteúdo escondido se passar */
+  .gc-events{
+    display:flex; flex-direction:column; gap:4px; margin-top:.25rem;
+    min-height:72px; max-height:96px; overflow:hidden;
+  }
+
+  /* Link do agendamento = texto (sem sublinhado) */
+  .gc-event-link,
+  .gc-event-link:link,
+  .gc-event-link:visited,
+  .gc-event-link:hover,
+  .gc-event-link:focus{
+    text-decoration:none !important; color:inherit !important; outline:none; display:block;
+  }
+  .gc-event-link:focus-visible{ outline:2px solid #137d8e; outline-offset:2px; border-radius:8px; }
+
+  /* Chip em DUAS LINHAS, tipografia adaptável e truncamento */
+  .gc-event-chip{
+    border:1px solid #e5e7eb; border-radius:10px; background:#fff; color:#0b5ed7;
+    padding:4px 6px; line-height:1.15; max-width:100%;
+    display:flex; flex-direction:column; align-items:flex-start; gap:.15rem;
+    font-size:clamp(12px, 1.2vw, 14px);  /* ← ajusta ao espaço */
+  }
+
+  .gc-event-chip .gc-line1{
+    display:flex; align-items:center; gap:.35rem;
+    width:100%; min-width:0; white-space:nowrap; overflow:hidden;
+  }
+  .gc-event-chip .gc-time{ flex:none; }                 /* horário não encolhe */
+  .gc-event-chip .gc-client{ min-width:0; overflow:hidden; text-overflow:ellipsis; }
+
+  .gc-event-chip .gc-line2{
+    font-size:.86em; opacity:.95; width:100%;
+  }
+  .gc-event-chip .gc-cat{
+    display:inline-block; max-width:100%;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+
+  /* Paleta de cores opcional */
+  .gc-event-chip.gc-c0{ --bg:#e8f0fe; --bd:#c6dafc; --tx:#1967d2; }
+  .gc-event-chip.gc-c1{ --bg:#e6f4ea; --bd:#c8e6c9; --tx:#188038; }
+  .gc-event-chip.gc-c2{ --bg:#fce8e6; --bd:#f5c6c3; --tx:#d93025; }
+  .gc-event-chip.gc-c3{ --bg:#fef7e0; --bd:#fbe7a2; --tx:#b06e00; }
+  .gc-event-chip.gc-c4{ --bg:#f3e8fd; --bd:#e1ccfb; --tx:#6f42c1; }
+  .gc-event-chip.gc-c5{ --bg:#e0f2fe; --bd:#bae6fd; --tx:#0b5ed7; }
+  .gc-event-chip[class*="gc-c"]{
+    background:var(--bg); border-color:var(--bd); color:var(--tx);
+  }
+
+  /* Livre */
+  .gc-event-chip.gc-free{
+    background:#f8f9fa; border-color:#e9ecef; color:#2c2d30; font-weight:400;
+  }
+
+  /* Fins de semana “apagados” (visual) */
+  .gc-calendar thead th:nth-child(6),
+  .gc-calendar thead th:nth-child(7){ background:#f6f7f9; color:#9aa0a6; }
+  .gc-calendar tbody td:nth-child(6),
+  .gc-calendar tbody td:nth-child(7){ background:#f6f7f9; }
+  .gc-calendar tbody td:nth-child(6) .gc-day-num,
+  .gc-calendar tbody td:nth-child(7) .gc-day-num{ color:#9aa0a6; }
+  .gc-calendar tbody td:nth-child(6) .gc-event-chip,
+  .gc-calendar tbody td:nth-child(7) .gc-event-chip{
+    background:#f8f9fa; border-color:#e9ecef; color:#6c757d;
+  }
 }
 
-/* Título (mês e ano) */
-.simple-calendar .calendar-heading .calendar-title {
-  text-transform: capitalize;   /* Agosto 2025 */
-  font-size: 1.25rem;
+/* Botões “Período” (branding) */
+.dashboard-page .btn-group[aria-label="Período"] .btn.btn-primary{
+  background:#137d8e; border-color:#137d8e; color:#fff;
+}
+.dashboard-page .btn-group[aria-label="Período"] .btn.btn-primary:hover,
+.dashboard-page .btn-group[aria-label="Período"] .btn.btn-primary:active{
+  background:#0A5764; border-color:#0A5764; color:#fff;
+}
+.dashboard-page .btn-group[aria-label="Período"] .btn.btn-outline-primary{
+  color:#137d8e; border-color:#137d8e; background:transparent;
+}
+.dashboard-page .btn-group[aria-label="Período"] .btn.btn-outline-primary:hover,
+.dashboard-page .btn-group[aria-label="Período"] .btn.btn-outline-primary:active{
+  background:#137d8e; border-color:#137d8e; color:#fff;
+}
+.dashboard-page .btn-group[aria-label="Período"] .btn:focus{
+  box-shadow:0 0 0 .2rem rgba(19,125,142,.25);
+}
+
+/* pill base */
+.status-badge{
+  display:inline-block;
+  padding: .35rem .6rem;
+  border-radius: 999px;
   font-weight: 600;
-  line-height: 1.2;
-  margin: 0; /* remove espaçamento extra */
+  letter-spacing: .01em;
+  border: 1px solid transparent;
+  box-shadow: 0 1px 2px rgba(0,0,0,.06);
+  font-size: .85rem;
 }
 
-/* Navegação */
-.simple-calendar .calendar-heading nav {
-  display: flex;
-  gap: .5rem; /* espaço entre os botões */
-}
+/* paleta suave */
+.status-badge.is-pending   { background:#fff4db; color:#8a5b00; border-color:#ffe2a7; }
+.status-badge.is-accepted  { background:#e8f0fe; color:#1a56db; border-color:#c6dafc; }
+.status-badge.is-confirmed { background:#e6f4ea; color:#0f5132; border-color:#c8e6c9; }
+.status-badge.is-completed { background:#e7f5ff; color:#0b7285; border-color:#c5e7f7; }
+.status-badge.is-canceled  { background:#f8f9fa; color:#495057; border-color:#e9ecef; }
+.status-badge.is-rejected  { background:#fdecec; color:#a61e4d; border-color:#f6c2ce; }
+.status-badge.is-no-show   { background:#f1f3f5; color:#495057; border-color:#e9ecef; }
+.status-badge.is-default   { background:#eef2f7; color:#334155; border-color:#dbe2ea; }
 
-/* Botões */
-.simple-calendar .calendar-heading nav a {
-  display: inline-block;
-  padding: 6px 12px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #2c2d30;
-  background-color: #f8f9fa;
-  border: 1px solid #dee2e6;
-  border-radius: 6px;
-  text-decoration: none;
-  transition: all 0.2s ease;
-}
-
-.simple-calendar .calendar-heading nav a:hover {
-  background-color: #137d8e;
-  color: #fff;
-  border-color: #137d8e;
-}
-
-/* ====== ESTILO DOS BOTÕES DE NAVEGAÇÃO ====== */
-.simple-calendar .calendar-heading nav a {
-  display: inline-block;
-  padding: 6px 12px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #2c2d30;
-  background-color: #f8f9fa;
-  border: 1px solid #dee2e6;
-  border-radius: 6px;
-  text-decoration: none;
-  transition: all 0.2s ease;
-}
-.simple-calendar .calendar-heading nav a:hover {
-  background-color: #137d8e;
-  color: #fff;
-  border-color: #137d8e;
-}
-
-.simple-calendar .day { cursor: pointer; padding: .25rem; border-radius: .5rem; transition: background-color .15s ease; }
-.simple-calendar .day:hover { background: #f1f3f5; }
-.simple-calendar .day.today { outline: 2px solid #137d8e20; background: #f5f8ff; }
-.simple-calendar .has-event { background: #fff7e6; }
-.simple-calendar .weekend { opacity: .5; pointer-events: none; }
-
-/* ===== Espaço no topo dentro do modal (em px) ===== */
-
-/* Calendário (esquerda): dá um respiro acima do mês + navegação */
-.custom-modal .simple-calendar .calendar-heading {
-  margin-top: 12px;      /* antes estava 0 */
-}
-
-/* Coluna de slots (direita): alinha com o topo do título do calendário */
-.custom-modal .form-label#slotsLabel {
-  margin-top: 12px;      /* sobe o rótulo para bater com o título */
-  padding-top: 0;        /* zera o ajuste anterior */
-}
-
-/* (opcional) se quiser um respiro igual em ambas as colunas */
-.custom-modal .modal-body .col-lg-6 {
-  padding-top: 8px;      /* leve afastamento do topo do modal */
-}
-
-/* mantém alinhamento vertical no topo entre as duas colunas */
-.custom-modal .modal-body .row {
-  align-items: flex-start;
-}
-
-/* destaque do dia selecionado */
-.simple-calendar .day.selected {
-  outline: 2px solid #137d8e55;
-  background: #f2f8f9;
-}
-
-/* dias passados: riscado e não clicável */
-.simple-calendar .day.past {
-  opacity: .5;
-  pointer-events: none;
-  cursor: default;
-}
-.simple-calendar .day.past:hover { background: transparent; }
-
-.simple-calendar td > .day { display: block; }
-
-.simple-calendar .day.past,
-.simple-calendar .day.past * {
-  text-decoration: line-through;
-}
-
-/* finais de semana: não clicáveis */
-.simple-calendar .day.weekend {
-  opacity: .5;
-  pointer-events: none;
-}
-
-/* dia 100% esgotado: riscado, mas clicável */
-.simple-calendar .day.fully-booked,
-.simple-calendar .day.fully-booked * {
-  text-decoration: line-through;
-}
-.simple-calendar .day.fully-booked {
-  opacity: .85;
-  cursor: pointer;       /* continua clicável (mostra "Sem horários") */
-}

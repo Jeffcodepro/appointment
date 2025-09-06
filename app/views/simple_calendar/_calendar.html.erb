@@ -1,4 +1,4 @@
-<table class="table table-striped">
+<table class="<%= ['simple-calendar', 'table', *Array(calendar.options[:class])].join(' ') %>">
   <thead>
     <tr>
       <% date_range.slice(0, 7).each do |day| %>
