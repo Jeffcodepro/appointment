@@ -1,0 +1,80 @@
+.site-footer{
+  background:#FFFFFF;
+  border-top:1px solid #E1E2E4;
+  color:#101112;
+  padding:28px 0 22px;
+}
+
+/* marca */
+.footer-logo{ height:28px; width:auto; }
+.footer-brand-name{ font-weight:800; font-size:18px; color:#101112; }
+.footer-desc{ color:#6D6F76; margin:8px 0 14px; }
+
+/* títulos de coluna */
+.footer-title{
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  font-weight:800;
+  font-size:12px;
+  color:#6D6F76;
+  margin:4px 0 10px;
+}
+
+/* listas e links */
+.footer-list{ margin:0; }
+.footer-link{
+  display:inline-block;
+  color:#101112;
+  text-decoration:none;
+  padding:4px 0;
+}
+.footer-link:hover{ color:#137D8E; text-decoration:underline; }
+
+/* social */
+.footer-social{ display:flex; gap:10px; }
+.social-link{
+  width:36px; height:36px; display:inline-flex; align-items:center; justify-content:center;
+  border:1px solid #E1E2E4; border-radius:50%;
+  color:#101112; text-decoration:none;
+}
+.social-link:hover{
+  border-color:#137D8E; color:#137D8E; background:rgba(19,125,142,0.06);
+}
+
+/* newsletter */
+.footer-newsletter{ display:flex; gap:8px; }
+.footer-input{
+  flex:1 1 auto;
+  border:1px solid #E1E2E4; border-radius:10px;
+  padding:10px 12px; outline:none;
+}
+.footer-input:focus{
+  border-color:#137D8E; box-shadow:0 0 0 3px rgba(19,125,142,0.16);
+}
+.footer-btn{
+  border:0; border-radius:999px;
+  padding:10px 16px; font-weight:800;
+  color:#fff; background:#137D8E;
+}
+.footer-btn:hover{ filter:brightness(1.06); }
+.footer-hint{ color:#92949B; display:block; margin-top:6px; }
+
+/* separador + bottom bar */
+.footer-sep{ border-color:#E1E2E4; margin:18px 0; opacity:1; }
+.footer-legal .footer-link{ padding:0 6px; }
+
+@media (max-width: 576px){
+  .footer-newsletter{ flex-direction:column; }
+  .footer-btn{ width:100%; }
+}
+
+.footer-social { display:flex; gap:10px; }
+.social-link{
+  width:36px; height:36px; display:inline-flex; align-items:center; justify-content:center;
+  border:1px solid #E1E2E4; border-radius:50%;
+  color:#101112; text-decoration:none;
+}
+.social-link i{ font-size:18px; line-height:1; }
+.social-link:hover{
+  border-color:#137D8E; color:#137D8E; background:rgba(19,125,142,0.06);
+}

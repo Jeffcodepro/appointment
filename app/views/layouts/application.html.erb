@@ -19,53 +19,19 @@
   </head>
 
   <!-- classe no body para definirmos --nav-h via CSS (role-pro vs role-default) -->
-  <body class="<%= user_signed_in? && current_user.professional? ? 'role-pro' : 'role-default' %>">
-    <%# Navbar: profissional x padrão %>
+  <body class="<%= user_signed_in? && current_user.professional? ? 'role-pro' : 'role-default' %> d-flex flex-column min-vh-100">
+    <%# Navbar %>
     <% if user_signed_in? && current_user.professional? %>
       <%= render "shared/pro_navbar" %>
     <% else %>
       <%= render "shared/navbar" %>
     <% end %>
 
-    <main class="app-main">
+    <main class="app-main flex-fill">
       <%= render "shared/flashes" %>
       <%= yield %>
     </main>
 
-    <script>
-      function setSearchHeightVar() {
-        const el = document.getElementById('stickySearch');
-        const h = el ? el.offsetHeight : 0;
-        document.documentElement.style.setProperty('--search-h', `${h}px`);
-      }
-
-      function scrollToResultsIfNeeded() {
-        const wantsHash = location.hash === '#results';
-        let wantsFlag = false;
-        try {
-          wantsFlag = sessionStorage.getItem('scrollToResults') === '1';
-          if (wantsFlag) sessionStorage.removeItem('scrollToResults');
-        } catch(_) {}
-
-        if (!wantsHash && !wantsFlag) return;
-
-        const go = () => {
-          const el = document.getElementById('results');
-          if (el) el.scrollIntoView({ behavior: 'auto', block: 'start' });
-        };
-
-        requestAnimationFrame(() => {
-          setSearchHeightVar();
-          requestAnimationFrame(go);
-        });
-      }
-
-      document.addEventListener('turbo:load',   () => { setSearchHeightVar(); scrollToResultsIfNeeded(); });
-      document.addEventListener('turbo:render', () => { setSearchHeightVar(); scrollToResultsIfNeeded(); });
-
-      window.addEventListener('resize', setSearchHeightVar);
-      if (document.fonts && document.fonts.ready) document.fonts.ready.then(setSearchHeightVar);
-      window.addEventListener('load', () => { setSearchHeightVar(); scrollToResultsIfNeeded(); });
-    </script>
+    <%= render "shared/footer" %>
   </body>
 </html>

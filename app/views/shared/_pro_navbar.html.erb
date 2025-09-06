@@ -1,8 +1,3 @@
-<%# Fallbacks de rota para não quebrar enquanto você cria as páginas reais %>
-<% schedule_path ||= edit_profile_path(current_user) %>    <%# "Cadastro de horários" (ajuste depois) %>
-<% agenda_path   ||= dashboard_path %>                     <%# "Minha Agenda" %>
-<% history_path  ||= dashboard_path %>                     <%# "Histórico" %>
-
 <nav class="navbar navbar-expand-lg bg-body-tertiary pro-navbar">
   <div class="container-fluid">
 
@@ -19,14 +14,25 @@
     <div class="collapse navbar-collapse" id="proNavbar">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
         <li class="nav-item">
-          <%= link_to "Cadastro de horários", schedule_path, class: "nav-link" %>
+          <%= link_to "Cadastro de horários", worktimes_path, class: "nav-link" %>
         </li>
         <li class="nav-item">
-          <%= link_to "Minha Agenda", agenda_path, class: "nav-link" %>
+          <%= link_to "Histórico",
+                      histories_path,
+                      class: "nav-link #{controller_name == 'histories' ? 'active' : ''}" %>
         </li>
-        <li class="nav-item">
-          <%= link_to "Histórico", history_path, class: "nav-link" %>
-        </li>
+        <% if current_user&.professional? %>
+          <li class="nav-item">
+            <%= link_to my_services_path,
+                        class: "nav-link d-flex align-items-center gap-1 #{current_page?(my_services_path) ? 'active' : ''}" do %>
+              <span>Meus Serviços</span>
+              <% count = current_user.services.count %>
+              <% if count.positive? %>
+                <span class="badge text-bg-secondary"><%= count %></span>
+              <% end %>
+            <% end %>
+          </li>
+        <% end %>
       </ul>
 
       <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">

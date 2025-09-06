@@ -1,0 +1,74 @@
+<footer class="site-footer">
+  <div class="container">
+    <div class="row gy-4">
+
+      <div class="col-sm-6 col-lg-4">
+        <%= link_to root_path, class: "footer-brand d-inline-flex align-items-center gap-2" do %>
+          <%= image_tag "logo2.png", class: "footer-logo", alt: "Logo" %>
+          <span class="footer-brand-name">Appointment</span>
+        <% end %>
+        <p class="footer-desc">
+          Conectando você aos melhores profissionais, perto de você.
+        </p>
+
+        <div class="footer-social">
+          <%= link_to "#", class: "social-link", target: "_blank", rel: "noopener", title: "Facebook", aria: { label: "Facebook" } do %>
+            <i class="fa-brands fa-facebook-f"></i>
+          <% end %>
+
+          <%= link_to "#", class: "social-link", target: "_blank", rel: "noopener", title: "Instagram", aria: { label: "Instagram" } do %>
+            <i class="fa-brands fa-instagram"></i>
+          <% end %>
+
+          <%= link_to "#", class: "social-link", target: "_blank", rel: "noopener", title: "X (Twitter)", aria: { label: "X (Twitter)" } do %>
+            <i class="fa-brands fa-x-twitter"></i>
+            <%# Se não aparecer na sua versão do FA, troque por: <i class="fa-brands fa-twitter"></i> %>
+          <% end %>
+
+          <%= link_to "#", class: "social-link", target: "_blank", rel: "noopener", title: "LinkedIn", aria: { label: "LinkedIn" } do %>
+            <i class="fa-brands fa-linkedin-in"></i>
+          <% end %>
+        </div>
+
+      </div>
+
+      <div class="col-6 col-lg-2">
+        <h6 class="footer-title">Produto</h6>
+        <ul class="list-unstyled footer-list">
+          <li><%= link_to "Explorar serviços", "#", class: "footer-link" %></li>
+          <li><%= link_to "Como funciona", "#", class: "footer-link" %></li>
+          <li><%= link_to "Planos", "#", class: "footer-link" %></li>
+        </ul>
+      </div>
+
+      <div class="col-6 col-lg-2">
+        <h6 class="footer-title">Conta</h6>
+        <ul class="list-unstyled footer-list">
+          <li><%= link_to "Entrar", new_user_session_path, class: "footer-link" %></li>
+          <li><%= link_to "Criar conta", new_user_registration_path, class: "footer-link" %></li>
+        </ul>
+      </div>
+
+      <div class="col-sm-6 col-lg-4">
+        <h6 class="footer-title">Receba novidades</h6>
+        <%= form_with url: "#", method: :get, html: { class: "footer-newsletter", role: "search" } do %>
+          <input type="email" class="footer-input" placeholder="Seu e-mail" aria-label="Seu e-mail">
+          <button type="submit" class="footer-btn">Assinar</button>
+        <% end %>
+        <small class="footer-hint">Você pode cancelar quando quiser.</small>
+      </div>
+
+    </div>
+
+    <hr class="footer-sep">
+
+    <div class="footer-bottom d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
+      <small class="m-0">© <%= Time.current.year %> Appointment. Todos os direitos reservados.</small>
+      <ul class="list-inline m-0 footer-legal">
+        <li class="list-inline-item"><%= link_to "Termos", "#", class: "footer-link" %></li>
+        <li class="list-inline-item"><%= link_to "Privacidade", "#", class: "footer-link" %></li>
+        <li class="list-inline-item"><%= link_to "Contato", "#", class: "footer-link" %></li>
+      </ul>
+    </div>
+  </div>
+</footer>

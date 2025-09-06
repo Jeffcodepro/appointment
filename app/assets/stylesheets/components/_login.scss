@@ -1,0 +1,181 @@
+/* Página branca minimal */
+.auth-page.clean{
+  min-height:100vh;
+  background:#FFFFFF;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:40px 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Card */
+.auth-card.clean{
+  width:100%;
+  max-width:420px;
+  background:#FFFFFF;
+  border:1px solid #E1E2E4;
+  border-radius:14px;
+  padding:28px;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.04);
+  color:#101112;
+}
+
+/* Título */
+.auth-title.clean{
+  margin:0 0 18px;
+  font-size:26px;
+  line-height:1.2;
+  font-weight:800;
+  color:#101112;
+  letter-spacing:.2px;
+}
+
+/* Form / grupos */
+.auth-form.clean .form-group{ margin-bottom:14px; }
+.auth-form.clean label{
+  color:#101112;
+  font-weight:600;
+  margin-bottom:6px;
+}
+
+/* Inputs */
+.auth-input.clean{
+  width:100%;
+  border-radius:10px;
+  background:#FFFFFF;
+  border:1px solid #E1E2E4;
+  color:#101112;
+  padding:12px 14px;
+  transition: box-shadow .2s ease, border-color .2s ease;
+}
+.auth-input.clean::placeholder{ color:#92949B; }
+.auth-input.clean:focus{
+  outline:none;
+  border-color:#137D8E;
+  box-shadow: 0 0 0 3px rgba(37,105,228,0.18);
+}
+
+/* Remember + link (uma linha, alinhados) */
+.auth-aux.clean{
+  display:flex;
+  align-items:center;          /* alinha verticalmente */
+  justify-content:space-between;
+  gap:12px;
+  margin-top:6px;
+}
+
+/* Ajustes do boolean do simple_form (checkbox + label) */
+.auth-aux.clean .boolean{
+  margin:0;
+  padding:0;
+  display:flex;
+  align-items:center;
+}
+.auth-aux.clean .boolean label{
+  margin:0;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  line-height:1;
+  font-weight:500;
+  color:#101112;
+}
+
+/* Checkbox na cor da marca */
+.auth-aux.clean .boolean input[type="checkbox"]{
+  width:16px;
+  height:16px;
+  accent-color:#137D8E;
+}
+
+/* Link “Esqueci minha senha” */
+.auth-link.clean{
+  color:#137D8E;
+  text-decoration:none;
+  font-weight:600;
+  line-height:1;
+  white-space:nowrap;
+}
+.auth-link.clean:hover{ text-decoration:underline; }
+
+/* Ações — empilha os botões */
+.form-actions.stack{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin-top:10px;
+}
+
+/* Botão primário */
+/* Botão primário (Entrar) — agora verde */
+.btn-auth.clean{
+  width:100%;
+  border:0;
+  border-radius:999px;
+  padding:12px 16px;
+  font-weight:800;
+  letter-spacing:.2px;
+  color:#FFFFFF;
+  background:#137D8E;                               /* verde principal */
+  box-shadow: 0 8px 18px rgba(19,125,142,0.28);     /* sombra no tom do verde */
+  transition: transform .12s ease, filter .15s ease, background .15s ease;
+}
+.btn-auth.clean:hover{
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+}
+.btn-auth.clean:active{
+  background:#0A5764;                               /* verde mais escuro p/ press */
+  transform: translateY(0);
+}
+
+/* Botão secundário (Criar conta) — outline verde */
+.btn-auth-outline.clean{
+  width:100%;
+  text-align:center;
+  border:1px solid #137D8E;                         /* borda verde */
+  border-radius:999px;
+  padding:12px 16px;
+  font-weight:800;
+  letter-spacing:.2px;
+  color:#137D8E;                                    /* texto verde */
+  background:#FFFFFF;
+  transition: background .15s ease, color .15s ease, border-color .15s ease;
+}
+.btn-auth-outline.clean:hover{
+  background: rgba(19,125,142,0.08);                /* leve wash no hover */
+}
+.btn-auth-outline.clean:active{
+  border-color:#0A5764;
+  color:#0A5764;
+  background: rgba(10,87,100,0.06);
+}
+
+/* Rodapé do card (se usar) */
+.auth-alt.clean{ margin-top:12px; color:#92949B; }
+.auth-alt.clean a{
+  color:#2569E4;
+  font-weight:700;
+  text-decoration:none;
+}
+.auth-alt.clean a:hover{ text-decoration:underline; }
+
+/* Erros do simple_form */
+.invalid-feedback, .error{
+  color:#1748A2;   /* discreto, ainda na paleta */
+}
+.input.boolean .invalid-feedback{ margin-top:6px; }
+
+/* Responsividade */
+@media (max-width:420px){
+  .auth-card.clean{ padding:22px; }
+  .auth-title.clean{ font-size:22px; }
+}
+
+/* Autofill do Chrome — mantém fundo branco */
+input.auth-input.clean:-webkit-autofill{
+  -webkit-box-shadow: 0 0 0 1000px #FFFFFF inset !important;
+  -webkit-text-fill-color: #101112 !important;
+}

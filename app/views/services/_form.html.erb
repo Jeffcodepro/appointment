@@ -1,36 +1,84 @@
 <div class="container">
-  <%= simple_form_for :service, url: services_path do |f| %>
-    <%= f.error_notification %>
+  <h2>Novo serviço</h2>
 
-    <div class="row">
-      <div class="col-md-8">
-        <%= f.input :name, label: "Nome do serviço" %>
-      </div>
-      <div class="col-md-4">
-        <%= f.input :price_hour, label: "Preço por hora (R$)", input_html: { step: "0.01" } %>
-      </div>
-    </div>
+  <%= form_with model: @service, data: { turbo: true } do |f| %>
+  <div class="mb-3">
+    <%= f.label :name, "Nome do serviço" %>
+    <%= f.text_field :name, class: "form-control", required: true %>
+  </div>
 
-    <div class="row">
-      <div class="col-md-6">
-        <%= f.input :categories, as: :select,
-              collection: Service::CATEGORIES,
-              include_blank: "Selecione uma categoria",
-              input_html: { data: { controller: "service-category", action: "change->service-category#change", "service-category-target": "category" } } %>
-      </div>
-      <div class="col-md-6">
-        <%= f.input :subcategories, as: :select,
-              collection: (Service::SUBCATEGORIES || 'Selecionar subcategoria' ),
-              include_blank: "Selecione uma subcategoria",
-              input_html: { data: { "service-category-target": "subcategory" } } %>
-      </div>
-    </div>
+  <div class="mb-3">
+    <%= f.label :category, "Categoria" %>
+    <%= f.text_field :category, class: "form-control", placeholder: "ex.: Cabeleireiro" %>
+  </div>
 
-    <%= f.input :description, as: :text, input_html: { rows: 5 }, label: "Descrição" %>
+  <div class="mb-3">
+    <%= f.label :description, "Descrição" %>
+    <%= f.text_area :description, class: "form-control", rows: 3 %>
+  </div>
 
-    <div class="mt-3">
-      <%= f.button :submit, class: "btn btn-primary" %>
-      <%= link_to "Cancelar", services_path, class: "btn btn-link" %>
-    </div>
-  <% end %>
+  <hr class="my-4">
+
+  <h5>Procedimentos (subcategorias)</h5>
+
+  <div id="subcategories-list">
+    <%= f.fields_for :service_subcategories do |sf| %>
+      <%= render "services/subcategory_fields", f: sf %>
+    <% end %>
+  </div>
+
+  <div class="mt-3">
+    <button type="button" id="add-subcategory" class="btn btn-outline-primary">
+      Adicionar procedimento
+    </button>
+  </div>
+
+  <div class="mt-4">
+    <%= f.submit class: "btn btn-primary" %>
+    <%= link_to "Cancelar", (@service.persisted? ? service_path(@service) : services_path), class: "btn btn-secondary ms-2" %>
+  </div>
+
+  <!-- Template escondido para novas linhas -->
+  <template id="subcategory-template">
+    <%= form_fields = f.fields_for(:service_subcategories, ServiceSubcategory.new, child_index: "NEW_RECORD") do |sf| %>
+      <%= render "services/subcategory_fields", f: sf %>
+    <% end %>
+  </template>
+<% end %>
+
+<script>
+  (function() {
+    const addBtn = document.getElementById("add-subcategory");
+    if (!addBtn) return;
+
+    addBtn.addEventListener("click", () => {
+      const tpl = document.getElementById("subcategory-template");
+      const target = document.getElementById("subcategories-list");
+      if (!tpl || !target) return;
+
+      const timestamp = Date.now();
+      const html = tpl.innerHTML.replace(/NEW_RECORD/g, timestamp);
+      target.insertAdjacentHTML("beforeend", html);
+    });
+
+    document.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-remove-subcategory]");
+      if (!btn) return;
+
+      const wrapper = btn.closest("[data-subcategory-wrapper]");
+      if (!wrapper) return;
+
+      const destroyField = wrapper.querySelector("input[name*='[_destroy]']");
+      if (destroyField) {
+        // Persistente: marca _destroy = 1 e oculta
+        destroyField.value = "1";
+        wrapper.style.display = "none";
+      } else {
+        // Novo (não salvo): remove do DOM
+        wrapper.remove();
+      }
+    });
+  })();
+</script>
+
 </div>
