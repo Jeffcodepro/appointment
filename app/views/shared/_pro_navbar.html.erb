@@ -1,8 +1,8 @@
-<nav class="navbar navbar-expand-lg bg-body-tertiary pro-navbar">
+<nav class="navbar navbar-expand-lg bg-white shadow-sm fixed-top site-navbar pro-navbar">
   <div class="container-fluid">
 
     <%= link_to root_path, class: "navbar-brand d-flex align-items-center gap-2" do %>
-      <%#= image_tag "logo.svg", alt: "Logo", class: "pro-navbar__logo" %>
+      <%= image_tag "logo2.png", alt: "Logo", class: "brand-logo" %>
       <span>MyApp</span>
     <% end %>
 
@@ -14,17 +14,21 @@
     <div class="collapse navbar-collapse" id="proNavbar">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
         <li class="nav-item">
-          <%= link_to "Cadastro de horários", worktimes_path, class: "nav-link" %>
+          <%= link_to "Cadastro de horários",
+                      edit_profile_path(current_user),
+                      class: "nav-link #{current_page?(edit_profile_path(current_user)) ? 'active' : ''}" %>
         </li>
+
         <li class="nav-item">
-          <%= link_to "Histórico",
-                      histories_path,
-                      class: "nav-link #{controller_name == 'histories' ? 'active' : ''}" %>
+          <%= link_to "Histórico de agendamentos",
+                      service_history_path,
+                      class: "nav-link #{current_page?(service_history_path) ? 'active' : ''}" %>
         </li>
+
         <% if current_user&.professional? %>
           <li class="nav-item">
-            <%= link_to my_services_path,
-                        class: "nav-link d-flex align-items-center gap-1 #{current_page?(my_services_path) ? 'active' : ''}" do %>
+            <%= link_to services_path(user_id: current_user.id),
+                        class: "nav-link d-flex align-items-center gap-1 #{current_page?(services_path(user_id: current_user.id)) ? 'active' : ''}" do %>
               <span>Meus Serviços</span>
               <% count = current_user.services.count %>
               <% if count.positive? %>
