@@ -39,7 +39,6 @@
   </div>
 
   <div id="<%= dom_id(@conversation, :form) %>" class="message-form">
-    <%= render "messages/form_conversation",
-               conversation: @conversation, message: @message %>
+    <%= render "messages/composer", parent: @conversation, message: @message %>
   </div>
 </div>

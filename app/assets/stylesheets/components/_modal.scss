@@ -235,3 +235,19 @@
 .cancel-modal .btn-cancel-confirm:hover{
   background-color:#a52525; border-color:#a52525; color:#fff;
 }
+
+
+.rm-modal{
+  width: calc(100% - 24px);  /* ocupa a largura menos a margem */
+  max-width: 480px;          /* mas não passa de 480px */
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.12);
+}
+.rm-overlay{
+  position: fixed; inset: 0; z-index: 2000;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,.35);
+}

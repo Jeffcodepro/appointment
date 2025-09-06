@@ -39,7 +39,15 @@
         <% end %>
       </ul>
 
-      <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+      <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
+        <% if current_user&.professional? %>
+          <li class="nav-item me-2">
+            <%= link_to "Criar novo serviço",
+                        new_service_path,
+                        class: "btn btn-sm btn-select-service" %>
+          </li>
+        <% end %>
+
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" role="button"
              data-bs-toggle="dropdown" aria-expanded="false">

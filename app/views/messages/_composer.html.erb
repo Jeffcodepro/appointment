@@ -1,0 +1,37 @@
+<%# parent: Conversation ou Schedule / message: Message %>
+<% parent  = local_assigns.fetch(:parent) %>
+<% message = local_assigns.fetch(:message) %>
+
+<% dom_prefix   = parent.model_name.singular %>  <%# "conversation" ou "schedule" %>
+<% post_url     = polymorphic_path([parent, :messages]) %> <%# conversation_messages_path OU schedule_messages_path %>
+<% container_id = "messages_for_#{dom_prefix}_#{parent.id}" %>
+
+
+<%= form_with model: message,
+              url: post_url,
+              method: :post,
+              data: {
+                controller: "prevent-multi-submit",
+                turbo: true,
+                "prevent-multi-submit-container-value": container_id
+              },
+              html: { class: "composer", autocomplete: "off" } do |f| %>
+
+  <div class="composer__wrap">
+    <%= f.text_area :content,
+          rows: 1,
+          class: "composer__textarea",
+          placeholder: "Escreva sua mensagem..." %>
+
+    <button class="composer__send" type="submit" title="Enviar">
+      <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+        <path fill="currentColor" d="M2.01 21L23 12L2.01 3L2 10l15 2l-15 2z"/>
+      </svg>
+      <span class="composer__send-text">Enviar</span>
+    </button>
+  </div>
+
+  <% if message.errors.any? %>
+    <div class="composer__error"><%= message.errors.full_messages.to_sentence %></div>
+  <% end %>
+<% end %>
