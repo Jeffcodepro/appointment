@@ -30,43 +30,107 @@
   </div>
 </div>
 
-<div class="container">
-  <% if has_services? %>
-    <h2 class="text-center">Serviços</h2>
-    <div class="row">
-      <% @services.each do |service| %>
-        <div class="col-md-4">
-          <div class="card mb-4 shadow-sm">
-            <div class="card-body">
-              <h5 class="card-title"><%= service.name %></h5>
-              <p class="card-text"><%= service.description %></p>
-              <p class="card-text">
-                <small class="text-muted">
-                  <i class="bi bi-clock"></i>
-                  <%= service.price_hour %> preço
-                </small>
-              </p>
-              <p class="card-text">
-                <small class="text-muted">
-                  <i class="bi bi-person-circle"></i>
-                  <%= service.user.email%>
-                </small>
-              </p>
-              <p class="card-text">
-                <small class="text-muted">
-                  <i class="bi bi-calendar-event"></i>
-                  <%#= service.user.schedules.first.start_at.strftime("%d/%m/%Y") %>
-                </small>
-              </p>
+<%# Toolbar topo: troca de visão e navegação %>
+<%# =================== TOOLBAR =================== %>
+<div class="container-fluid py-3">
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+    <div class="btn-group" role="group">
+      <%= link_to "Semana",
+                  dashboard_path(view: "week", start_date: @date),
+                  class: "btn btn-outline-primary #{'active' if @view=='week'}" %>
+      <%= link_to "Mês",
+                  dashboard_path(view: "month", start_date: @date),
+                  class: "btn btn-outline-primary #{'active' if @view=='month'}" %>
+    </div>
+
+    <div class="btn-group" role="group">
+      <% step = (@view == 'week' ? 1.week : 1.month) %>
+      <%= link_to "◀", dashboard_path(view: @view, start_date: (@date - step)), class: "btn btn-outline-secondary" %>
+      <%= link_to "Hoje", dashboard_path(view: @view, start_date: Date.current), class: "btn btn-outline-secondary" %>
+      <%= link_to "▶", dashboard_path(view: @view, start_date: (@date + step)), class: "btn btn-outline-secondary" %>
+    </div>
+  </div>
+
+  <%# =================== MONTH VIEW =================== %>
+  <% if @view == "month" %>
+    <div class="card">
+      <div class="card-body p-0">
+        <div class="gcal-month">
+          <%= month_calendar attribute: :start_at, events: @appointments, start_date: @date do |date, events| %>
+            <div class="gcal-month-cell <%= 'is-today' if date == Date.current %>">
+              <div class="gcal-month-date">
+                <%= link_to l(date, format: "%d"),
+                            dashboard_path(view: "week", start_date: date),
+                            class: "date-link" %>
+              </div>
+
+              <%# Chips de eventos %>
+              <% events.first(4).each do |ev| %>
+                <div class="gcal-month-chip" title="<%= ev.service&.name %>">
+                  <span class="dot"></span>
+                  <%= truncate(ev.service&.name.to_s, length: 22) %>
+                </div>
+              <% end %>
+
+              <% if events.size > 4 %>
+                <%= link_to "+#{events.size - 4} mais",
+                            dashboard_path(view: "week", start_date: date),
+                            class: "more-link" %>
+              <% end %>
             </div>
-          </div>
-        </div>
           <% end %>
+        </div>
       </div>
     </div>
 
+  <% else %>
+  <%# =================== WEEK VIEW (grade de horas) =================== %>
+    <div class="card">
+      <div class="card-body p-0">
+        <div class="gcal-week" style="--hour-height: 46px;">
+          <%= week_calendar attribute: :start_at, number_of_weeks: 1, start_date: @date, events: @appointments do |date, day_events| %>
+            <% is_first = (date == date.beginning_of_week(:sunday)) %>
+            <div class="gcal-day <%= 'is-today' if date == Date.current %>">
+
+              <%# régua de horas (renderiza somente na 1a coluna visual) %>
+              <% if is_first %>
+                <div class="gcal-hour-rail" aria-hidden="true">
+                  <% (0..24).each do |h| %>
+                    <div class="hour" style="top:<%= (h/24.0*100).round(4) %>%"><%= "%02d:00" % h %></div>
+                  <% end %>
+                </div>
+              <% end %>
+
+              <%# linhas de 30 em 30 min (background) %>
+              <div class="gcal-lines" aria-hidden="true"></div>
+
+              <%# faixa de almoço (background) %>
+              <% if (wt = @wt_by_wday[date.wday]) && wt.active && wt.lunch_start_time.present? && wt.lunch_end_time.present? && wt.lunch_end_time > wt.lunch_start_time %>
+                <% s = time_on_date(date, wt.lunch_start_time)
+                   e = time_on_date(date, wt.lunch_end_time) %>
+                <div class="gcal-lunch" style="top:<%= top_pct(s) %>%; height:<%= height_pct(s,e) %>%"></div>
+              <% end %>
+
+              <%# linha "agora" %>
+              <% if (nt = now_top_pct_for(date)) %>
+                <div class="gcal-now" style="top:<%= nt %>%"></div>
+              <% end %>
+
+              <%# eventos (empacotados em colunas quando sobrepostos) %>
+              <% pack_day_events(day_events, date).each do |ev| %>
+                <div class="gcal-event"
+                     style="top:<%= ev[:top] %>%; height:<%= ev[:height] %>%; left: <%= ev[:left] %>%; width: <%= ev[:width] %>%;">
+                  <div class="evt-time"><%= l(ev[:s], format: "%H:%M") %>–<%= l(ev[:e], format: "%H:%M") %></div>
+                  <div class="evt-title"><%= ev[:record].service&.name %></div>
+                  <div class="evt-client"><%= ev[:record].user&.name || ev[:record].user&.email %></div>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
   <% end %>
-  <% if current_user&.professional? %>
-    <%= link_to 'Novo Serviço', new_service_path, class: "btn btn-warning" %>
-  <% end %>
+</div>
+
 </div>

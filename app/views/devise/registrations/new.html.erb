@@ -1,20 +1,49 @@
-<!-- app/views/devise/registrations/new.html.erb -->
-<h2>Criar conta</h2>
+<div class="auth-page clean">
+  <div class="auth-card clean">
+    <h1 class="auth-title clean">Criar conta</h1>
 
-<%= simple_form_for(resource, as: resource_name, url: registration_path(resource_name)) do |f| %>
-  <%= f.error_notification %>
+    <%= simple_form_for(
+          resource,
+          as: resource_name,
+          url: registration_path(resource_name),
+          html: { data: { turbo: false }, class: "auth-form clean" }
+        ) do |f| %>
 
-  <%= f.input :role, as: :select,
-        collection: [["Cliente", "client"], ["Profissional", "professional"]],
-        prompt: "Selecione o tipo de conta",
-        label: "Tipo de usuário" %>
+      <%= f.error_notification %>
 
-  <%= f.input :name,  label: "Nome completo" %>
-  <%= f.input :email, required: true %>
-  <%= f.input :password, required: true, hint: ("#{@minimum_password_length} caracteres no mínimo" if @minimum_password_length) %>
-  <%= f.input :password_confirmation, required: true %>
+      <div class="form-inputs">
+        <%= f.input :role,
+              as: :select,
+              collection: [["Cliente", "client"], ["Profissional", "professional"]],
+              prompt: "Selecione o tipo de conta",
+              label: "Tipo de usuário",
+              input_html: { class: "auth-input clean" } %>
 
-  <%= f.button :submit, "Cadastrar" %>
-<% end %>
+        <%= f.input :name,
+              label: "Nome completo",
+              input_html: { class: "auth-input clean", autocomplete: "name" } %>
 
-<%= render "devise/shared/links" %>
+        <%= f.input :email,
+              label: "E-mail",
+              required: true,
+              input_html: { class: "auth-input clean", autocomplete: "email" } %>
+
+        <%= f.input :password,
+              label: "Senha",
+              required: true,
+              hint: (@minimum_password_length ? "#{@minimum_password_length} caracteres no mínimo" : nil),
+              input_html: { class: "auth-input clean", autocomplete: "new-password" } %>
+
+        <%= f.input :password_confirmation,
+              label: "Confirmar senha",
+              required: true,
+              input_html: { class: "auth-input clean", autocomplete: "new-password" } %>
+      </div>
+
+      <div class="form-actions stack">
+        <%= f.button :submit, "Cadastrar", class: "btn-auth clean" %>
+        <%= link_to "Voltar ao entrar", new_session_path(resource_name), class: "btn-auth-outline clean" %>
+      </div>
+    <% end %>
+  </div>
+</div>

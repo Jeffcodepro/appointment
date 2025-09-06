@@ -1,57 +1,83 @@
-.navbar-lewagon {
-  justify-content: space-between;
-  background: white;
+/* ===== Offsets para navbar FIXED ===== */
+body { padding-top: 64px; }
+@media (min-width: 576px){ body { padding-top: 72px; } }
+
+/* ===== Navbar ===== */
+.site-navbar{
+  border-bottom: 1px solid #E1E2E4;
+  background: #FFFFFF;
+  z-index: 1400;              /* acima do conteúdo */
 }
 
-.navbar-lewagon .navbar-collapse {
-  flex-grow: 0;
+/* Logo */
+.brand-logo{ width:40px; height:auto; }
+
+/* Links */
+.site-navbar .nav-link{
+  color:#101112; opacity:.85; font-weight:600;
+}
+.site-navbar .nav-link:hover{
+  opacity:1; color:#137D8E;   /* verde da paleta */
 }
 
-.navbar-lewagon .navbar-brand img {
-  width: 40px;
+/* Botão “Criar conta” (outline verde) */
+.btn-nav-signup{
+  display:inline-block;
+  padding:8px 14px;
+  border-radius:999px;
+  border:1px solid #137D8E;
+  color:#137D8E;
+  background:#FFFFFF;
+  font-weight:700;
+  text-decoration:none;
+  line-height:1;
+}
+.btn-nav-signup:hover{
+  background:rgba(19,125,142,0.08);
+  color:#0A5764;
+  border-color:#0A5764;
 }
 
-/* altura por papel, usada na posição do header sticky da conversa */
-.role-default { --nav-h: 64px; }
-.role-pro     { --nav-h: 72px; }
+/* Dropdown por cima de tudo */
+.dropdown-menu{ z-index:1500; }
 
-/* navbar colada no topo usando STICKY */
-.app-navbar{
-  position: sticky;
-  top: 0;
-  z-index: 1200;
-  background: #fff; /* ou var(--surface-1) */
-  border-bottom: 1px solid #e5e8ef; /* var(--line) */
-  min-height: var(--nav-h);
-  display: flex;
-  align-items: center;
-  padding-inline: 16px;
+
+.brand-logo{
+  height: 48px;   /* ajuste aqui: 48, 56, 64… */
+  width: auto;    /* mantém proporção */
 }
 
-/* header fixo do resumo na conversa */
-.conv-header{
-  position: sticky;
-  top: calc(var(--nav-h) + 8px);
-  z-index: 1100;
+/* Saudação */
+.nav-greeting{
+  font-weight:700;
+  color:#101112;
+  margin-right:6px;
+  white-space:nowrap;
 }
 
-/* Altura por papel (ajuste se a pro navbar for maior) */
-.role-default { --nav-h: 64px; }
-.role-pro     { --nav-h: 72px; }
-
-/* ===== Navbar colada no topo (sem fixed-top) ===== */
-.app-navbar{
-  position: sticky;
-  top: 0;
-  z-index: 1200;
-  background: var(--surface-1);
-  border-bottom: 1px solid var(--line);
-  min-height: var(--nav-h);
-  display: flex;
-  align-items: center;
-  padding-inline: 16px;
+/* Link em verde (apenas onde quiser destacar) */
+.nav-link-green{
+  color:#137D8E !important;
+}
+.nav-link-green:hover{
+  color:#0A5764 !important;
 }
 
-/* Garanta que a navbar e seus dropdowns fiquem acima do resumo */
-.navbar-lewagon.fixed-top { z-index: 1400; }
-.dropdown-menu             { z-index: 1500; } /* por via das dúvidas */
+/* Botão de sair (outline verde) */
+.btn-logout-nav{
+  display:inline-block;
+  padding:8px 14px;
+  border-radius:999px;
+  border:1px solid #137D8E;
+  color:#137D8E;
+  background:#FFFFFF;
+  font-weight:700;
+  text-decoration:none;
+  line-height:1;
+}
+.btn-logout-nav:hover{
+  background:rgba(19,125,142,0.08);
+  color:#0A5764;
+  border-color:#0A5764;
+}
+
