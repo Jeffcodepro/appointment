@@ -181,3 +181,52 @@
   border-color:#67e8f9;
   color:#075985;
 }
+
+/* Criar serviço – primário brand (#137d8e) */
+.btn-create-service {
+  @extend .btn;
+  background-color: #137d8e;
+  border-color: #137d8e;
+  color: #ffffff;
+  padding: 0.5rem 1.25rem;
+  font-size: 1rem;
+
+  &:hover {
+    background-color: #0A5764;
+    border-color: #0A5764;
+    color: #ffffff;
+  }
+}
+
+/* Cancelar – fantasma no padrão existente */
+.btn-cancel-service {
+  @extend .btn--ghost;
+}
+
+/* Confirmar agendamento */
+.btn-accept-schedule {
+  @extend .btn;
+  background-color: #137d8e;
+  border-color: #137d8e;
+  color: #fff;
+
+  &:hover {
+    background-color: #0A5764;
+    border-color: #0A5764;
+    color: #fff;
+  }
+}
+
+/* Recusar agendamento */
+.btn-reject-schedule {
+  @extend .btn;
+  background-color: #fff;
+  border: 1px solid rgb(213,114,114);
+  color: rgb(193,45,45);
+
+  &:hover {
+    background-color: rgb(193,45,45);
+    border-color: rgb(193,45,45);
+    color: #fff;
+  }
+}

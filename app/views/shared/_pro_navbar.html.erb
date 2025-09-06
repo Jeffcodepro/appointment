@@ -7,7 +7,6 @@
   <div class="container-fluid">
 
     <%= link_to root_path, class: "navbar-brand d-flex align-items-center gap-2" do %>
-      <%# Se tiver um logo em app/assets/images/logo.svg, descomente a linha abaixo %>
       <%#= image_tag "logo.svg", alt: "Logo", class: "pro-navbar__logo" %>
       <span>MyApp</span>
     <% end %>
@@ -30,8 +29,15 @@
         </li>
       </ul>
 
-      <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-        <%# Avatar + dropdown %>
+      <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
+        <% if current_user&.professional? %>
+          <li class="nav-item me-2">
+            <%= link_to "Criar novo serviço",
+                        new_service_path,
+                        class: "btn btn-sm btn-select-service" %>
+          </li>
+        <% end %>
+
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" role="button"
              data-bs-toggle="dropdown" aria-expanded="false">

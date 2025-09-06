@@ -1,3 +1,4 @@
+
 # app/controllers/conversations/messages_controller.rb
 module Conversations
   class MessagesController < ApplicationController
