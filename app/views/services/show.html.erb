@@ -73,10 +73,15 @@
       <!-- AÇÕES -->
       <div class="d-flex gap-2 mb-3">
         <% if user_signed_in? && current_user.id == @service.user_id %>
-          <!-- DONO DO SERVIÇO: mostra atalho para conversas do serviço -->
+          <!-- DONO DO SERVIÇO: conversas + excluir -->
           <%= link_to "Ver conversas deste serviço",
                       conversations_path(service_id: @service.id),
                       class: "btn btn--ghost btn-inbox-link" %>
+
+          <%= link_to "Excluir serviço",
+                      service_path(@service),
+                      data: { turbo_method: :delete, turbo_confirm: "Tem certeza que deseja excluir este serviço? Esta ação não pode ser desfeita." },
+                      class: "btn btn-outline-danger" %>
         <% else %>
           <!-- QUALQUER OUTRO USUÁRIO: Agendar + Mensagem -->
           <div
