@@ -6,23 +6,54 @@
   <div class="container py-4">
 
     <!-- Banner com foto do profissional -->
-    <div class="card border-0 mb-4 overflow-hidden shadow-sm">
-      <div class="row g-0 align-items-center">
-        <div class="col-auto p-3">
-          <div class="rounded-circle overflow-hidden bg-light" style="width:88px;height:88px;">
-            <% if @user.images.attached? %>
-              <%= image_tag(@user.images.first, class: "w-100 h-100", style: "object-fit: cover;") %>
+    <%# ==== HERO do dashboard (banner + avatar) ==== %>
+    <% owner = defined?(@profile) && @profile.present? ? @profile : @user %>
+    <div class="dash-hero card border-0 shadow-sm overflow-hidden mb-4">
+      <div class="dash-hero__media">
+        <% if owner.respond_to?(:banner) && owner.banner&.attached? %>
+          <%# Se usa Cloudinary (ActiveStorage <= cloudinary), use cl_image_tag p/ recorte/otimização %>
+          <% if defined?(cl_image_tag) && owner.banner.respond_to?(:key) %>
+            <%= cl_image_tag owner.banner.key,
+                  width: 1920, height: 320, crop: :fill, gravity: :auto,
+                  fetch_format: :auto, quality: :auto,
+                  class: "w-100 h-100", style: "object-fit: cover;" %>
+          <% else %>
+            <%= image_tag owner.banner, class: "w-100 h-100", style: "object-fit: cover;" %>
+          <% end %>
+        <% else %>
+          <div class="dash-hero__placeholder"></div>
+        <% end %>
+      </div>
+
+      <div class="dash-hero__overlay">
+        <div class="d-flex align-items-center gap-3">
+          <div class="dash-hero__avatar-wrap rounded-circle overflow-hidden">
+            <% if owner.respond_to?(:avatar) && owner.avatar&.attached? %>
+              <% if defined?(cl_image_tag) && owner.avatar.respond_to?(:key) %>
+                <%= cl_image_tag owner.avatar.key,
+                      width: 88, height: 88, crop: :fill, gravity: :face,
+                      fetch_format: :auto, quality: :auto,
+                      class: "w-100 h-100", style: "object-fit: cover;", alt: (owner.try(:name) || owner.try(:email)) %>
+              <% else %>
+                <%= image_tag owner.avatar, class: "w-100 h-100", style: "object-fit: cover;", alt: (owner.try(:name) || owner.try(:email)) %>
+              <% end %>
             <% else %>
-              <%= image_tag("avatar_placeholder.png", class: "w-100 h-100", style: "object-fit: cover;") %>
+              <% initials = (owner.try(:name).presence || owner.try(:email)).to_s.split.map { |s| s[0] }.join.first(2).upcase %>
+              <div class="dash-hero__avatar-fallback rounded-circle d-flex align-items-center justify-content-center">
+                <%= initials.presence || "@" %>
+              </div>
             <% end %>
           </div>
-        </div>
-        <div class="col p-3">
-          <h1 class="h4 mb-1">Olá, <%= @user.name %></h1>
-          <div class="text-muted">Seu painel de agendamentos e receita</div>
+
+          <div>
+            <h1 class="h4 mb-1 text-white text-shadow">Olá, <%= first_name(current_user) %></h1>
+
+            <div class="text-white-50 small">Seu painel de agendamentos e receita</div>
+          </div>
         </div>
       </div>
     </div>
+
 
     <!-- Corpo (métricas + calendário) dentro de um Turbo Frame -->
     <%= turbo_frame_tag "dashboard-body" do %>

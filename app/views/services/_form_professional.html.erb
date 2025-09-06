@@ -1,3 +1,12 @@
+<%# app/views/services/_form_professional.html.erb %>
+
+<% if params[:last_service_id].present? %>
+  <div class="alert alert-info py-2 mb-3">
+    Agora selecione um <strong>Tipo de serviço</strong>, informe o <strong>Preço por hora</strong> e a <strong>Duração</strong>,
+    depois clique em <em>Salvar e adicionar outro</em> até concluir sua lista.
+  </div>
+<% end %>
+
 <%= simple_form_for service, url: services_path,
       html: {
         data: {
@@ -37,7 +46,7 @@
     <div class="col-md-6">
       <%= f.input :subcategories, as: :select, label: "Tipo de serviço",
             collection: (Service::SUBCATEGORIES[service.categories] || []),
-            include_blank: "Selecione um tipo de serviço",
+            include_blank: (service.categories.present? ? "Selecione um tipo de serviço" : "Selecione uma categoria primeiro"),
             input_html: {
               disabled: service.categories.blank?,
               data: { service_category_target: "subcategory" }
@@ -67,7 +76,24 @@
         input_html: { rows: 5, placeholder: "Explique o que está incluso, diferenciais etc." } %>
 
   <div class="mt-3 d-flex gap-2">
-    <%= f.button :submit, "Criar serviço", class: "btn btn-create-service" %>
-    <%= link_to "Cancelar", dashboard_path, class: "btn btn-cancel-service" %>
+    <%= f.button :submit, "Salvar", class: "btn btn-create-service" %>
+
+    <%= button_tag "Salvar e adicionar outro",
+          type: "submit",
+          name: "save_and_new",
+          value: "1",
+          class: "btn btn-outline-secondary" %>
+
+    <%= link_to "Cancelar", dashboard_path, class: "btn btn-cancel-service ms-auto" %>
   </div>
 <% end %>
+
+<script>
+  // Se estiver voltando de um "Salvar e adicionar outro", foca o campo "Tipo"
+  document.addEventListener("turbo:load", () => {
+    if (new URLSearchParams(window.location.search).get("last_service_id")) {
+      const sub = document.querySelector('[data-service-category-target="subcategory"]');
+      if (sub) sub.focus();
+    }
+  });
+</script>

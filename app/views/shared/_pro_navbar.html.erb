@@ -3,7 +3,6 @@
 
     <%= link_to root_path, class: "navbar-brand d-flex align-items-center gap-2" do %>
       <%= image_tag "logo2.png", alt: "Logo", class: "brand-logo" %>
-      <span>MyApp</span>
     <% end %>
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#proNavbar"
@@ -13,11 +12,6 @@
 
     <div class="collapse navbar-collapse" id="proNavbar">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-        <li class="nav-item">
-          <%= link_to "Cadastro de horários",
-                      edit_profile_path(current_user),
-                      class: "nav-link #{current_page?(edit_profile_path(current_user)) ? 'active' : ''}" %>
-        </li>
 
         <li class="nav-item">
           <%= link_to "Histórico de agendamentos",
@@ -37,16 +31,17 @@
             <% end %>
           </li>
         <% end %>
+        <% if current_user&.professional? %>
+          <li class="nav-item">
+            <%= link_to "Criar novo serviço",
+                        new_service_path,
+                        class: "nav-link" %>
+          </li>
+        <% end %>
       </ul>
 
       <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
-        <% if current_user&.professional? %>
-          <li class="nav-item me-2">
-            <%= link_to "Criar novo serviço",
-                        new_service_path,
-                        class: "btn btn-sm btn-select-service" %>
-          </li>
-        <% end %>
+
 
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" role="button"
@@ -60,7 +55,8 @@
               <% initials = (current_user.name.presence || current_user.email).split.map { |s| s[0] }.join.first(2).upcase %>
               <span class="rounded-circle pro-navbar__avatar-fallback"><%= initials %></span>
             <% end %>
-            <span class="d-none d-md-inline"><%= current_user.name.presence || current_user.email %></span>
+            <span class="d-none d-md-inline"><%= first_name(current_user) %></span>
+
           </a>
           <ul class="dropdown-menu dropdown-menu-end">
             <li><%= link_to "Editar perfil", edit_profile_path(current_user), class: "dropdown-item" %></li>
@@ -74,6 +70,5 @@
         </li>
       </ul>
     </div>
-
   </div>
 </nav>

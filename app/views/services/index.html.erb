@@ -158,7 +158,7 @@
           class="map-sticky"
           data-controller="map"
           data-turbo-permanent
-          data-turbo="false" 
+          data-turbo="false"
           data-map-api-key-value="<%= ENV['MAPBOX_API_KEY'] %>"
           data-map-markers-value="<%= ERB::Util.json_escape(@markers.to_json) %>"
           data-map-clickable-pins-value="true"
