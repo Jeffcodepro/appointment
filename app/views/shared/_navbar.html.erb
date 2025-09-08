@@ -1,3 +1,4 @@
+<!-- app/views/shared/_navbar.html.erb -->
 <div class="navbar navbar-expand-sm bg-white shadow-sm fixed-top site-navbar">
   <div class="container-fluid">
     <%= link_to root_path, class: "navbar-brand d-flex align-items-center gap-2" do %>
@@ -64,12 +65,32 @@
             </ul>
           </li>
 
+        <% elsif user_signed_in? %>
+          <li class="nav-item">
+            <%= link_to dashboard_path,
+                        class: "nav-link nav-link-pill #{current_page?(dashboard_path) ? 'active' : ''}" do %>
+              <i class="fa-solid fa-gauge"></i>
+              <span>Dashboard</span>
+            <% end %>
+          </li>
+          <li class="nav-item ms-2">
+            <%= link_to "Sair", destroy_user_session_path,
+                data: { turbo_method: :delete }, class: "btn-logout-nav" %>
+          </li>
+
         <% else %>
           <li class="nav-item">
-            <%= link_to "Entrar", new_user_session_path, class: "nav-link" %>
-          </li>
-          <li class="nav-item">
-            <%= link_to "Criar conta", new_user_registration_path, class: "btn-nav-signup" %>
+            <div class="nav-guest">
+              <%= link_to new_user_session_path, class: "btn-nav-login" do %>
+                <i class="fa-solid fa-right-to-bracket"></i>
+                <span>Entrar</span>
+              <% end %>
+
+              <%= link_to new_user_registration_path, class: "btn-nav-cta" do %>
+                <i class="fa-solid fa-user-plus"></i>
+                <span>Criar conta</span>
+              <% end %>
+            </div>
           </li>
         <% end %>
       </ul>
