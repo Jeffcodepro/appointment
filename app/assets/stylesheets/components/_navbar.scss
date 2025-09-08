@@ -59,7 +59,39 @@
   background:#f3f4f6; color:#6b7280; font-weight:700; font-size:.8rem;
 }
 
-/* Responsivo */
+/* ===== Estado deslogado ===== */
+.nav-guest{
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .25rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  background: #f9fafb;
+}
+
+/* Botão fantasma para “Entrar” */
+.btn-nav-login{
+  display:inline-flex; align-items:center; gap:.5rem;
+  padding:.45rem .9rem;
+  border-radius:999px;
+  border:1px solid #d1d5db;
+  background:#fff;
+  color:#111827; font-weight:600; text-decoration:none;
+  transition: all .15s ease;
+}
+.btn-nav-login:hover{
+  background:#f3f4f6; border-color:#cfd4da; color:#0a5764;
+}
+
+/* Já existe .btn-nav-cta (preenchido verde) — fica perfeito para “Criar conta” */
+.btn-nav-cta i,
+.btn-nav-login i{ font-size:.95em; }
+
+/* Mobile: deixa o grupo mais “solto” */
 @media (max-width: 575.98px){
-  .brand-wordmark{ display:none; }
+  .nav-guest{
+    border: 0; background: transparent; padding: 0;
+    gap: .4rem;
+  }
 }
