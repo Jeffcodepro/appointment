@@ -1,0 +1,93 @@
+<% content_for :head do %>
+  <meta name="turbo-cache-control" content="no-preview">
+<% end %>
+
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">Meus serviços</h1>
+    <%= link_to "Novo serviço", new_service_path, class: "btn btn-primary" %>
+  </div>
+
+  <% if @services.any? %>
+    <div class="vstack gap-3">
+      <% @services.each do |s| %>
+        <div class="card border-0 service-tile shadow-sm">
+          <div class="card-body">
+            <div class="d-grid align-items-start" style="grid-template-columns: 1fr auto; gap: .75rem;">
+              <div>
+                <div class="fw-semibold">
+                  <%= s.categories.presence %>
+                  •
+                  <%= s.subcategories.presence || s.categories %>
+                </div>
+                <div class="small text-muted mt-1">
+                  <%= s.description.present? ? truncate(s.description, length: 140) : "Descrição breve não informada." %>
+                </div>
+                <div class="mt-2 small text-muted">
+                  Preço/hora:
+                  <strong>
+                    <%= (defined?(humanized_money_with_symbol) && s.price_hour.present?) ?
+                          humanized_money_with_symbol(s.price_hour) :
+                          number_to_currency(s.try(:price_hour_cents).to_i / 100.0, unit: "R$ ", separator: ",", delimiter: ".") %>
+                  </strong>
+                  <% if s.average_hours.present? %>
+                    • Duração média: <%= s.average_hours %> <%= s.average_hours.to_i == 1 ? "hora" : "horas" %>
+                  <% end %>
+                </div>
+              </div>
+
+              <div class="d-flex flex-wrap gap-2 justify-content-end">
+                <%= link_to "Ver página", service_path(s), class: "btn btn--ghost" %>
+                <%= link_to "Editar", edit_service_path(s), class: "btn btn-chat" %>
+
+                <!-- Abre modal Bootstrap -->
+                <button type="button"
+                        class="btn btn-cancel-appointment"
+                        data-bs-toggle="modal"
+                        data-bs-target="#confirmDeleteService-<%= s.id %>">
+                  Excluir
+                </button>
+              </div>
+
+              <div class="modal fade cancel-modal" id="confirmDeleteService-<%= s.id %>" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                  <div class="modal-content">
+
+                    <div class="modal-header">
+                      <h5 class="modal-title">Excluir serviço</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    </div>
+
+                    <div class="modal-body">
+                      Tem certeza que deseja excluir <strong><%= s.name.presence || "este serviço" %></strong>?
+                      <div class="small text-muted mt-2">
+                        Esta ação não pode ser desfeita.
+                      </div>
+                    </div>
+
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn--ghost" data-bs-dismiss="modal">Cancelar</button>
+
+                      <%= button_to "Excluir definitivamente",
+                                    service_path(s),
+                                    method: :delete,
+                                    form: { data: { turbo_confirm: nil } },  # desativa confirm nativo
+                                    class: "btn-cancel-confirm" %>
+                    </div>
+
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="text-muted">
+      Você ainda não cadastrou serviços.
+      <%= link_to "Crie o primeiro agora", new_service_path %>.
+    </div>
+  <% end %>
+</div>

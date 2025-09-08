@@ -73,15 +73,48 @@
       <!-- AÇÕES -->
       <div class="d-flex gap-2 mb-3">
         <% if user_signed_in? && current_user.id == @service.user_id %>
-          <!-- DONO DO SERVIÇO: conversas + excluir -->
+          <!-- DONO DO SERVIÇO: conversas + excluir (com modal) -->
           <%= link_to "Ver conversas deste serviço",
                       conversations_path(service_id: @service.id),
                       class: "btn btn--ghost btn-inbox-link" %>
 
-          <%= link_to "Excluir serviço",
-                      service_path(@service),
-                      data: { turbo_method: :delete, turbo_confirm: "Tem certeza que deseja excluir este serviço? Esta ação não pode ser desfeita." },
-                      class: "btn btn-outline-danger" %>
+          <!-- Abre modal Bootstrap -->
+          <button type="button"
+                  class="btn btn-cancel-appointment"
+                  data-bs-toggle="modal"
+                  data-bs-target="#confirmDeleteService-<%= @service.id %>">
+            Excluir serviço
+          </button>
+
+          <!-- Modal de confirmação -->
+          <div class="modal fade cancel-modal" id="confirmDeleteService-<%= @service.id %>" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+              <div class="modal-content">
+
+                <div class="modal-header">
+                  <h5 class="modal-title">Excluir serviço</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+
+                <div class="modal-body">
+                  Tem certeza que deseja excluir
+                  <strong><%= @service.name.presence || "este serviço" %></strong>?
+                  <div class="small text-muted mt-2">Esta ação não pode ser desfeita.</div>
+                </div>
+
+                <div class="modal-footer">
+                  <button type="button" class="btn btn--ghost" data-bs-dismiss="modal">Cancelar</button>
+
+                  <%= button_to "Excluir definitivamente",
+                                service_path(@service),
+                                method: :delete,
+                                form: { data: { turbo_confirm: nil } },  # evita confirm nativo
+                                class: "btn-cancel-confirm" %>
+                </div>
+
+              </div>
+            </div>
+          </div>
         <% else %>
           <!-- QUALQUER OUTRO USUÁRIO: Agendar + Mensagem -->
           <div

@@ -1,6 +1,6 @@
 class ServicesController < ApplicationController
   skip_before_action :authenticate_user!, only: [:index, :cities, :show, :availability, :calendar, :availability_summary]
-  before_action :ensure_professional!, only: [:new, :create, :destroy]
+  before_action :ensure_professional!, only: [:new, :create, :destroy, :mine, :edit, :update]
   before_action :ensure_provider_geocoded!, only: [:new, :create]
 
   # Captura qualquer find que não ache registro e trata com redirect amigável
@@ -8,6 +8,8 @@ class ServicesController < ApplicationController
 
   # Carrega @service quando necessário
   before_action :set_service, only: [:show, :destroy]
+  before_action :set_owned_service, only: [:edit, :update]
+
 
 
   include ActionView::Helpers::NumberHelper
@@ -243,9 +245,8 @@ class ServicesController < ApplicationController
 
     if @service.save
       if params[:save_and_new].present?
-        # volta para o form, reaproveitando campos base
-        redirect_to new_service_path(last_service_id: @service.id),
-                    notice: "Serviço salvo. Cadastre o próximo tipo."
+        # 👉 volta para o NEW sem pré-preencher (form limpinho)
+        redirect_to new_service_path, notice: "Serviço salvo. Cadastre o próximo."
       else
         redirect_to dashboard_path, notice: "Serviço criado com sucesso."
       end
@@ -254,6 +255,7 @@ class ServicesController < ApplicationController
       render :new, status: :unprocessable_entity
     end
   end
+
 
   # DELETE /services/:id
   def destroy
@@ -272,6 +274,23 @@ class ServicesController < ApplicationController
       service.destroy
       redirect_back fallback_location: dashboard_path,
                     notice: "Serviço excluído com sucesso."
+    end
+  end
+
+  def mine
+    redirect_to new_user_session_path and return unless user_signed_in?
+    @services = current_user.services.order(created_at: :desc)
+  end
+
+  def edit
+  end
+
+  def update
+    if @service.update(service_params)
+      redirect_to mine_services_path, notice: "Serviço atualizado com sucesso."
+    else
+      flash.now[:alert] = "Não foi possível atualizar. Verifique os campos."
+      render :edit, status: :unprocessable_entity
     end
   end
 
@@ -308,15 +327,17 @@ class ServicesController < ApplicationController
   end
 
   def service_params
-    # - categories / subcategories (strings)
-    # - price_hour (MoneyRails -> monetized :price_hour_cents)
-    # - average_hours (integer)
     params.require(:service).permit(
       :name, :description,
-      :categories, :subcategories,
-      :price_hour, :average_hours
+      # aceita as duas chaves para não quebrar nada existente
+      :category, :categories, :subcategories,
+      :price_hour, :average_hours,
+      service_subcategories_attributes: [
+        :id, :name, :price_hour, :average_hours, :description, :_destroy
+      ]
     )
   end
+
 
   def preload_from_last
     last = current_user.services.find_by(id: params[:last_service_id])
@@ -353,5 +374,13 @@ class ServicesController < ApplicationController
     # tem números (ex.: "123") OU começa com prefixos comuns
     return true if q =~ /\d/
     q =~ /\b(rua|r\.|avenida|av\.?|alameda|praça|praca|estrada|rod\.?|rodovia)\b/i
+  end
+
+  def set_service
+    @service = Service.includes(user: { images_attachments: :blob }).find(params[:id])
+  end
+
+  def set_owned_service
+    @service = current_user.services.find(params[:id])
   end
 end

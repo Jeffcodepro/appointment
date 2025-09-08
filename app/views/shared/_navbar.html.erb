@@ -1,7 +1,8 @@
 <div class="navbar navbar-expand-sm bg-white shadow-sm fixed-top site-navbar">
   <div class="container-fluid">
-    <%= link_to root_path, class: "navbar-brand d-flex align-items-center" do %>
-      <%= image_tag "logo2.png", class: "brand-logo" %>
+    <%= link_to root_path, class: "navbar-brand d-flex align-items-center gap-2" do %>
+      <%= image_tag "logo2.png", class: "brand-logo", alt: "Logo" %>
+      <span class="brand-wordmark d-none d-sm-inline">Appointments</span>
     <% end %>
 
     <button class="navbar-toggler border-0" type="button"
@@ -13,35 +14,62 @@
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav ms-auto align-items-center gap-2">
         <% if user_signed_in? && current_user.role == "client" %>
-          <li class="nav-item">
+          <% unread_total = total_unread_for(current_user) %>
+
+          <li class="nav-item d-none d-md-block">
             <span class="nav-greeting">Olá, <%= first_name(current_user) %></span>
           </li>
 
           <li class="nav-item">
-            <%= link_to "Meus agendamentos", dashboard_path, class: "nav-link nav-link-" %>
+            <%= link_to service_history_path,
+                        class: "nav-link nav-link-pill #{current_page?(service_history_path) ? 'active' : ''}" do %>
+              <i class="fa-regular fa-calendar-check"></i>
+              <span>Histórico</span>
+            <% end %>
           </li>
 
-          <li class="nav-item">
-            <%= link_to "Histórico de agendamentos", service_history_path, class: "nav-link" %>
+          <li class="nav-item position-relative">
+            <%= link_to conversations_path,
+                        class: "nav-link nav-link-pill #{current_page?(conversations_path) ? 'active' : ''}" do %>
+              <i class="fa-regular fa-comments"></i>
+              <span>Minhas conversas</span>
+              <% if unread_total.positive? %>
+                <span class="nav-badge"><%= unread_total %></span>
+              <% end %>
+            <% end %>
           </li>
 
-          <li class="nav-item ms-2">
-            <%= link_to "Sair", destroy_user_session_path,
-                data: { turbo_method: :delete }, class: "btn-logout-nav" %>
-          </li>
-
-        <% elsif user_signed_in? %>
-          <!-- opcional: menu para outros papéis -->
-          <li class="nav-item"><%= link_to "Dashboard", dashboard_path, class: "nav-link" %></li>
-          <li class="nav-item ms-2">
-            <%= link_to "Sair", destroy_user_session_path,
-                data: { turbo_method: :delete }, class: "btn-logout-nav" %>
+          <li class="nav-item dropdown ms-1">
+            <a class="nav-link dropdown-toggle d-flex align-items-center gap-2 nav-user"
+               href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <% if current_user.avatar.attached? %>
+                <%= cl_image_tag current_user.avatar.key,
+                      width: 32, height: 32, crop: :fill, gravity: :face,
+                      fetch_format: :auto, quality: :auto,
+                      class: "rounded-circle navbar__avatar", alt: current_user.name %>
+              <% else %>
+                <% initials = (current_user.name.presence || current_user.email).split.map { |s| s[0] }.join.first(2).upcase %>
+                <span class="rounded-circle navbar__avatar-fallback"><%= initials %></span>
+              <% end %>
+              <span class="d-none d-md-inline"><%= first_name(current_user) %></span>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><%= link_to "Minha conta", edit_user_registration_path, class: "dropdown-item" %></li>
+              <li><hr class="dropdown-divider"></li>
+              <li>
+                <%= link_to "Sair", destroy_user_session_path,
+                             data: { turbo_method: :delete },
+                             class: "dropdown-item text-danger" %>
+              </li>
+            </ul>
           </li>
 
         <% else %>
-          <li class="nav-item"><%= link_to "Entrar", new_user_session_path, class: "nav-link" %></li>
           <li class="nav-item">
-            <%= link_to "Criar conta", new_user_registration_path, class: "nav-link" %>
+            <%= link_to "Entrar", new_user_session_path, class: "nav-link" %>
+          </li>
+          <li class="nav-item">
+            <%= link_to "Criar conta", new_user_registration_path, class: "btn-nav-signup" %>
           </li>
         <% end %>
       </ul>

@@ -40,7 +40,11 @@ class ConversationsController < ApplicationController
 
     @messages = @conversation.messages.includes(:user).order(:created_at)
     @message  = @conversation.messages.build
+
+    @unread_count = @conversation.unread_count_for(current_user)
+    @conversation.mark_read_for!(current_user)
   end
+
 
   private
 

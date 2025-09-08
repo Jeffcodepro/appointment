@@ -14,6 +14,7 @@ Rails.application.routes.draw do
   resources :services do
     collection do
       get :cities
+      get :mine
     end
 
     member do

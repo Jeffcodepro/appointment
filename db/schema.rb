@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_09_06_205422) do
+ActiveRecord::Schema[7.1].define(version: 2025_09_08_205051) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_trgm"
   enable_extension "plpgsql"
@@ -50,8 +50,12 @@ ActiveRecord::Schema[7.1].define(version: 2025_09_06_205422) do
     t.bigint "service_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.datetime "last_read_client_at"
+    t.datetime "last_read_professional_at"
     t.index ["client_id", "professional_id", "service_id"], name: "idx_unique_conversation_triplet", unique: true
     t.index ["client_id"], name: "index_conversations_on_client_id"
+    t.index ["last_read_client_at"], name: "index_conversations_on_last_read_client_at"
+    t.index ["last_read_professional_at"], name: "index_conversations_on_last_read_professional_at"
     t.index ["professional_id"], name: "index_conversations_on_professional_id"
     t.index ["service_id"], name: "index_conversations_on_service_id"
   end
@@ -89,6 +93,19 @@ ActiveRecord::Schema[7.1].define(version: 2025_09_06_205422) do
     t.index ["service_id"], name: "index_schedules_on_service_id"
     t.index ["status"], name: "index_schedules_on_status"
     t.index ["user_id"], name: "index_schedules_on_user_id"
+  end
+
+  create_table "service_subcategories", force: :cascade do |t|
+    t.bigint "service_id", null: false
+    t.string "name", null: false
+    t.text "description"
+    t.integer "price_hour_cents"
+    t.string "price_hour_currency", default: "BRL", null: false
+    t.integer "average_hours"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["service_id", "name"], name: "index_service_subcategories_on_service_id_and_name"
+    t.index ["service_id"], name: "index_service_subcategories_on_service_id"
   end
 
   create_table "services", force: :cascade do |t|
@@ -144,5 +161,6 @@ ActiveRecord::Schema[7.1].define(version: 2025_09_06_205422) do
   add_foreign_key "schedules", "users"
   add_foreign_key "schedules", "users", column: "client_id"
   add_foreign_key "schedules", "users", column: "professional_id"
+  add_foreign_key "service_subcategories", "services"
   add_foreign_key "services", "users"
 end
