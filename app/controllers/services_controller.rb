@@ -90,11 +90,14 @@ class ServicesController < ApplicationController
     day_start = date.in_time_zone.change(hour: open_h,  min: 0)
     day_end   = date.in_time_zone.change(hour: close_h, min: 0)
 
+    rel = Schedule.for_provider(provider.id).blocking
+
+
     # agendamentos do provider que conflitam com o dia
-    day_schedules = Schedule
-      .for_provider(provider.id)
+    day_schedules = rel
       .where("start_at < ? AND end_at > ?", day_end, day_start)
       .pluck(:start_at, :end_at)
+
 
     now = Time.zone.now
 
@@ -140,10 +143,11 @@ class ServicesController < ApplicationController
     range_start = start_date.in_time_zone.change(hour: open_h,  min: 0)
     range_end   = end_date.in_time_zone.change(  hour: close_h, min: 0)
 
-    all_sched = Schedule
-                  .for_provider(provider.id)
-                  .where("start_at < ? AND end_at > ?", range_end, range_start)
-                  .pluck(:start_at, :end_at)
+    rel = Schedule.for_provider(provider.id).blocking
+
+    all_sched = rel
+      .where("start_at < ? AND end_at > ?", range_end, range_start)
+      .pluck(:start_at, :end_at)
 
     now = Time.zone.now
     fully_booked = []
@@ -187,7 +191,11 @@ class ServicesController < ApplicationController
   def calendar
     @service   = Service.find(params[:id])
     @provider  = @service.user
-    @provider_schedules = Schedule.for_provider(@provider.id)
+
+    @provider_schedules =
+      Schedule.for_provider(@provider.id)
+              .where.not(status: :canceled, canceled_by: Schedule.canceled_bies[:client])
+
     @start_date = params[:start_date].present? ? Date.parse(params[:start_date]) : Date.current
     render partial: "services/calendar", locals: { start_date: @start_date }
   end
@@ -198,19 +206,10 @@ class ServicesController < ApplicationController
     @provider  = @service.user
     @services_from_provider = @provider.services.order(:categories, :subcategories)
 
-    @provider_schedules = Schedule.for_provider(@provider.id)
+    @provider_schedules =
+      Schedule.for_provider(@provider.id)
+              .where.not(status: :canceled, canceled_by: Schedule.canceled_bies[:client])
 
-
-    # mapa: só o local do profissional
-    @markers = [{
-      lat:  @provider.latitude,
-      lng:  @provider.longitude,
-      name: @provider.name,
-      service_id: @service.id,
-      price: @service.price_hour.format,
-      url: service_path(@service),
-    }]
-    # marcador do provider (só cria se tiver geo válido)
     @markers = []
     if @provider.latitude.present? && @provider.longitude.present?
       @markers << {

@@ -5,6 +5,7 @@ module SchedulesHelper
     when "canceled"  then "is-canceled"
     when "no_show"   then "is-no-show"
     when "confirmed" then "is-confirmed"
+    when "rejected"  then "is-rejected"
     else                 "is-pending"
     end
   end
@@ -15,7 +16,8 @@ module SchedulesHelper
       "canceled"  => "Cancelado",
       "no_show"   => "No-show",
       "confirmed" => "Confirmado",
-      "pending"   => "Pendente"
+      "pending"   => "Pendente",
+      "rejected"  => "Recusado"
     }[status.to_s] || status.to_s.humanize
   end
 
@@ -76,5 +78,39 @@ module SchedulesHelper
       end_str = e ? e.strftime('%d/%m/%Y %H:%M') : ""
       "#{s.strftime('%d/%m/%Y %H:%M')} – #{end_str}"
     end
+  end
+
+  def status_chip_class(status)
+    case status.to_s
+    when "pending"    then "is-pending"
+    when "confirmed"  then "is-confirmed"
+    when "completed"  then "is-completed"
+    when "canceled"   then "is-canceled"
+    when "no_show"    then "is-no-show"
+    when "rejected"   then "is-rejected"
+    else "is-default"
+    end
+  end
+
+  def status_label_with_canceled_by(schedule)
+    base = status_label(schedule.status)
+    return base unless schedule.canceled?
+
+    who =
+      case schedule.canceled_by&.to_s
+      when "professional" then "profissional"
+      when "client"       then "cliente"
+      else nil
+      end
+
+    who.present? ? "#{base} <small>(pelo #{who})</small>".html_safe : base
+  end
+
+  def canceled_by_label(schedule)
+    return unless schedule.respond_to?(:canceled?) && schedule.canceled?
+    who = if schedule.canceled_by_client? then "cliente"
+          elsif schedule.canceled_by_professional? then "profissional"
+          end
+    who ? "Cancelado (#{who})" : "Cancelado"
   end
 end

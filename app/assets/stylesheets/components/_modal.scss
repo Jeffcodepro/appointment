@@ -237,17 +237,139 @@
 }
 
 
-.rm-modal{
-  width: calc(100% - 24px);  /* ocupa a largura menos a margem */
-  max-width: 480px;          /* mas não passa de 480px */
+/* Para o overlay custom (Stimulus) do show */
+/* Para o overlay custom (Stimulus) do show */
+.rm-overlay[hidden] { display: none !important; }
+.rm-overlay {
+  position: fixed; inset: 0; z-index: 2050;
+  background: rgba(2, 15, 45, .35);
+  backdrop-filter: blur(6px) saturate(110%);
+  -webkit-backdrop-filter: blur(6px) saturate(110%);
+  display: grid; place-items: center;
+}
+
+.rm-modal {
+  /* width: min(520px, calc(100% - 24px));  <-- REMOVER esta linha */
+
+  /* ✅ equivalente compatível com Sass */
+  width: 100%;
+  max-width: 520px;
+  margin-left: 12px;
+  margin-right: 12px;
+
   background: #fff;
-  border: 1px solid #e5e7eb;
   border-radius: 12px;
   padding: 16px;
-  box-shadow: 0 10px 30px rgba(0,0,0,.12);
+  box-shadow: 0 20px 60px rgba(0,0,0,.25);
 }
-.rm-overlay{
-  position: fixed; inset: 0; z-index: 2000;
-  display: flex; align-items: center; justify-content: center;
-  background: rgba(0,0,0,.35);
+
+
+
+/* Blur elegante no backdrop dos modais Bootstrap */
+.modal-backdrop.show {
+  opacity: 1 !important;                         /* não use o fade cinza do BS */
+  background-color: rgba(2, 15, 45, .35) !important; /* tom da sua paleta */
+  backdrop-filter: blur(6px) saturate(110%);
+  -webkit-backdrop-filter: blur(6px) saturate(110%);  /* Safari */
 }
+
+/* Garante que conteúdo atrás não "salte" por z-index */
+body.modal-open .history-index .history-filters,
+body.modal-open .history-index .filters-row,
+body.modal-open .history-index .date-dropdown__menu {
+  position: relative;
+  z-index: 1 !important;
+}
+
+
+/* ====== DAY EVENTS MODAL (Dashboard) ====== */
+/* Escopo fechado no modal do dashboard para não afetar o modal do cliente */
+#dayEventsModal {
+
+  /* Cabeçalho com leve gradiente e título coloridinho */
+  .modal-header{
+    background: linear-gradient(180deg, #f6fbfd 0%, #ffffff 100%);
+    border-bottom: 1px solid rgba(0,0,0,.06);
+  }
+  .modal-title{
+    color: #137d8e; /* cor da marca */
+  }
+
+  /* Corpo com um respiro extra */
+  .day-modal-body{ padding-top: 12px; }
+  .day-modal-date{ color:#0a5764; }
+
+  /* Lista “cartões” com cores por status */
+  .day-list .day-item{
+    position: relative;
+    border: 1px solid rgba(0,0,0,.05);
+    border-radius: 12px;
+    margin: 6px 0;
+    padding: 12px 14px;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,.04);
+    transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease, background-color .12s ease;
+  }
+  .day-list .day-item:hover{
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(0,0,0,.06);
+  }
+  /* filete colorido à esquerda */
+  .day-list .day-item::before{
+    content:"";
+    position:absolute; inset: 0 auto 0 0;
+    width:4px; border-radius: 12px 0 0 12px;
+    background:#dbe2ea; /* default */
+  }
+
+  /* Badge do horário (usa as cores do status) */
+  .day-time-badge{
+    display:inline-block;
+    font-size:.825rem;
+    line-height:1;
+    padding: .35rem .5rem;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    background: #eef2f7; /* default */
+    color: #334155;
+    white-space: nowrap;
+  }
+
+  /* ===== Paleta por status ===== */
+  /* Confirmado */
+  .day-item.is-confirmed::before{ background:#34a853; }
+  .day-item.is-confirmed .day-time-badge{
+    background:#e6f4ea; border-color:#c8e6c9; color:#0f5132;
+  }
+
+  /* Pendente */
+  .day-item.is-pending::before{ background:#f4b400; }
+  .day-item.is-pending { background: #fffaf0; }
+  .day-item.is-pending .day-time-badge{
+    background:#fff7e6; border-color:#ffe2a7; color:#8a5b00;
+  }
+
+  /* Cancelado */
+  .day-item.is-canceled::before{ background:#d93025; }
+  .day-item.is-canceled { background:#fff6f6; opacity:.95; }
+  .day-item.is-canceled .day-time-badge{
+    background:#fef2f2; border-color:#fecaca; color:#991b1b;
+  }
+
+  /* Recusado */
+  .day-item.is-rejected::before{ background:#a61e4d; }
+  .day-item.is-rejected { background:#fff5f7; opacity:.95; }
+  .day-item.is-rejected .day-time-badge{
+    background:#fdecec; border-color:#f6c2ce; color:#7f1239;
+  }
+
+  /* Estado vazio do dia */
+  .day-empty{
+    border:1px dashed #e5e7eb;
+    border-radius:12px;
+    background: #f9fafb;
+  }
+}
+
+/* helpers bem sutis (não obrigatórios) */
+.text-teal-600{ color:#0a5764; }

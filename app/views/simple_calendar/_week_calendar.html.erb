@@ -1,8 +1,8 @@
+<!-- app/views/simple_calendar/week_calendar.html.erb -->
 <div class="simple-calendar">
   <div class="calendar-heading">
     <span class="calendar-title">
       <%= t('simple_calendar.week', default: 'Week') %>
-      <%= calendar.week_number %>
       <% if calendar.number_of_weeks > 1 %>
         - <%= calendar.end_week %>
       <% end %>
@@ -10,12 +10,13 @@
 
     <nav>
       <%= link_to t('simple_calendar.previous', default: 'Previous'), calendar.url_for_previous_view %>
-      <%= link_to t('simple_calendar.today', default: 'Today'), calendar.url_for_today_view %>
-      <%= link_to t('simple_calendar.next', default: 'Next'), calendar.url_for_next_view %>
+      <%= link_to t('simple_calendar.today',    default: 'Today'),    calendar.url_for_today_view %>
+      <%= link_to t('simple_calendar.next',     default: 'Next'),     calendar.url_for_next_view %>
     </nav>
   </div>
 
-  <table class="table table-striped">
+  <!-- ⬇️ injeta as classes vindas da chamada (ex.: "gc-calendar gc-week") -->
+  <table class="<%= ['table', *Array(calendar.options[:class])].join(' ') %>">
     <thead>
       <tr>
         <% date_range.slice(0, 7).each do |day| %>

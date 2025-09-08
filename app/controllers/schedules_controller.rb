@@ -59,18 +59,13 @@ class SchedulesController < ApplicationController
       else                      base
       end
 
-    @status = params[:status].presence
+    @status   = params[:status].presence
     has_status = @status.present? && Schedule.statuses.key?(@status)
     has_dates  = params[:start_date].present? || params[:end_date].present?
     has_query  = params[:query].present?
-    role_filter_applied = params.key?(:role) && @role != "all"
 
-    no_filters = !has_status && !has_dates && !has_query && !role_filter_applied
-
-    # ===== Filtros opcionais =====
     base = base.where(status: @status) if has_status
 
-    # Texto (join só se necessário)
     if has_query
       pattern = "%#{params[:query].to_s.strip}%"
       base = base
@@ -86,25 +81,43 @@ class SchedulesController < ApplicationController
         ).distinct
     end
 
-    # Datas: só aplica se houve algum filtro (status/query/role) OU o usuário selecionou datas.
-    unless no_filters
-      start_date =
-        if params[:start_date].present?
-          (Date.parse(params[:start_date]) rescue Date.today - 29)
-        else
-          Date.today - 29
-        end
-      end_date =
-        if params[:end_date].present?
-          (Date.parse(params[:end_date]) rescue Date.today)
-        else
-          Date.today
-        end
+    # ✅ só filtra por data se usuário escolheu datas
+    if has_dates
+      start_date = params[:start_date].present? ? (Date.parse(params[:start_date]) rescue nil) : nil
+      end_date   = params[:end_date].present?   ? (Date.parse(params[:end_date])   rescue nil) : nil
 
-      base = base.where(start_at: start_date.beginning_of_day..end_date.end_of_day)
+      if start_date && end_date
+        base = base.where(start_at: start_date.beginning_of_day..end_date.end_of_day)
+      elsif start_date
+        base = base.where("start_at >= ?", start_date.beginning_of_day)
+      elsif end_date
+        base = base.where("start_at <= ?", end_date.end_of_day)
+      end
     end
 
-    @schedules = base.order(start_at: :desc)
+    # ===== Ordenação =====
+    order_param = params[:order].presence_in(%w[
+      recent oldest price_desc price_asc duration_desc duration_asc status_asc
+    ]) || "recent"
+
+    scope = base
+    scope =
+      case order_param
+      when "recent"        then scope.order(start_at: :desc)
+      when "oldest"        then scope.order(start_at: :asc)
+      when "price_desc"    then scope.left_joins(:service).order(Arel.sql("services.price_hour DESC NULLS LAST"))
+      when "price_asc"     then scope.left_joins(:service).order(Arel.sql("services.price_hour ASC  NULLS LAST"))
+      when "duration_desc" then scope.order(Arel.sql("COALESCE(EXTRACT(EPOCH FROM (end_at - start_at)),0) DESC"))
+      when "duration_asc"  then scope.order(Arel.sql("COALESCE(EXTRACT(EPOCH FROM (end_at - start_at)),0) ASC"))
+      when "status_asc"
+        # monta CASE dinamicamente com base no enum
+        cases = Schedule.statuses.map { |k, v| "WHEN #{v} THEN '#{k}'" }.join(" ")
+        # ordena pelo nome do status (string) A–Z e, de quebra, pelos mais recentes dentro de cada status
+        scope = scope.order(Arel.sql("CASE schedules.status #{cases} END ASC")).order(start_at: :desc)
+      else                      scope.order(start_at: :desc)
+      end
+
+    @schedules = scope
 
     respond_to do |format|
       format.html
@@ -114,47 +127,52 @@ class SchedulesController < ApplicationController
           type: "text/csv; charset=utf-8"
       end
     end
-  end
 
+  end
 
 
   def cancel
-    schedule = Schedule.find(params[:id])
-    authorize_participation!(schedule)
+    @schedule = Schedule.find(params[:id])
+    authorize_participation!(@schedule)
 
-    if schedule.canceled? || schedule.completed? || schedule.no_show?
-      redirect_back fallback_location: service_history_path, alert: "Este agendamento não pode ser cancelado."
-      return
+    if @schedule.canceled? || @schedule.completed? || @schedule.no_show?
+      redirect_back fallback_location: service_history_path, alert: "Este agendamento não pode ser cancelado." and return
     end
+
+    actor = current_user.id == @schedule.professional_id ? :professional : :client
+    note  = params[:note].to_s.strip
 
     Schedule.transaction do
-      schedule.update!(status: :canceled)
-      note = params[:note].to_s.strip
-      if note.present?
-        schedule.messages.create!(user: current_user, content: "Cancelamento: #{note}")
-      end
+      @schedule.update!(status: :canceled, canceled_by: actor)
+      # ⛔️ removido: @schedule.messages.create!(...)
     end
 
-    msg = params[:note].present? ? "Agendamento cancelado e mensagem enviada." : "Agendamento cancelado."
-    redirect_back fallback_location: service_history_path, notice: msg
+    post_system_message(@schedule, actor == :client ? :canceled_by_client : :canceled_by_professional, note)
+
+    notice_msg = "Agendamento cancelado."
+    if params[:from] == "history"
+      redirect_to service_history_path, notice: notice_msg
+    else
+      redirect_back fallback_location: schedule_path(@schedule), notice: notice_msg
+    end
   end
 
-  def accept
-    schedule = Schedule.find(params[:id])
-    authorize_participation!(schedule)
 
-    unless current_user.id == schedule.professional_id
-      redirect_back fallback_location: schedule_path(schedule), alert: "Apenas o profissional pode confirmar." and return
+  def accept
+    @schedule = Schedule.find(params[:id])
+    authorize_participation!(@schedule)
+
+    unless current_user.id == @schedule.professional_id
+      redirect_back fallback_location: schedule_path(@schedule), alert: "Apenas o profissional pode confirmar." and return
     end
-    if schedule.canceled? || schedule.completed? || schedule.no_show?
-      redirect_back fallback_location: schedule_path(schedule), alert: "Este agendamento não pode ser confirmado." and return
+    if @schedule.canceled? || @schedule.completed? || @schedule.no_show?
+      redirect_back fallback_location: schedule_path(@schedule), alert: "Este agendamento não pode ser confirmado." and return
     end
 
     Schedule.transaction do
       attrs = { accepted_professional: true }
-      attrs[:confirmed] = true if schedule.has_attribute?(:confirmed)
+      attrs[:confirmed] = true if @schedule.has_attribute?(:confirmed)
 
-      # seta o melhor status disponível no enum
       if Schedule.respond_to?(:statuses)
         if Schedule.statuses.key?("confirmed")
           attrs[:status] = :confirmed
@@ -163,42 +181,48 @@ class SchedulesController < ApplicationController
         end
       end
 
-      schedule.update!(attrs)
+      @schedule.update!(attrs)
     end
 
-    redirect_to schedule_path(schedule), notice: "Agendamento confirmado."
+    notice_msg = "Agendamento confirmado."
+    if params[:from] == "history"
+      redirect_to service_history_path, notice: notice_msg
+    else
+      redirect_back fallback_location: schedule_path(@schedule), notice: notice_msg
+    end
   end
 
   def reject
-    schedule = Schedule.find(params[:id])
-    authorize_participation!(schedule)
+    @schedule = Schedule.find(params[:id])
+    authorize_participation!(@schedule)
 
-    unless current_user.id == schedule.professional_id
-      redirect_back fallback_location: schedule_path(schedule), alert: "Apenas o profissional pode recusar." and return
+    unless current_user.id == @schedule.professional_id
+      redirect_back fallback_location: schedule_path(@schedule), alert: "Apenas o profissional pode recusar." and return
     end
-    if schedule.canceled? || schedule.completed? || schedule.no_show?
-      redirect_back fallback_location: schedule_path(schedule), alert: "Este agendamento não pode ser recusado." and return
+    if @schedule.canceled? || @schedule.completed? || @schedule.no_show?
+      redirect_back fallback_location: schedule_path(@schedule), alert: "Este agendamento não pode ser recusado." and return
     end
 
     note = params[:note].to_s.strip
 
     Schedule.transaction do
-      attrs = { accepted_professional: false, confirmed: false }
-      attrs.delete(:confirmed) unless schedule.has_attribute?(:confirmed)
-
-      if Schedule.respond_to?(:statuses)
-        if Schedule.statuses.key?("rejected")
-          attrs[:status] = :rejected
-        else
-          attrs[:status] = :canceled if Schedule.statuses.key?("canceled")
-        end
-      end
-
-      schedule.update!(attrs)
-      schedule.messages.create!(user: current_user, content: "Recusado pelo profissional#{": #{note}" if note.present?}") if note.present?
+      @schedule.update!(
+        accepted_professional: false,
+        confirmed:             (@schedule.has_attribute?(:confirmed) ? false : nil),
+        status:                :rejected,
+        canceled_by:           :professional
+      )
+      # ⛔️ removido: @schedule.messages.create!(...)
     end
 
-    redirect_to schedule_path(schedule), notice: "Agendamento recusado."
+    post_system_message(@schedule, :rejected, note)
+
+    notice_msg = "Agendamento recusado."
+    if params[:from] == "history"
+      redirect_to service_history_path, notice: notice_msg
+    else
+      redirect_back fallback_location: schedule_path(@schedule), notice: notice_msg
+    end
   end
 
 
@@ -228,4 +252,38 @@ class SchedulesController < ApplicationController
     return if current_user && permitted_ids.include?(current_user.id)
     redirect_to root_path, alert: "Acesso negado."
   end
+
+
+# app/controllers/schedules_controller.rb
+private
+
+  def post_system_message(schedule, action, note)
+    conv = Conversation.find_or_create_by!(
+      service_id:      schedule.service_id,
+      client_id:       schedule.client_id,
+      professional_id: schedule.professional_id
+    )
+
+    subcat   = schedule.service&.subcategories.presence ||
+              schedule.service&.categories.presence   ||
+              schedule.service&.name                  || "serviço"
+    when_str = schedule.start_at ? schedule.start_at.strftime("%d/%m/%Y %H:%M") : "-"
+    prof     = schedule.professional&.name || "profissional"
+    client   = schedule.client&.name       || "cliente"
+
+    header =
+      case action
+      when :rejected                 then "[Recusa de #{prof}]"
+      when :canceled_by_client       then "[Cancelamento de #{client}]"
+      when :canceled_by_professional then "[Cancelamento de #{prof}]"
+      else "[Atualização]"
+      end
+
+    text = "#{header} para o serviço #{subcat} no #{when_str}."
+    text += " Motivo: #{note.to_s.strip}" if note.present?
+
+    conv.messages.create!(user: current_user, content: text)
+  end
+
+
 end

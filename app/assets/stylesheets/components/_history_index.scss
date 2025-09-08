@@ -193,3 +193,36 @@
   .history-index{ --filters-sticky-top: calc(var(--nav-h, 64px) + 6px); }
 }
 
+/* Quando um modal Bootstrap está aberto, garanta que os filtros fiquem abaixo do backdrop */
+body.modal-open .history-index .history-filters,
+body.modal-open .history-index .filters-row,
+body.modal-open .history-index .date-dropdown__menu {
+  z-index: 1 !important;     /* backdrop = 1040, modal = 1050 */
+  position: relative;         /* evita criar novo contexto alto por engano */
+}
+
+/* (opcional) se sua barra sticky tiver z-index alto, normalize o default */
+.history-index .history-filters {
+  z-index: 10;                /* algo baixo por padrão já resolve */
+}
+
+.modal-backdrop { z-index: 2000 !important; }
+.modal { z-index: 2010 !important; }
+
+/* chip de status: mesmo tamanho/tipografia da .chip */
+.chip--status{
+  /* herda o visual da .chip */
+}
+
+/* Cores por status — alinhadas à paleta */
+.chip--status.is-pending  { background:#fffbeb; border-color:#fde68a; color:#92400e; font-weight: 500; }
+.chip--status.is-confirmed{ background:#eff6ff; border-color:#bfdbfe; color:#1748a2; font-weight: 500;}  /* usa #1748a2 */
+.chip--status.is-completed{ background:#ecfdf5; border-color:#d1fae5; color:#065f46; font-weight: 500;}
+.chip--status.is-canceled { background:#fef2f2; border-color:#fecaca; color:#991b1b; font-weight: 500;}
+.chip--status.is-no-show  { background:#fff7ed; border-color:#fed7aa; color:#9a3412; font-weight: 500;}
+
+/* opcional */
+.chip--status { white-space: nowrap; }
+.chip--status small { opacity:.9; font-weight:500; }
+
+.chip--status.is-rejected { background:#fdecec; border-color:#f6c2ce; color:#a61e4d; font-weight:500; }

@@ -143,6 +143,7 @@
                     professional_id: @schedule.professional_id
                   }
                 } %>
+    <div data-chat-scroll-target="anchor" style="height:1px;"></div>
   </div>
   <div id="<%= dom_id(@schedule, :form) %>" class="message-form">
       <%= render "messages/composer", parent: @schedule, message: @message %>
