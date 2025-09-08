@@ -8,7 +8,10 @@ class Schedule < ApplicationRecord
   validate  :ends_after_start
   validate  :no_overlap
 
-  enum status: { pending: 0, confirmed: 1, completed: 2, canceled: 3, no_show: 4 }
+  enum status: { pending: 0, confirmed: 1, completed: 2, canceled: 3, no_show: 4, rejected: 5 }
+
+  enum canceled_by: { client: 0, professional: 1 }, _prefix: :canceled_by
+
 
   # ---- Scopes: sempre no nível da classe ----
   scope :for_provider,     ->(provider_id) { joins(:service).where(services: { user_id: provider_id }) }
@@ -22,6 +25,20 @@ class Schedule < ApplicationRecord
       closed: statuses.slice("completed","canceled","no_show").values
     )
   }
+
+  # ✅ bloqueia: pending/confirmed OR (canceled by professional) OR rejected
+  scope :blocking, -> {
+    base = statuses.slice("pending","confirmed").values
+    where(
+      "status IN (:base) OR (status = :canceled AND canceled_by = :pro) OR status = :rejected",
+      base: base,
+      canceled: statuses[:canceled],
+      pro: canceled_bies[:professional],
+      rejected: statuses[:rejected]
+    )
+  }
+
+
 
   def start_time
     start_at
@@ -49,6 +66,7 @@ class Schedule < ApplicationRecord
 
     overlapping = self.class
       .for_provider(service.user_id)
+      .blocking
       .where.not(id: id)
       .where("start_at < ? AND end_at > ?", end_at, start_at)
 

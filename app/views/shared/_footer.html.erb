@@ -51,10 +51,19 @@
 
       <div class="col-sm-6 col-lg-4">
         <h6 class="footer-title">Receba novidades</h6>
-        <%= form_with url: "#", method: :get, html: { class: "footer-newsletter", role: "search" } do %>
-          <input type="email" class="footer-input" placeholder="Seu e-mail" aria-label="Seu e-mail">
+
+        <%= form_with url: "#", method: :get, html: { class: "footer-newsletter" } do %>
+          <%= email_field_tag :newsletter_email,
+                              nil,
+                              id: "footer-newsletter-email",
+                              class: "footer-input",
+                              placeholder: "Seu e-mail",
+                              aria: { label: "Seu e-mail" },
+                              autocomplete: "email",
+                              required: true %>
           <button type="submit" class="footer-btn">Assinar</button>
         <% end %>
+
         <small class="footer-hint">Você pode cancelar quando quiser.</small>
       </div>
 

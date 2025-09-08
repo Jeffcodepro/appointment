@@ -4,7 +4,6 @@ class DashboardsController < ApplicationController
 
   include ActionView::Helpers::NumberHelper
 
-
   def show
     @user = current_user
 
@@ -19,7 +18,7 @@ class DashboardsController < ApplicationController
       @range_end   = @date.end_of_month
     end
 
-    # ajuste o "base" ao seu caso (profissional logado, etc.)
+    # base de agendamentos do profissional no período visível
     base = Schedule
       .includes(:service, :client, :professional)
       .where(professional_id: @user.id)
@@ -35,8 +34,23 @@ class DashboardsController < ApplicationController
     @appointments_past_count   = past.count
     @appointments_future_count = future.count
 
-    @revenue_past   = total_revenue(past)   # Money
-    @revenue_future = total_revenue(future) # Money
+    # Contagens por status
+    @count_pending   = base.where(status: :pending).count
+    @count_confirmed = base.where(status: :confirmed).count
+    @count_completed = base.where(status: :completed).count
+    @count_canceled_by_client = base
+      .where(status: :canceled, canceled_by: Schedule.canceled_bies[:client])
+      .count
+    @count_canceled_or_rejected_by_professional =
+      base.where(status: :canceled, canceled_by: Schedule.canceled_bies[:professional]).count +
+      base.where(status: :rejected).count
+
+    # Receita (ignora cancelados/recusados)
+    revenue_past_scope   = past.where.not(status: [:canceled, :rejected])
+    revenue_future_scope = future.where.not(status: [:canceled, :rejected])
+
+    @revenue_past   = total_revenue(revenue_past_scope)   # Money
+    @revenue_future = total_revenue(revenue_future_scope) # Money
 
     @revenue_human        = helpers.humanized_money_with_symbol(@revenue_past)
     @revenue_future_human = helpers.humanized_money_with_symbol(@revenue_future)
@@ -45,6 +59,21 @@ class DashboardsController < ApplicationController
     @next_date = (@view == "week" ? @date + 1.week  : @date + 1.month)
   end
 
+  # ===== conteúdo do modal "agendamentos do dia" (Turbo Frame) =====
+  def day
+    @user = current_user
+    @date = safe_date(params[:date])
+
+    range = @date.beginning_of_day..@date.end_of_day
+    @schedules = Schedule
+      .includes(:service, :client, :professional)
+      .where(professional_id: @user.id)
+      .where(start_at: range)
+      .order(:start_at)
+
+    # resposta para preencher o <turbo-frame id="day-events-modal-body">
+    render "dashboards/day", layout: false
+  end
 
   private
 
@@ -68,7 +97,6 @@ class DashboardsController < ApplicationController
     end
   end
 
-
   def total_revenue(scope)
     scope.to_a.reduce(Money.new(0, Money.default_currency || "BRL")) do |sum, s|
       ph = s.service&.price_hour
@@ -80,5 +108,4 @@ class DashboardsController < ApplicationController
       end
     end
   end
-
 end

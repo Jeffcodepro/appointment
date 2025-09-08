@@ -129,14 +129,17 @@
 
 .btn-chat{
   @extend .btn;
-  background-color:#fff;
+  background:#fff;
   border:1px solid #137d8e;
   color:#137d8e;
+  transition: all .15s ease;
 }
-.btn-chat:hover{
-  background-color:#137d8e;
+.btn-chat:hover,
+.btn-chat:focus {
+  background:#137d8e;
   border-color:#137d8e;
   color:#fff;
+  box-shadow: 0 0 0 .2rem rgba(19,125,142,.2);
 }
 
 /* Cancelar (abrir modal) */
@@ -153,9 +156,9 @@
 
 /* Confirmar cancelamento (no modal) */
 .cancel-modal .btn-cancel-confirm{
-  background-color: #c12d2d;
-  border: 1px solid #c12d2d;
-  color:#fff;
+  background-color:#fff;
+  border:1px solid rgb(213,114,114);
+  color: rgb(193,45,45);
   padding:.5rem 1rem;
   border-radius:.5rem;
 }
@@ -204,29 +207,33 @@
 }
 
 /* Confirmar agendamento */
-.btn-accept-schedule {
+.btn-accept-schedule{
   @extend .btn;
-  background-color: #137d8e;
-  border-color: #137d8e;
-  color: #fff;
-
-  &:hover {
-    background-color: #0A5764;
-    border-color: #0A5764;
-    color: #fff;
-  }
+  background:#137d8e;
+  border-color:#137d8e;
+  color:#fff;
+  transition: all .15s ease;
+}
+.btn-accept-schedule:hover,
+.btn-accept-schedule:focus {
+  background:#0A5764;
+  border-color:#0A5764;
+  color:#fff;
+  box-shadow: 0 0 0 .2rem rgba(23,72,162,.25);
 }
 
 /* Recusar agendamento */
-.btn-reject-schedule {
+.btn-reject-schedule{
   @extend .btn;
-  background-color: #fff;
-  border: 1px solid rgb(213,114,114);
-  color: rgb(193,45,45);
-
-  &:hover {
-    background-color: rgb(193,45,45);
-    border-color: rgb(193,45,45);
-    color: #fff;
-  }
+  background:#fff;
+  border:1px solid #7a70f2;
+  color:#311bb3;
+  transition: all .15s ease;
+}
+.btn-reject-schedule:hover,
+.btn-reject-schedule:focus {
+  background:#523eeb;
+  border-color:#523eeb;
+  color:#fff;
+  box-shadow: 0 0 0 .2rem rgba(122,112,242,.25);
 }

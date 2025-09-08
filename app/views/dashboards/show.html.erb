@@ -1,3 +1,4 @@
+
 <% content_for :head do %>
   <meta name="turbo-cache-control" content="no-preview">
 <% end %>
@@ -62,13 +63,34 @@
                   view: @view, date: @date, prev_date: @prev_date, next_date: @next_date,
                   revenue_human: @revenue_human,
                   revenue_future_human: @revenue_future_human,
-                  appointments_count: @appointments_count,
-                  appointments_past_count: @appointments_past_count,
-                  appointments_future_count: @appointments_future_count,
+                  # contagens
+                  count_pending: @count_pending,
+                  count_confirmed: @count_confirmed,
+                  count_completed: @count_completed,
+                  count_canceled_by_client: @count_canceled_by_client,
+                  count_canceled_or_rejected_by_professional: @count_canceled_or_rejected_by_professional,
+                  # calendário
                   schedules: @schedules, range_start: @range_start, range_end: @range_end
                 } %>
     <% end %>
+
   </div>
 </div>
 
+<!-- ===== Modal CSS-only (fora do frame para não ser re-renderizado) ===== -->
+<div id="dayEventsModal" class="custom-modal" aria-hidden="true" data-controller="day-modal">
+  <div class="custom-modal__overlay" data-action="click->day-modal#close"></div>
+  <div class="custom-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="dayEventsLabel">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="dayEventsLabel">Agendamentos do dia</h5>
+        <button type="button" class="btn-close" aria-label="Fechar" data-action="click->day-modal#close"></button>
+      </div>
+
+      <!-- Turbo Frame preenchido ao abrir (Stimulus define o src) -->
+      <turbo-frame id="day-events-modal-body">
+        <div class="p-4 text-center text-muted">Carregando…</div>
+      </turbo-frame>
+    </div>
+  </div>
 </div>

@@ -36,7 +36,10 @@ Rails.application.routes.draw do
     resources :messages, only: [:create], controller: "messages"
   end
 
-  get "dashboard", to: "dashboards#show"
+  resource :dashboard, only: [:show] do
+    get :day
+  end
+
   get "login_and_return", to: "pages#login_and_return", as: :login_and_return
   get "history", to: "schedules#history", as: :service_history
 

@@ -1,0 +1,58 @@
+<%= turbo_frame_tag "day-events-modal-body" do %>
+  <div class="modal-body day-modal-body">
+    <div class="d-flex justify-content-between align-items-baseline mb-2">
+      <div class="fw-semibold h6 mb-0 text-teal-600 day-modal-date"><%= l(@date, format: :long) %></div>
+      <% count = @schedules.size %>
+      <div class="small text-muted"><%= count %> <%= count == 1 ? 'agendamento' : 'agendamentos' %></div>
+    </div>
+
+    <% if @schedules.any? %>
+      <div class="list-group list-group-flush day-list">
+        <% @schedules.each do |e| %>
+          <% title  = e.service&.subcategories || e.service&.categories || "Serviço" %>
+          <% client = e.try(:client)&.name || e.try(:user)&.name || e.try(:customer_name) || "Cliente" %>
+
+          <% status =
+              if e.respond_to?(:canceled?) && e.canceled?
+                "is-canceled"
+              elsif e.respond_to?(:rejected?) && e.rejected?
+                "is-rejected"
+              elsif e.respond_to?(:pending?) && e.pending?
+                "is-pending"
+              else
+                "is-confirmed"
+              end %>
+
+          <%= link_to schedule_path(e),
+                      class: "list-group-item list-group-item-action day-item #{status} d-flex justify-content-between align-items-start gap-2",
+                      data: { turbo_frame: "_top" } do %>
+            <div class="me-2 flex-grow-1">
+              <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="day-time-badge"><%= hhmm(e.start_at) %>–<%= hhmm(e.end_at) %></span>
+                <span class="fw-semibold text-truncate"><%= client %></span>
+              </div>
+              <div class="small text-muted text-truncate"><%= title %></div>
+            </div>
+
+            <div class="text-nowrap">
+              <% if e.respond_to?(:pending?) && e.pending? %>
+                <span class="gc-tag gc-tag--pending">Pendente</span>
+              <% end %>
+              <% if e.respond_to?(:canceled?) && e.canceled? %>
+                <span class="gc-tag gc-tag--canceled">
+                  Cancelado <%= "(#{e.canceled_by_client? ? "cliente" : (e.canceled_by_professional? ? "profissional" : "—")})" %>
+                </span>
+              <% elsif e.respond_to?(:rejected?) && e.rejected? %>
+                <span class="gc-tag gc-tag--canceled">Recusado</span>
+              <% end %>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="p-4 text-center text-muted day-empty">
+        Sem agendamentos para este dia.
+      </div>
+    <% end %>
+  </div>
+<% end %>

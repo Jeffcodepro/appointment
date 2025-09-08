@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_09_05_193822) do
+ActiveRecord::Schema[7.1].define(version: 2025_09_06_205422) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_trgm"
   enable_extension "plpgsql"
@@ -82,6 +82,8 @@ ActiveRecord::Schema[7.1].define(version: 2025_09_05_193822) do
     t.integer "status", default: 0, null: false
     t.bigint "client_id", null: false
     t.bigint "professional_id", null: false
+    t.integer "canceled_by"
+    t.index ["canceled_by"], name: "index_schedules_on_canceled_by"
     t.index ["client_id"], name: "index_schedules_on_client_id"
     t.index ["professional_id"], name: "index_schedules_on_professional_id"
     t.index ["service_id"], name: "index_schedules_on_service_id"

@@ -39,7 +39,7 @@
         <div class="p-3 rounded-4 border bg-light h-100">
           <div class="small text-muted">Receita no período</div>
           <div class="fs-4 fw-bold"><%= revenue_human %></div>
-          <div class="small text-muted mt-1">Considera <strong>agendamentos realizados</strong> (início antes de agora).</div>
+          <div class="aux-text mt-1">Considera <strong>agendamentos realizados</strong> (início antes de agora) e <strong>desconsidera cancelados/recusados</strong>.</div>
         </div>
       </div>
 
@@ -47,7 +47,7 @@
         <div class="p-3 rounded-4 border bg-light h-100">
           <div class="small text-muted">Receita prevista</div>
           <div class="fs-4 fw-bold"><%= revenue_future_human %></div>
-          <div class="small text-muted mt-1">Agendamentos com início <strong>a partir de agora</strong>.</div>
+          <div class="aux-text mt-1">Agendamentos com início <strong>a partir de agora</strong>, sem incluir cancelados/recusados.</div>
         </div>
       </div>
 
@@ -55,14 +55,15 @@
         <div class="p-3 rounded-4 border bg-light h-100">
           <div class="small text-muted">Agendamentos no período</div>
           <div class="d-flex flex-wrap gap-2 mt-1">
-            <span class="badge text-bg-light border">Realizados: <strong><%= appointments_past_count %></strong></span>
-            <span class="badge text-bg-light border">Previstos: <strong><%= appointments_future_count %></strong></span>
-            <span class="badge text-bg-light border">Total: <strong><%= appointments_count %></strong></span>
+            <span class="badge text-bg-light border">Pendentes: <strong><%= count_pending %></strong></span>
+            <span class="badge text-bg-light border">Confirmados: <strong><%= count_confirmed %></strong></span>
+            <span class="badge text-bg-light border">Realizados: <strong><%= count_completed %></strong></span>
+            <span class="badge text-bg-light border">Cancelados (cliente): <strong><%= count_canceled_by_client %></strong></span>
+            <span class="badge text-bg-light border">Cancelados/Recusados (prof.): <strong><%= count_canceled_or_rejected_by_professional %></strong></span>
           </div>
         </div>
       </div>
     </div>
-
 
     <%# ===== CALENDÁRIO ===== %>
     <% open_h = 9; close_h = 18 %>
@@ -91,27 +92,42 @@
               <span class="gc-dot">·</span>
               <span class="gc-client">Fechado</span>
             </div>
+
           <% elsif day_events.any? %>
             <% day_events.each do |e| %>
               <% title  = e.service&.subcategories || e.service&.categories || "Serviço" %>
               <% client = e.try(:client)&.name || e.try(:user)&.name || e.try(:customer_name) || "Cliente" %>
-              <% color_class = calendar_color_for(e) %>
+              <% is_canceled_or_rejected =
+                  (e.respond_to?(:canceled?) && e.canceled?) ||
+                  (e.respond_to?(:rejected?) && e.rejected?) %>
+              <% color_class = [
+                    calendar_color_for(e),
+                    (is_canceled_or_rejected && e.respond_to?(:canceled_by_professional?) && e.canceled_by_professional?) ? 'gc-canceled-pro' : nil
+                  ].compact.join(' ') %>
 
-              <%= link_to schedule_path(e),
-                          class: "gc-event-link",
-                          data: { turbo_frame: "_top" } do %>
-                <div class="gc-event-chip <%= color_class %>" title="<%= "#{title} — #{client}" %>">
-                  <div class="gc-line1">
-                    <span class="gc-time"><%= hhmm(e.start_at) %>–<%= hhmm(e.end_at) %></span>
-                    <span class="gc-dot">·</span>
-                    <span class="gc-client"><%= client %></span>
-                  </div>
-                    <div class="gc-line2">
-                      <span class="gc-cat"><%= title %></span>
-                    </div>
+              <div class="gc-event-chip <%= color_class %>" title="<%= "#{title} — #{client}" %>">
+                <% if is_canceled_or_rejected %><del><% end %>
+                <div class="gc-line1">
+                  <span class="gc-time"><%= hhmm(e.start_at) %>–<%= hhmm(e.end_at) %></span>
+                  <span class="gc-dot">·</span>
+                  <span class="gc-client"><%= client %></span>
                 </div>
-              <% end %>
+                <div class="gc-line2">
+                  <span class="gc-cat"><%= title %></span>
+                  <% if e.respond_to?(:canceled?) && e.canceled? %>
+                    <span class="gc-tag gc-tag--canceled">
+                      Cancelado (<%= e.canceled_by_client? ? "cliente" : (e.canceled_by_professional? ? "profissional" : "—") %>)
+                    </span>
+                  <% elsif e.respond_to?(:rejected?) && e.rejected? %>
+                    <span class="gc-tag gc-tag--canceled">Recusado</span>
+                  <% elsif e.respond_to?(:pending?) && e.pending? %>
+                    <span class="gc-tag gc-tag--pending">Pendente</span>
+                  <% end %>
+                </div>
+                <% if is_canceled_or_rejected %></del><% end %>
+              </div>
             <% end %>
+
           <% else %>
             <div class="gc-event-chip gc-free" title="Sem agendamentos">
               <span class="gc-time"><%= hhmm(day_open) %>–<%= hhmm(day_close) %></span>
@@ -145,27 +161,64 @@
               <span class="gc-dot">·</span>
               <span class="gc-client">Fechado</span>
             </div>
-          <% elsif day_events.any? %>
-            <% day_events.each do |e| %>
-              <% title  = e.service&.subcategories || e.service&.categories || "Serviço" %>
-              <% client = e.try(:client)&.name || e.try(:user)&.name || e.try(:customer_name) || "Cliente" %>
-              <% color_class = calendar_color_for(e) %>
 
-              <%= link_to schedule_path(e),
-                          class: "gc-event-link",
-                          data: { turbo_frame: "_top" } do %>
-                <div class="gc-event-chip <%= color_class %>" title="<%= "#{title} — #{client}" %>">
-                  <div class="gc-line1">
-                    <span class="gc-time"><%= hhmm(e.start_at) %>–<%= hhmm(e.end_at) %></span>
-                    <span class="gc-dot">·</span>
-                    <span class="gc-client"><%= client %></span>
-                  </div>
-                  <div class="gc-line2">
-                    <span class="gc-cat"><%= title %></span>
-                  </div>
+          <% elsif day_events.any? %>
+          <%# --- mostra até 1, e depois "mais X" abre modal --- %>
+          <% visible_events = day_events.first(1) %>
+          <% extra_count    = [day_events.size - 1, 0].max %>
+
+          <% visible_events.each do |e| %>
+            <% title  = e.service&.subcategories || e.service&.categories || "Serviço" %>
+            <% client = e.try(:client)&.name || e.try(:user)&.name || e.try(:customer_name) || "Cliente" %>
+            <% color_class = [
+                  calendar_color_for(e),
+                  (
+                    (e.respond_to?(:canceled_by_professional?) && e.canceled_by_professional?) ||
+                    (e.respond_to?(:rejected?) && e.rejected?)
+                  ) ? 'gc-canceled-pro' : nil
+                ].compact.join(' ') %>
+
+            <%= link_to schedule_path(e),
+                        class: "gc-event-link",
+                        data: { turbo_frame: "_top" } do %>
+              <div class="gc-event-chip <%= color_class %>" title="<%= "#{title} — #{client}" %>">
+                <div class="gc-line1">
+                  <span class="gc-time"><%= hhmm(e.start_at) %>–<%= hhmm(e.end_at) %></span>
+                  <span class="gc-dot">·</span>
+                  <span class="gc-client"><%= client %></span>
                 </div>
-              <% end %>
+                <div class="gc-line2">
+                  <span class="gc-cat"><%= title %></span>
+                  <% if e.respond_to?(:pending?) && e.pending? %>
+                    <span class="gc-tag gc-tag--pending">Pendente</span>
+                  <% end %>
+                </div>
+              </div>
             <% end %>
+          <% end %>
+
+          <% if extra_count > 0 %>
+            <% more_label = extra_count == 1 ? "Mais 1 agendamento" : "Mais #{extra_count} agendamentos" %>
+
+            <%= link_to "#",
+                class: "gc-event-more",
+                data: {
+                  controller: "day-modal",
+                  action: "click->day-modal#open",
+                  day_modal_url_value: day_dashboard_path(date: date_cell)
+                },
+                role: "button",
+                title: "Ver todos deste dia" do %>
+              <div class="gc-event-chip gc-more">
+                <span class="gc-client"><%= more_label %></span>
+              </div>
+            <% end %>
+          <% end %>
+
+
+
+
+
           <% else %>
             <div class="gc-event-chip gc-free" title="Sem agendamentos">
               <span class="gc-time"><%= hhmm(day_open) %>–<%= hhmm(day_close) %></span>

@@ -1,3 +1,11 @@
+/* ===========================================
+   _simple_calendar.scss (consolidado)
+   - Base do simple_calendar
+   - Dashboard (profissional): mês/semana
+   - Cliente: respeita passados/fins de semana
+   - “Mais X agendamentos” (mês) com modal
+   =========================================== */
+
 /* ====== TÍTULO + NAVEGAÇÃO (padrão) ====== */
 .simple-calendar .calendar-heading{
   display:flex; align-items:center; justify-content:space-between;
@@ -14,44 +22,66 @@
 }
 .simple-calendar .calendar-heading nav a:hover{ background:#137d8e; color:#fff; border-color:#137d8e; }
 
-/* dia básico + estados */
+/* ===========================================
+   BASE (cliente): célula interna do calendário
+   - Usamos seletores "td > .day" para NÃO afetar o TD do dashboard
+   =========================================== */
 .simple-calendar td > .day{ display:block; }
-.simple-calendar .day{ cursor:pointer; padding:.25rem; border-radius:.5rem; transition:background-color .15s ease; }
-.simple-calendar .day:hover{ background:#f1f3f5; }
-.simple-calendar .day.today{ outline:2px solid #137d8e20; background:#f5f8ff; }
-.simple-calendar .day.selected{ outline:2px solid #137d8e55; background:#f2f8f9; }
-.simple-calendar .day.past{ opacity:.5; pointer-events:none; cursor:default; }
-.simple-calendar .day.past, .simple-calendar .day.past *{ text-decoration:line-through; }
-.simple-calendar .day.weekend{ opacity:.5; pointer-events:none; }
-.simple-calendar .day.fully-booked, .simple-calendar .day.fully-booked *{ text-decoration:line-through; }
-.simple-calendar .day.fully-booked{ opacity:.85; cursor:pointer; }
+.simple-calendar td > .day{
+  cursor:pointer; padding:.25rem; border-radius:.5rem; transition:background-color .15s ease;
+}
+.simple-calendar td > .day:hover{ background:#f1f3f5; }
+.simple-calendar td > .day.today{ outline:2px solid #137d8e20; background:#f5f8ff; }
+.simple-calendar td > .day.selected{ outline:2px solid #137d8e55; background:#f2f8f9; }
 
-/* ====== DASHBOARD: grade do calendário (mês e semana) ====== */
+/* Estados (cliente) — não impactam o dashboard */
+.simple-calendar td > .day.past,
+.simple-calendar td > .day.weekend{
+  opacity:.5; cursor:default;
+  pointer-events:none; /* bloqueia clique só no cliente */
+}
+.simple-calendar td > .day.past,
+.simple-calendar td > .day.past *{ text-decoration:line-through; }
+.simple-calendar td > .day.weekend,
+.simple-calendar td > .day.weekend *{ text-decoration:line-through; }
+
+.simple-calendar td > .day.fully-booked,
+.simple-calendar td > .day.fully-booked *{ text-decoration:line-through; }
+.simple-calendar td > .day.fully-booked{ opacity:.85; cursor:default; }
+
+/* ===================================================
+   DASHBOARD (VISÃO DO PROFISSIONAL)
+   =================================================== */
 .dashboard-page {
 
-  /* esconde a navegação interna do simple_calendar (usamos a nossa) */
+  /* esconde navegação interna; usamos a nossa */
   .simple-calendar .calendar-heading nav{ display:none !important; }
 
-  /* Tabela com colunas SEMPRE iguais */
+  /* grade 7 colunas fixas */
   .gc-calendar,
   .gc-calendar table{ width:100%; table-layout:fixed; }
   .gc-calendar thead th,
   .gc-calendar tbody td{ width:calc(100%/7); }
 
-  /* Cabeçalho dos dias */
+  /* cabeçalho dos dias */
   .gc-calendar thead th{
     font-size:.8rem; font-weight:600; color:#6c757d; padding:.5rem;
     border-bottom:1px solid #e9ecef; text-transform:uppercase; letter-spacing:.02em;
   }
 
-  /* Células (altura fixa para não “estourar” com chips) */
+  /* células: mês (fixo) e semana (auto p/ não cortar) */
   .gc-calendar td.day{
     vertical-align:top; padding:.5rem;
     border-right:1px solid #f1f3f5; border-bottom:1px solid #f1f3f5;
-    height:10rem;          /* mês: fixo */
+    height:10rem;               /* mês padrão */
+    position: relative;         /* p/ “Mais X” absoluto */
+    /* importante: a célula precisa receber eventos pro link “Mais X” funcionar */
+    pointer-events:auto;
   }
-  .gc-week td.day{ height:10rem; }  /* semana: também fixo (ANTES era auto) */
   .gc-calendar td.day:last-child{ border-right:0; }
+
+  /* semana → deixa crescer para mostrar todos os chips */
+  .gc-week td.day{ height:auto !important; }
 
   .gc-day-head{ display:flex; align-items:baseline; gap:6px; margin-bottom:4px; }
   .gc-day-num{
@@ -61,13 +91,17 @@
   .gc-day-num.is-today{ background:#0b5ed7; color:#fff; }
   .gc-day-label{ font-size:.8rem; color:#6c757d; text-transform:capitalize; }
 
-  /* Área de eventos: altura controlada e conteúdo escondido se passar */
+  /* área de eventos */
   .gc-events{
     display:flex; flex-direction:column; gap:4px; margin-top:.25rem;
-    min-height:72px; max-height:96px; overflow:hidden;
+    min-height:72px; max-height:96px; overflow:hidden; /* mês */
+    position: relative;
+  }
+  .gc-week .gc-events{
+    max-height:none !important; overflow:visible !important; /* semana = tudo */
   }
 
-  /* Link do agendamento = texto (sem sublinhado) */
+  /* links de evento */
   .gc-event-link,
   .gc-event-link:link,
   .gc-event-link:visited,
@@ -77,30 +111,26 @@
   }
   .gc-event-link:focus-visible{ outline:2px solid #137d8e; outline-offset:2px; border-radius:8px; }
 
-  /* Chip em DUAS LINHAS, tipografia adaptável e truncamento */
+  /* chip */
   .gc-event-chip{
     border:1px solid #e5e7eb; border-radius:10px; background:#fff; color:#0b5ed7;
     padding:4px 6px; line-height:1.15; max-width:100%;
     display:flex; flex-direction:column; align-items:flex-start; gap:.15rem;
-    font-size:clamp(12px, 1.2vw, 14px);  /* ← ajusta ao espaço */
+    font-size:clamp(12px, 1.2vw, 14px);
   }
-
   .gc-event-chip .gc-line1{
     display:flex; align-items:center; gap:.35rem;
     width:100%; min-width:0; white-space:nowrap; overflow:hidden;
   }
-  .gc-event-chip .gc-time{ flex:none; }                 /* horário não encolhe */
+  .gc-event-chip .gc-time{ flex:none; }
   .gc-event-chip .gc-client{ min-width:0; overflow:hidden; text-overflow:ellipsis; }
-
-  .gc-event-chip .gc-line2{
-    font-size:.86em; opacity:.95; width:100%;
-  }
+  .gc-event-chip .gc-line2{ font-size:.86em; opacity:.95; width:100%; }
   .gc-event-chip .gc-cat{
     display:inline-block; max-width:100%;
     overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
   }
 
-  /* Paleta de cores opcional */
+  /* paleta (opcional) */
   .gc-event-chip.gc-c0{ --bg:#e8f0fe; --bd:#c6dafc; --tx:#1967d2; }
   .gc-event-chip.gc-c1{ --bg:#e6f4ea; --bd:#c8e6c9; --tx:#188038; }
   .gc-event-chip.gc-c2{ --bg:#fce8e6; --bd:#f5c6c3; --tx:#d93025; }
@@ -111,12 +141,12 @@
     background:var(--bg); border-color:var(--bd); color:var(--tx);
   }
 
-  /* Livre */
+  /* livre */
   .gc-event-chip.gc-free{
     background:#f8f9fa; border-color:#e9ecef; color:#2c2d30; font-weight:400;
   }
 
-  /* Fins de semana “apagados” (visual) */
+  /* fins de semana “apagados” no grid (visual adicional) */
   .gc-calendar thead th:nth-child(6),
   .gc-calendar thead th:nth-child(7){ background:#f6f7f9; color:#9aa0a6; }
   .gc-calendar tbody td:nth-child(6),
@@ -127,9 +157,57 @@
   .gc-calendar tbody td:nth-child(7) .gc-event-chip{
     background:#f8f9fa; border-color:#e9ecef; color:#6c757d;
   }
-}
 
-/* Botões “Período” (branding) */
+  /* texto auxiliar */
+  .aux-text{
+    font-size:.75rem; line-height:1.25; color:#92949b;
+  }
+
+  /* tags de status nos chips */
+  .gc-event-chip .gc-tag{
+    display:inline-block; margin-left:.35rem; padding:2px 6px;
+    border-radius:999px; font-size:.72em; line-height:1.1;
+    border:1px solid #e5e7eb; background:#fff; vertical-align:middle;
+  }
+  .gc-tag--canceled{ background:#fef2f2; border-color:#fecaca; color:#991b1b; font-weight:600; }
+  .gc-tag--pending{  background:#fff7e6; border-color:#ffe2a7; color:#8a5b00; font-weight:600; }
+  .gc-event-chip.gc-pending{ background:#fff7e6; border-color:#ffe2a7; color:#8a5b00; }
+
+  /* cancelado/recusado por profissional → riscado */
+  .gc-event-chip.gc-canceled-pro,
+  .gc-event-chip.gc-canceled-pro *{
+    text-decoration: line-through !important;
+    text-decoration-thickness: from-font;
+    opacity:.65;
+  }
+
+  /* ==============================
+     MÊS (dashboard): “Mais X agendamentos”
+     - Anchor fica absoluto no rodapé; chip é estático
+     ============================== */
+  .gc-calendar.gc-month .gc-events{
+    position: relative;
+    padding-bottom: 32px; /* espaço p/ botão fixo */
+  }
+
+  /* o LINK é o elemento absoluto e clicável */
+  .gc-calendar.gc-month .gc-event-more{
+    position:absolute; left:0; right:0; bottom:0;
+    z-index:9; display:block; cursor:pointer; pointer-events:auto;
+    text-decoration:none;
+  }
+  .gc-calendar.gc-month .gc-event-more:focus-visible{
+    outline:2px solid #137d8e; outline-offset:2px; border-radius:8px;
+  }
+
+  /* o CHIP vira conteúdo estático dentro do link */
+  .gc-calendar.gc-month .gc-event-chip.gc-more{
+    position:static; text-decoration:none !important;
+  }
+
+} /* /dashboard-page */
+
+/* ===== Botões “Período” (branding) ===== */
 .dashboard-page .btn-group[aria-label="Período"] .btn.btn-primary{
   background:#137d8e; border-color:#137d8e; color:#fff;
 }
@@ -148,19 +226,12 @@
   box-shadow:0 0 0 .2rem rgba(19,125,142,.25);
 }
 
-/* pill base */
+/* ===== Pills genéricas (se usadas em algum lugar do calendário) ===== */
 .status-badge{
-  display:inline-block;
-  padding: .35rem .6rem;
-  border-radius: 999px;
-  font-weight: 600;
-  letter-spacing: .01em;
-  border: 1px solid transparent;
-  box-shadow: 0 1px 2px rgba(0,0,0,.06);
-  font-size: .85rem;
+  display:inline-block; padding:.35rem .6rem; border-radius:999px;
+  font-weight:600; letter-spacing:.01em; border:1px solid transparent;
+  box-shadow:0 1px 2px rgba(0,0,0,.06); font-size:.85rem;
 }
-
-/* paleta suave */
 .status-badge.is-pending   { background:#fff4db; color:#8a5b00; border-color:#ffe2a7; }
 .status-badge.is-accepted  { background:#e8f0fe; color:#1a56db; border-color:#c6dafc; }
 .status-badge.is-confirmed { background:#e6f4ea; color:#0f5132; border-color:#c8e6c9; }
@@ -169,4 +240,3 @@
 .status-badge.is-rejected  { background:#fdecec; color:#a61e4d; border-color:#f6c2ce; }
 .status-badge.is-no-show   { background:#f1f3f5; color:#495057; border-color:#e9ecef; }
 .status-badge.is-default   { background:#eef2f7; color:#334155; border-color:#dbe2ea; }
-
