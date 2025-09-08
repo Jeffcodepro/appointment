@@ -1,84 +1,96 @@
+<!-- app/views/services/_form.html.erb -->
 <div class="container">
-  <h2>Novo serviço</h2>
+  <h2><%= @service.persisted? ? "Editar serviço" : "Novo serviço" %></h2>
 
-  <%= form_with model: @service, data: { turbo: true } do |f| %>
-  <div class="mb-3">
-    <%= f.label :name, "Nome do serviço" %>
-    <%= f.text_field :name, class: "form-control", required: true %>
-  </div>
+  <%= form_with model: @service,
+        data: {
+          controller: "service-form",
+          "service-form-subcats-value": Service::SUBCATEGORIES.to_json
+        } do |f| %>
 
-  <div class="mb-3">
-    <%= f.label :category, "Categoria" %>
-    <%= f.text_field :category, class: "form-control", placeholder: "ex.: Cabeleireiro" %>
-  </div>
+    <div class="mb-3">
+      <%= f.label :name, "Nome do serviço" %>
+      <%= f.text_field :name, class: "form-control", required: true %>
+    </div>
 
-  <div class="mb-3">
-    <%= f.label :description, "Descrição" %>
-    <%= f.text_area :description, class: "form-control", rows: 3 %>
-  </div>
+    <div class="mb-3">
+      <%= f.label :categories, "Categoria" %>
+      <%= f.select :categories,
+                   Service::CATEGORIES,
+                   { include_blank: "Selecione uma categoria" },
+                   class: "form-select",
+                   id: "service_categories",
+                   data: {
+                     "service-form-target": "category",
+                     action: "service-form#onCategoryChange"
+                   } %>
+    </div>
 
-  <hr class="my-4">
+    <div class="mb-3">
+      <%= f.label :subcategories, "Subcategoria" %>
+      <%= f.select :subcategories,
+                   (@service.categories.present? ? Service::SUBCATEGORIES[@service.categories] : []),
+                   { include_blank: "Selecione a subcategoria" },
+                   class: "form-select",
+                   id: "service_subcategories",
+                   data: {
+                     selected: @service.subcategories.to_s,
+                     "service-form-target": "subcategory"
+                   } %>
+      <small class="form-text text-muted">Opcional: subcategoria principal exibida na página do serviço.</small>
+    </div>
 
-  <h5>Procedimentos (subcategorias)</h5>
+    <div class="mb-3">
+      <%= f.label :description, "Descrição" %>
+      <%= f.text_area :description, class: "form-control", rows: 3 %>
+    </div>
 
-  <div id="subcategories-list">
-    <%= f.fields_for :service_subcategories do |sf| %>
-      <%= render "services/subcategory_fields", f: sf %>
-    <% end %>
-  </div>
+    <!-- Preço/hora + Duração + Total -->
+    <div class="row g-3">
+      <div class="col-md-4">
+        <%= f.label :price_hour, "Preço por hora", class: "form-label" %>
+        <%= f.text_field :price_hour,
+              class: "form-control",
+              placeholder: "Ex.: 150,00",
+              id: "service_price_hour",
+              data: {
+                "service-form-target": "price",
+                action: "input->service-form#recalc"
+              } %>
+      </div>
 
-  <div class="mt-3">
-    <button type="button" id="add-subcategory" class="btn btn-outline-primary">
-      Adicionar procedimento
-    </button>
-  </div>
+      <div class="col-md-4">
+        <%= f.label :average_hours, "Duração (horas)", class: "form-label" %>
+        <%= f.number_field :average_hours,
+              class: "form-control",
+              step: 1, min: 1,
+              id: "service_average_hours",
+              data: {
+                "service-form-target": "hours",
+                action: "input->service-form#recalc"
+              } %>
+      </div>
 
-  <div class="mt-4">
-    <%= f.submit class: "btn btn-primary" %>
-    <%= link_to "Cancelar", (@service.persisted? ? service_path(@service) : services_path), class: "btn btn-secondary ms-2" %>
-  </div>
+      <div class="col-md-4">
+        <label class="form-label">Valor total estimado</label>
+        <div class="form-control-plaintext fw-semibold"
+             id="service_total_preview"
+             data-service-form-target="total">R$ 0,00</div>
+        <small class="text-muted">Calculado: preço/h × duração</small>
+      </div>
+    </div>
 
-  <!-- Template escondido para novas linhas -->
-  <template id="subcategory-template">
-    <%= form_fields = f.fields_for(:service_subcategories, ServiceSubcategory.new, child_index: "NEW_RECORD") do |sf| %>
-      <%= render "services/subcategory_fields", f: sf %>
-    <% end %>
-  </template>
-<% end %>
+    <div class="mt-4 d-flex flex-wrap gap-2">
+      <%= f.submit (@service.persisted? ? "Atualizar serviço" : "Criar serviço"),
+                   class: "btn-create-service" %>
 
-<script>
-  (function() {
-    const addBtn = document.getElementById("add-subcategory");
-    if (!addBtn) return;
+      <%= button_tag "Salvar e criar outro",
+            name: "save_and_new", value: "1", type: "submit",
+            class: "btn-chat" %>
 
-    addBtn.addEventListener("click", () => {
-      const tpl = document.getElementById("subcategory-template");
-      const target = document.getElementById("subcategories-list");
-      if (!tpl || !target) return;
-
-      const timestamp = Date.now();
-      const html = tpl.innerHTML.replace(/NEW_RECORD/g, timestamp);
-      target.insertAdjacentHTML("beforeend", html);
-    });
-
-    document.addEventListener("click", (e) => {
-      const btn = e.target.closest("[data-remove-subcategory]");
-      if (!btn) return;
-
-      const wrapper = btn.closest("[data-subcategory-wrapper]");
-      if (!wrapper) return;
-
-      const destroyField = wrapper.querySelector("input[name*='[_destroy]']");
-      if (destroyField) {
-        // Persistente: marca _destroy = 1 e oculta
-        destroyField.value = "1";
-        wrapper.style.display = "none";
-      } else {
-        // Novo (não salvo): remove do DOM
-        wrapper.remove();
-      }
-    });
-  })();
-</script>
-
+      <%= link_to "Cancelar",
+                  (@service.persisted? ? service_path(@service) : services_path),
+                  class: "btn-cancel-service" %>
+    </div>
+  <% end %>
 </div>

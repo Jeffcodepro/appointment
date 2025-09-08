@@ -1,84 +1,65 @@
-/* ===== Offsets para navbar FIXED ===== */
-body { padding-top: 64px; }
-@media (min-width: 576px){ body { padding-top: 72px; } }
-
-/* ===== Navbar ===== */
+/* Base */
 .site-navbar{
   border-bottom: 1px solid #E1E2E4;
-  background: #FFFFFF;
-  z-index: 1400;              /* acima do conteúdo */
+  background: #fff;
+  z-index: 1400;
+}
+.brand-logo{ height: 44px; width: auto; }
+.brand-wordmark{ font-weight: 800; font-size: 1rem; letter-spacing: .2px; }
+
+/* Pills de navegação */
+.nav-link-pill{
+  display: inline-flex; align-items:center; gap:.5rem;
+  padding: .5rem .9rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-weight: 600; color:#101112; opacity:.9;
+  transition: all .15s ease;
+}
+.nav-link-pill:hover{
+  opacity:1; background:#f6fafb; color:#0a5764; border-color:#d8eef3;
+}
+.nav-link-pill.active{
+  background:#f0f9fb; color:#0a5764; border-color:#a5f3fc;
 }
 
-/* Logo */
-.brand-logo{ width:40px; height:auto; }
-
-/* Links */
-.site-navbar .nav-link{
-  color:#101112; opacity:.85; font-weight:600;
+/* Badge (não lidas / contadores) */
+.nav-badge{
+  display:inline-flex; align-items:center; justify-content:center;
+  min-width: 20px; height: 20px; padding: 0 6px;
+  margin-left: .35rem;
+  border-radius:999px; font-size:.75rem; font-weight:700;
+  background:#ef4444; color:#fff;
 }
-.site-navbar .nav-link:hover{
-  opacity:1; color:#137D8E;   /* verde da paleta */
-}
+.nav-badge.subtle{ background:#e5e7eb; color:#111827; }
 
-/* Botão “Criar conta” (outline verde) */
-.btn-nav-signup{
-  display:inline-block;
-  padding:8px 14px;
+/* CTA “Novo serviço” */
+.btn-nav-cta{
+  display:inline-flex;
+  align-items:center;
+  gap:.5rem;
+  padding:.5rem .9rem;
   border-radius:999px;
-  border:1px solid #137D8E;
-  color:#137D8E;
-  background:#FFFFFF;
-  font-weight:700;
+  background:#137D8E;
+  color:#fff;
   text-decoration:none;
-  line-height:1;
+  font-weight:400;
+  box-shadow: 0 1px 0 rgba(0,0,0,.03);
 }
-.btn-nav-signup:hover{
-  background:rgba(19,125,142,0.08);
-  color:#0A5764;
-  border-color:#0A5764;
+.btn-nav-cta:hover{ background:#0A5764; color:#fff; }
+
+/* Saudação e avatar */
+.nav-greeting{ font-weight:700; color:#101112; white-space:nowrap; }
+.nav-user{ padding: .25rem .5rem; }
+.navbar__avatar{
+  width:32px; height:32px; object-fit:cover;
 }
-
-/* Dropdown por cima de tudo */
-.dropdown-menu{ z-index:1500; }
-
-
-.brand-logo{
-  height: 48px;   /* ajuste aqui: 48, 56, 64… */
-  width: auto;    /* mantém proporção */
-}
-
-/* Saudação */
-.nav-greeting{
-  font-weight:700;
-  color:#101112;
-  margin-right:6px;
-  white-space:nowrap;
+.navbar__avatar-fallback{
+  width:32px; height:32px; display:inline-flex; align-items:center; justify-content:center;
+  background:#f3f4f6; color:#6b7280; font-weight:700; font-size:.8rem;
 }
 
-/* Link em verde (apenas onde quiser destacar) */
-.nav-link-green{
-  color:#137D8E !important;
+/* Responsivo */
+@media (max-width: 575.98px){
+  .brand-wordmark{ display:none; }
 }
-.nav-link-green:hover{
-  color:#0A5764 !important;
-}
-
-/* Botão de sair (outline verde) */
-.btn-logout-nav{
-  display:inline-block;
-  padding:8px 14px;
-  border-radius:999px;
-  border:1px solid #137D8E;
-  color:#137D8E;
-  background:#FFFFFF;
-  font-weight:700;
-  text-decoration:none;
-  line-height:1;
-}
-.btn-logout-nav:hover{
-  background:rgba(19,125,142,0.08);
-  color:#0A5764;
-  border-color:#0A5764;
-}
-
-

@@ -3,6 +3,7 @@
 
     <%= link_to root_path, class: "navbar-brand d-flex align-items-center gap-2" do %>
       <%= image_tag "logo2.png", alt: "Logo", class: "brand-logo" %>
+      <span class="brand-wordmark d-none d-sm-inline">Appointments</span>
     <% end %>
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#proNavbar"
@@ -11,52 +12,64 @@
     </button>
 
     <div class="collapse navbar-collapse" id="proNavbar">
-      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0 align-items-center gap-2">
+        <% unread_total = total_unread_for(current_user) %>
 
         <li class="nav-item">
-          <%= link_to "Histórico de agendamentos",
-                      service_history_path,
-                      class: "nav-link #{current_page?(service_history_path) ? 'active' : ''}" %>
+          <%= link_to service_history_path,
+                      class: "nav-link nav-link-pill #{current_page?(service_history_path) ? 'active' : ''}" do %>
+            <i class="fa-regular fa-calendar-check"></i>
+            <span>Histórico</span>
+          <% end %>
+        </li>
+
+        <li class="nav-item position-relative">
+          <%= link_to conversations_path,
+                      class: "nav-link nav-link-pill #{current_page?(conversations_path) ? 'active' : ''}" do %>
+            <i class="fa-regular fa-comments"></i>
+            <span>Minhas conversas</span>
+            <% if unread_total.positive? %>
+              <span class="nav-badge"><%= unread_total %></span>
+            <% end %>
+          <% end %>
         </li>
 
         <% if current_user&.professional? %>
           <li class="nav-item">
-            <%= link_to services_path(user_id: current_user.id),
-                        class: "nav-link d-flex align-items-center gap-1 #{current_page?(services_path(user_id: current_user.id)) ? 'active' : ''}" do %>
-              <span>Meus Serviços</span>
+            <%= link_to mine_services_path,
+                        class: "nav-link nav-link-pill #{current_page?(mine_services_path) ? 'active' : ''}" do %>
+              <i class="fa-regular fa-rectangle-list"></i>
+              <span>Meus serviços</span>
               <% count = current_user.services.count %>
               <% if count.positive? %>
-                <span class="badge text-bg-secondary"><%= count %></span>
+                <span class="nav-badge subtle"><%= count %></span>
               <% end %>
             <% end %>
           </li>
-        <% end %>
-        <% if current_user&.professional? %>
-          <li class="nav-item">
-            <%= link_to "Criar novo serviço",
-                        new_service_path,
-                        class: "nav-link" %>
+
+          <li class="nav-item d-none d-lg-block">
+            <%= link_to new_service_path, class: "btn-nav-cta" do %>
+              <i class="fa-solid fa-plus"></i>
+              <span>Novo serviço</span>
+            <% end %>
           </li>
         <% end %>
       </ul>
 
       <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
-
-
         <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" role="button"
+          <a class="nav-link dropdown-toggle d-flex align-items-center gap-2 nav-user" href="#" role="button"
              data-bs-toggle="dropdown" aria-expanded="false">
             <% if current_user.avatar.attached? %>
               <%= cl_image_tag current_user.avatar.key,
                     width: 32, height: 32, crop: :fill, gravity: :face,
                     fetch_format: :auto, quality: :auto,
-                    class: "rounded-circle pro-navbar__avatar", alt: current_user.name %>
+                    class: "rounded-circle navbar__avatar", alt: current_user.name %>
             <% else %>
               <% initials = (current_user.name.presence || current_user.email).split.map { |s| s[0] }.join.first(2).upcase %>
-              <span class="rounded-circle pro-navbar__avatar-fallback"><%= initials %></span>
+              <span class="rounded-circle navbar__avatar-fallback"><%= initials %></span>
             <% end %>
             <span class="d-none d-md-inline"><%= first_name(current_user) %></span>
-
           </a>
           <ul class="dropdown-menu dropdown-menu-end">
             <li><%= link_to "Editar perfil", edit_profile_path(current_user), class: "dropdown-item" %></li>

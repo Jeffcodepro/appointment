@@ -3,6 +3,11 @@ class Service < ApplicationRecord
 
   monetize :price_hour_cents
   has_many :conversations, dependent: :destroy
+  has_many :service_subcategories, dependent: :destroy, inverse_of: :service
+
+  accepts_nested_attributes_for :service_subcategories, allow_destroy: true
+
+
 
   CATEGORIES = [
     "Salão de beleza",

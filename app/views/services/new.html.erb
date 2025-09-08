@@ -1,9 +1,9 @@
+<!-- app/views/services/new.html.erb -->
 <% content_for :head do %>
   <meta name="turbo-cache-control" content="no-preview">
 <% end %>
 
 <div class="container py-4">
-  <!-- Cabeçalho -->
   <div class="card border-0 mb-4 overflow-hidden shadow-sm">
     <div class="row g-0 align-items-center">
       <div class="col-auto p-3">
@@ -22,6 +22,5 @@
     </div>
   </div>
 
-  <!-- Form ocupa toda a largura -->
-  <%= render "form_professional", service: @service %>
+  <%= render "form" %>
 </div>
