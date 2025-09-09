@@ -376,10 +376,6 @@ class ServicesController < ApplicationController
     q =~ /\b(rua|r\.|avenida|av\.?|alameda|praça|praca|estrada|rod\.?|rodovia)\b/i
   end
 
-  def set_service
-    @service = Service.includes(user: { images_attachments: :blob }).find(params[:id])
-  end
-
   def set_owned_service
     @service = current_user.services.find(params[:id])
   end
