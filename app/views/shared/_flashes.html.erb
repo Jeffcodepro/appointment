@@ -1,12 +1,21 @@
 <% if notice %>
-  <div class="alert alert-info alert-dismissible fade show m-1" role="alert">
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  <div class="alert alert-info alert-dismissible fade show m-1"
+       role="alert"
+       data-controller="flash"
+       data-flash-timeout-value="5000"
+       data-action="turbo:before-cache->flash#close">
+    <button type="button" class="btn-close" aria-label="Fechar" data-action="click->flash#close"></button>
     <%= notice %>
   </div>
 <% end %>
+
 <% if alert %>
-  <div class="alert alert-warning alert-dismissible fade show m-1" role="alert">
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  <div class="alert alert-warning alert-dismissible fade show m-1"
+       role="alert"
+       data-controller="flash"
+       data-flash-timeout-value="5000"
+       data-action="turbo:before-cache->flash#close">
+    <button type="button" class="btn-close" aria-label="Fechar" data-action="click->flash#close"></button>
     <%= alert %>
   </div>
 <% end %>

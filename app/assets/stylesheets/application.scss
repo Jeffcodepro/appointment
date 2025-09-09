@@ -29,3 +29,12 @@
   --surface-1: #fff;
   --nav-h: 64px;          /* fallback */
 }
+
+@keyframes flashFadeOut {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-4px); }
+}
+
+.flash-fade-out {
+  animation: flashFadeOut .25s ease forwards;
+}

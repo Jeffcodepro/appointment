@@ -11,6 +11,8 @@ class Schedule < ApplicationRecord
   enum status: { pending: 0, confirmed: 1, completed: 2, canceled: 3, no_show: 4, rejected: 5 }
 
   enum canceled_by: { client: 0, professional: 1 }, _prefix: :canceled_by
+  attribute :canceled_by, :string  # diz ao Rails para tratar como string
+
 
 
   # ---- Scopes: sempre no nível da classe ----
