@@ -21,12 +21,22 @@ class SchedulesController < ApplicationController
     schedule.user_id = service.user_id if schedule.has_attribute?(:user_id) && schedule.user_id.blank?
 
     if schedule.save
+      # 🔔 avisa o profissional que há um agendamento pendente de confirmação
+      if schedule.professional&.email.present?
+        begin
+          mail = ScheduleMailer.with(schedule: schedule).booking_request_to_professional
+          Rails.env.development? ? mail.deliver_now : mail.deliver_later
+        rescue => e
+          Rails.logger.error("[EMAIL_DEBUG] booking_request_to_professional failed: #{e.class} - #{e.message}")
+          # não quebra o fluxo do usuário
+        end
+      end
+
       redirect_to service_path(service), notice: "Solicitação enviada! Aguarde a confirmação do profissional."
     else
       redirect_to service_path(service), alert: schedule.errors.full_messages.to_sentence
     end
   end
-
 
   def show
     @schedule = Schedule.includes(:service, :client, :professional, :messages).find(params[:id])
@@ -44,7 +54,6 @@ class SchedulesController < ApplicationController
 
     @message  = Message.new
   end
-
 
 
   def history
@@ -113,7 +122,7 @@ class SchedulesController < ApplicationController
         # monta CASE dinamicamente com base no enum
         cases = Schedule.statuses.map { |k, v| "WHEN #{v} THEN '#{k}'" }.join(" ")
         # ordena pelo nome do status (string) A–Z e, de quebra, pelos mais recentes dentro de cada status
-        scope = scope.order(Arel.sql("CASE schedules.status #{cases} END ASC")).order(start_at: :desc)
+        scope.order(Arel.sql("CASE schedules.status #{cases} END ASC")).order(start_at: :desc)
       else                      scope.order(start_at: :desc)
       end
 
@@ -127,7 +136,6 @@ class SchedulesController < ApplicationController
           type: "text/csv; charset=utf-8"
       end
     end
-
   end
 
 
@@ -143,8 +151,16 @@ class SchedulesController < ApplicationController
     note  = params[:note].to_s.strip
 
     Schedule.transaction do
-      @schedule.update!(status: :canceled, canceled_by: actor)
-      # ⛔️ removido: @schedule.messages.create!(...)
+      @schedule.update!(
+        status:      :canceled,
+        canceled_by: current_user.id, # 👈 inteiro (user_id). NADA de :professional
+        confirmed:   false
+      )
+    end
+
+    # 🔔 e-mail só se quem cancelou foi o profissional
+    if actor == :professional
+      deliver_mail ScheduleMailer.with(schedule: @schedule).booking_canceled_by_professional_to_client
     end
 
     post_system_message(@schedule, actor == :client ? :canceled_by_client : :canceled_by_professional, note)
@@ -156,7 +172,6 @@ class SchedulesController < ApplicationController
       redirect_back fallback_location: schedule_path(@schedule), notice: notice_msg
     end
   end
-
 
   def accept
     @schedule = Schedule.find(params[:id])
@@ -210,10 +225,12 @@ class SchedulesController < ApplicationController
         accepted_professional: false,
         confirmed:             (@schedule.has_attribute?(:confirmed) ? false : nil),
         status:                :rejected,
-        canceled_by:           :professional
+        canceled_by:           nil # 👈 nada de :professional aqui
       )
-      # ⛔️ removido: @schedule.messages.create!(...)
     end
+
+    # 🔔 e-mail de recusa (sempre que houver recusa)
+    deliver_mail ScheduleMailer.with(schedule: @schedule).booking_declined_to_client
 
     post_system_message(@schedule, :rejected, note)
 
@@ -224,7 +241,6 @@ class SchedulesController < ApplicationController
       redirect_back fallback_location: schedule_path(@schedule), notice: notice_msg
     end
   end
-
 
   private
 
@@ -282,8 +298,12 @@ private
     text = "#{header} para o serviço #{subcat} no #{when_str}."
     text += " Motivo: #{note.to_s.strip}" if note.present?
 
-    conv.messages.create!(user: current_user, content: text)
+    msg = conv.messages.build(user: current_user, content: text)
+    msg.skip_email_notifications = true  # 👈 NÃO dispara e-mail pelo callback do Message
+    msg.save!
   end
 
-
+  def deliver_mail(mail)
+    Rails.env.development? ? mail.deliver_now : mail.deliver_later
+  end
 end

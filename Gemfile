@@ -57,6 +57,7 @@ gem "pg_search"
 gem "geocoder"
 gem "simple_calendar"
 gem "rails-i18n", "~> 7.0"
+gem "good_job"
 
 
 gem "activestorage-cloudinary-service"

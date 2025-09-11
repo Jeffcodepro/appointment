@@ -2,6 +2,7 @@ class MessagesController < ApplicationController
   before_action :authenticate_user!
   before_action :load_parent!  # Schedule ou Conversation
   before_action :authorize_participation!
+  before_action :set_parent
 
   def create
     message = @parent.messages.build(
@@ -44,6 +45,16 @@ class MessagesController < ApplicationController
       @parent = Conversation.includes(:client, :professional, :service).find(params[:conversation_id])
     else
       head :bad_request
+    end
+  end
+
+  def set_parent
+    if params[:conversation_id].present?
+      @parent = Conversation.find(params[:conversation_id])
+    elsif params[:schedule_id].present?
+      @parent = Schedule.find(params[:schedule_id])
+    else
+      head :unprocessable_entity
     end
   end
 

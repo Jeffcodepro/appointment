@@ -79,5 +79,20 @@ Rails.application.configure do
   # Raise error when a before_action's only/except options reference missing actions
   config.action_controller.raise_on_missing_callback_actions = true
 
+  config.active_job.queue_adapter = :good_job
+  config.good_job.execution_mode  = :async   # executa no próprio web process
 
+  config.action_mailer.default_url_options = { host: "localhost", port: 3000, protocol: "http" }
+  config.action_mailer.perform_caching = false
+  config.action_mailer.raise_delivery_errors = true
+
+  config.action_mailer.delivery_method = :smtp
+  config.action_mailer.smtp_settings = {
+    address:              "smtp.gmail.com",
+    port:                 587,
+    user_name:            ENV["SMTP_USERNAME"] || Rails.application.credentials.dig(:smtp, :user_name),
+    password:             ENV["SMTP_PASSWORD"] || Rails.application.credentials.dig(:smtp, :password),
+    authentication:       :login,
+    enable_starttls_auto: true
+  }
 end

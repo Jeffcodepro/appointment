@@ -1,0 +1,7 @@
+Agendamento recusado
+
+Procedimento: <%= @service&.subcategories %>
+Profissional: <%= @professional&.name %>
+<% if @start %>Data/hora: <%= l(@start, format: :long) %><% if @end %> - <%= l(@end, format: :time) %><% end %><% end %>
+Status: Recusado
+
