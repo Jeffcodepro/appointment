@@ -97,4 +97,33 @@ Rails.application.configure do
 
   # config/environments/production.rb
   config.active_storage.service = :cloudinary
+
+  # URLs para helpers *_url (ex.: conversation_url)
+
+  config.action_mailer.default_url_options = { host: "localhost", port: 3000, protocol: "http" }
+  config.action_mailer.perform_caching = false
+  config.action_mailer.raise_delivery_errors = true
+
+  host = ENV.fetch("APP_HOST") # ex.: "seuapp.herokuapp.com" ou domínio próprio
+  config.action_mailer.default_url_options = { host: host, protocol: "https" }
+  config.action_mailer.asset_host          = "https://#{host}"
+
+  config.action_mailer.delivery_method = :smtp
+  config.action_mailer.smtp_settings = {
+    address:              "smtp.gmail.com",
+    port:                 587,
+    user_name:            ENV["SMTP_USERNAME"] || Rails.application.credentials.dig(:smtp, :user_name),
+    password:             ENV["SMTP_PASSWORD"] || Rails.application.credentials.dig(:smtp, :password),
+    authentication:       :login,
+    enable_starttls_auto: true
+  }
+
+  # --- Active Job / GoodJob ---
+  config.active_job.queue_adapter = :good_job
+  config.good_job.execution_mode  = :async
+  # Sem CRON aqui (apenas e-mails de "nova mensagem").
+  # No Heroku, suba um worker com: worker: bundle exec good_job start
+
+  # --- Hosts (opcional; geralmente não precisa no Heroku) ---
+  # config.hosts = ["seu-dominio.com"]
 end

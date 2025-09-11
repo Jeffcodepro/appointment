@@ -1,0 +1,55 @@
+<!-- app/views/schedule_mailer/booking_created_to_client.html.erb -->
+<% content_for :title, (@confirmed ? "Agendamento confirmado" : "Agendamento recebido") %>
+<% content_for :header_tagline do %>
+  <%= @confirmed ? "Tudo certo!" : "Aguardando confirmação do profissional" %>
+<% end %>
+
+<p style="margin:0 0 8px 0;font:700 18px/1.3 system-ui,-apple-system,Segoe UI,Roboto;color:#0f172a;">
+  <%= @confirmed ? "Seu agendamento está confirmado 🎉" : "Recebemos seu agendamento ✅" %>
+</p>
+
+<p style="margin:0 0 16px 0;font:400 14px/1.6 system-ui,-apple-system,Segoe UI,Roboto;color:#334155;">
+  Olá <strong><%= @client&.name || "tudo bem" %></strong>, segue o resumo do seu atendimento:
+</p>
+
+<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin:6px 0 18px 0;border:1px solid #e5e7eb;border-radius:12px;">
+  <tr>
+    <td style="padding:14px 16px;border-bottom:1px solid #e5e7eb;">
+      <div style="font:500 12px/1.4 system-ui,-apple-system,Segoe UI,Roboto;color:#6b7280;text-transform:uppercase;letter-spacing:.02em;">Procedimento</div>
+      <div style="font:600 15px/1.4 system-ui,-apple-system,Segoe UI,Roboto;color:#0f172a;">
+        <%= @service&.subcategories || "Serviço" %>
+      </div>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding:14px 16px;border-bottom:1px solid #e5e7eb;">
+      <div style="font:500 12px/1.4 system-ui,-apple-system,Segoe UI,Roboto;color:#6b7280;text-transform:uppercase;letter-spacing:.02em;">Data e horário</div>
+      <div style="font:600 15px/1.4 system-ui,-apple-system,Segoe UI,Roboto;color:#0f172a;">
+        <% if @start.present? %>
+          <%= l(@start, format: :long) %><% if @end.present? %> — <%= l(@end, format: :time) %><% end %>
+        <% else %>
+          a definir
+        <% end %>
+      </div>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding:14px 16px;">
+      <div style="font:500 12px/1.4 system-ui,-apple-system,Segoe UI,Roboto;color:#6b7280;text-transform:uppercase;letter-spacing:.02em;">Profissional</div>
+      <div style="font:600 15px/1.4 system-ui,-apple-system,Segoe UI,Roboto;color:#0f172a;">
+        <%= @professional&.name || "Profissional" %>
+      </div>
+    </td>
+  </tr>
+</table>
+
+<!-- chip de status -->
+<span style="display:inline-block;
+             padding:8px 10px;border-radius:999px;
+             font:600 12px/1 system-ui,-apple-system,Segoe UI,Roboto;
+             color:<%= @confirmed ? '#065f46' : '#1e40af' %>;
+             background:<%= @confirmed ? '#d1fae5' : '#dbeafe' %>;
+             border:1px solid <%= @confirmed ? '#a7f3d0' : '#bfdbfe' %>;">
+  <%= @confirmed ? "Confirmado" : "Aguardando confirmação" %>
+</span>
+

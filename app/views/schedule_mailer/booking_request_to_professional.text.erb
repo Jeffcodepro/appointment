@@ -1,0 +1,7 @@
+Novo agendamento pendente
+
+Cliente: <%= @client&.name %>
+Procedimento: <%= @service&.subcategories %>
+<% if @start %>Quando: <%= l(@start, format: :long) %><% if @end %> - <%= l(@end, format: :time) %><% end %><% end %>
+Status: Aguardando confirmação
+

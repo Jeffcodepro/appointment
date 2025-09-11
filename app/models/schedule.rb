@@ -13,7 +13,11 @@ class Schedule < ApplicationRecord
   enum canceled_by: { client: 0, professional: 1 }, _prefix: :canceled_by
   attribute :canceled_by, :string  # diz ao Rails para tratar como string
 
+  after_update_commit :notify_client_when_confirmed, if: -> { saved_change_to_confirmed? && confirmed? }
 
+  # PROFISSIONAL CANCELOU -> canceled_by mudou p/ professional_id
+  after_update_commit :notify_client_when_canceled_by_professional,
+    if: -> { saved_change_to_canceled_by? && canceled_by.present? && canceled_by == professional_id }
 
   # ---- Scopes: sempre no nível da classe ----
   scope :for_provider,     ->(provider_id) { joins(:service).where(services: { user_id: provider_id }) }
@@ -73,5 +77,28 @@ class Schedule < ApplicationRecord
       .where("start_at < ? AND end_at > ?", end_at, start_at)
 
     errors.add(:base, "Conflito com outro agendamento") if overlapping.exists?
+  end
+
+  def notify_client_when_confirmed
+    client = User.find_by(id: client_id)
+    return if client.blank? || client.email.blank?
+
+    mail = ScheduleMailer.with(schedule: self).booking_confirmed_to_client
+
+    if Rails.env.development?
+      Rails.logger.info("[EMAIL_DEBUG] DEV deliver_now booking_confirmed_to_client to=#{client.email}")
+      mail.deliver_now
+    else
+      Rails.logger.info("[EMAIL_DEBUG] deliver_later booking_confirmed_to_client to=#{client.email}")
+      mail.deliver_later
+    end
+  end
+
+  def notify_client_when_canceled_by_professional
+    client = User.find_by(id: client_id)
+    return if client.blank? || client.email.blank?
+
+    mail = ScheduleMailer.with(schedule: self).booking_canceled_by_professional_to_client
+    Rails.env.development? ? mail.deliver_now : mail.deliver_later
   end
 end

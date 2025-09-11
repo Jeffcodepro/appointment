@@ -1,0 +1,6 @@
+Agendamento cancelado
+
+Procedimento: <%= @service&.subcategories %>
+Profissional: <%= @professional&.name %>
+<% if @start %>Data original: <%= l(@start, format: :long) %><% if @end %> - <%= l(@end, format: :time) %><% end %><% end %>
+Status: Cancelado
