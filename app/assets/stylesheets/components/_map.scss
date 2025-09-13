@@ -61,3 +61,137 @@
   z-index: 3; }
 
 .mapboxgl-canvas { z-index: 1; }
+
+/* Hover legível */
+.mapboxgl-popup.hover-tip-popup { z-index: 10; }
+.mapboxgl-popup.hover-tip-popup .mapboxgl-popup-content {
+  min-width: 220px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 2px solid #111;
+  box-shadow: 0 10px 24px rgba(0,0,0,.28);
+  background: #fff;
+}
+.mapboxgl-popup.hover-tip-popup .mapboxgl-popup-tip { display: none; }
+.hover-tip .ht-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: #111;
+  line-height: 1.2;
+  letter-spacing: .2px;
+}
+
+/* Chip com setinha e popup detalhado */
+.price-marker.price-marker-flex { display: inline-flex; align-items: center; gap: 6px; }
+.pm-arrow {
+  appearance: none;
+  border: 0;
+  background: #fff;
+  color: #111;
+  font-weight: 900;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,.18);
+  transition: transform .12s ease;
+}
+.pm-arrow:hover { transform: translateY(-1px); }
+.pm-arrow.open  { transform: rotate(180deg); }
+
+.mapboxgl-popup.detail-popup { z-index: 12; }
+.mapboxgl-popup.detail-popup .mapboxgl-popup-content {
+  min-width: 260px;
+  max-width: 360px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 2px solid #111;
+  background: #fff;
+  box-shadow: 0 16px 32px rgba(0,0,0,.3);
+  transform: translateY(-8px);
+  opacity: 0;
+  animation: detail-slide .18s ease-out forwards;
+}
+@keyframes detail-slide { to { transform: translateY(0); opacity: 1; } }
+.mapboxgl-popup.detail-popup .mapboxgl-popup-tip { display: none; }
+
+.detail-card .dc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.detail-card .dc-title  {
+  font-size: 14px;
+  font-weight: 800;
+  color: #111;
+  line-height: 1.2;
+}
+.detail-card .dc-price  {
+  font-size: 16px;
+  font-weight: 900;
+  background: #111;
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 2px solid #111;
+}
+
+/* bloco de meta (categoria/procedimento) */
+.detail-card .dc-meta { display: grid; gap: 6px; margin: 8px 0 12px; }
+.detail-card .dc-row { display: flex; gap: 6px; align-items: baseline; }
+.detail-card .dc-k   { font-size: 11px; font-weight: 800; color: #666; text-transform: uppercase; letter-spacing: .3px; }
+.detail-card .dc-v   { font-size: 12px; color: #222; }
+
+.detail-card .dc-actions .dc-action-btn {
+  appearance: none;
+  background: #111;
+  color: #fff;
+  font-weight: 800;
+  font-size: 12px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 1px 6px rgba(0,0,0,.2);
+}
+.detail-card .dc-actions .dc-action-btn:hover { transform: translateY(-1px); }
+
+/* ====== DETAIL POPUP (cardzinho) ====== */
+.detail-popup .mapboxgl-popup-content{
+  padding: 12px 14px;
+  border-radius: 14px;
+}
+
+/* Cabeçalho do card: título à esquerda, preço à direita */
+.detail-popup .dc-header{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.detail-popup .dc-title{
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.25;
+  margin-right: auto;
+}
+
+/* Pílula de preço — menor e SEM QUEBRA */
+.detail-popup .dc-price{
+  background: #111;
+  color: #fff;
+  font-weight: 700;
+  padding: 4px 8px;          /* ↓ menor que antes */
+  border-radius: 12px;
+  font-size: 13px;           /* ↓ diminui um pouco */
+  line-height: 1;
+  display: inline-flex;      /* força ficar em linha */
+  align-items: center;
+  white-space: nowrap;       /* não quebra “R$ 175,15” */
+  overflow-wrap: normal;     /* evita quebra estranha */
+  word-break: normal;        /* evita quebra estranha */
+  min-width: max-content;    /* expande o chip até caber tudo */
+}

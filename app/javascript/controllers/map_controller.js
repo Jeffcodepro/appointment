@@ -6,11 +6,12 @@ export default class extends Controller {
   static values = {
     apiKey: String,
     markers: Array,
-    spiderRadii: Object,       // { "4": 60, "8": 80, "12": 100, "*": 120 }
-    clickablePins: Boolean     // true no index, false no show
+    spiderRadii: Object,
+    clickablePins: Boolean
   }
 
   connect() {
+    console.log("MapController v2.7 loaded")
     mapboxgl.accessToken = this.apiKeyValue
 
     try { this.element.replaceChildren() } catch { this.element.innerHTML = "" }
@@ -20,7 +21,7 @@ export default class extends Controller {
     this.element.style.width = this.element.style.width || "100%"
     this.element.classList.remove("is-ready")
 
-    // 👇 base para comportamento do index/show (fallback: id === "services-map")
+    // index/show: se não vier, deduz pelo id
     this._isIndex = this.hasClickablePinsValue ? this.clickablePinsValue : (this.element.id === "services-map")
 
     const initial = this._loadViewState() || this._initialFromMarkers() || { center: [-46.6333, -23.55], zoom: 9 }
@@ -99,7 +100,7 @@ export default class extends Controller {
     this.map = null
   }
 
-  // dispara quando data-map-markers-value muda
+  // ------- reatividade dos markers -------
   markersValueChanged() {
     if (!this.map) return
     const animate = this._viewInitialized
@@ -176,8 +177,9 @@ export default class extends Controller {
         const m  = items[0]
         const el = this._buildPriceMarker(m.price, m.name, m.url, m.service_id, { clickable: isIndex })
         const mk = new mapboxgl.Marker({ element: el }).setLngLat([lng, lat])
-        // sem popup em ambos (para não “roubar” clique)
         mk.addTo(this.map)
+        this._attachHoverTip(mk, m)
+        this._attachDetailToggle(mk, m)
         this.allMarkers.push(mk)
       } else {
         const el = this._buildClusterMarker(items.length)
@@ -206,7 +208,7 @@ export default class extends Controller {
       const currentResults = document.querySelector("#results")
       if (newResults && currentResults) currentResults.replaceWith(newResults)
 
-      // 2) sincroniza markers do mapa (mantém o mesmo container/permanente)
+      // 2) sincroniza markers do mapa
       const incomingMap = doc.querySelector("#services-map")
       const existingMap = document.querySelector("#services-map")
       if (incomingMap && existingMap) {
@@ -214,46 +216,46 @@ export default class extends Controller {
         if (newMarkers) existingMap.setAttribute("data-map-markers-value", newMarkers)
       }
 
-      // 3) atualiza URL e rola suave pro bloco
+      // 3) atualiza URL e rola suave
       window.history.pushState({}, "", url)
       const target = document.querySelector("#results")
       if (target) target.scrollIntoView({ behavior: "smooth", block: "start" })
     } catch (_) {
-      // fallback: navegação turbo caso algo dê ruim
       if (window.Turbo?.visit) window.Turbo.visit(url, { action: "advance" })
       else window.location.assign(url)
     }
   }
 
+  _navigateToService(serviceId) {
+    // filtrar no index (comportamento do chip de preço)
+    const path = window.location.pathname.split("?")[0].split("#")[0]
+    const base = /^\/services\/\d+/.test(path) ? "/services" : path
+    const filterUrl = `${base}?service_id=${encodeURIComponent(serviceId)}#results`
+    this._smoothFilterTo(serviceId, filterUrl)
+  }
 
+  // ---------- builders ----------
   _buildPriceMarker(priceText, title, url, serviceId, opts = {}) {
     const clickable = !!opts.clickable
     const el = document.createElement("div")
     el.className = "price-marker"
     el.innerText = priceText || "•"
-    el.title = title || ""
+    el.title = "" // desativa tooltip nativo
+    el.setAttribute("aria-label", `${title || "Serviço"} por ${this._priceLabel(priceText)}`)
 
     if (clickable) {
       el.setAttribute("role", "button")
       el.setAttribute("tabindex", "0")
       el.style.cursor = "pointer"
 
-      const navigateToFiltered = () => {
-        const path = window.location.pathname.split("?")[0].split("#")[0]
-        const base = /^\/services\/\d+/.test(path) ? "/services" : path
-        const filterUrl = `${base}?service_id=${encodeURIComponent(serviceId)}#results`
-        // 👇 suavão: sem reload, troca #results e atualiza markers do mapa
-        this._smoothFilterTo(serviceId, filterUrl)
+      const onNav = (e) => {
+        e.stopPropagation()
+        this._navigateToService(serviceId)
       }
 
-      el.addEventListener("click", (e) => {
-        e.stopPropagation()
-        // Ctrl / ⌘ abre a página do serviço em nova aba (comportamento útil)
-        if ((e.metaKey || e.ctrlKey) && url) { window.open(url, "_blank"); return }
-        navigateToFiltered()
-      })
+      el.addEventListener("click", onNav)
       el.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); navigateToFiltered() }
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onNav(e) }
       })
     } else {
       el.style.cursor = "default"
@@ -262,7 +264,6 @@ export default class extends Controller {
 
     return el
   }
-
 
   _buildClusterMarker(count) {
     const el = document.createElement("div")
@@ -287,6 +288,8 @@ export default class extends Controller {
       const target = this._offsetLngLatByPixels(center, radiusPx, this._angleForIndex(i, items.length))
       const el = this._buildPriceMarker(m.price, m.name, m.url, m.service_id, { clickable: isIndex })
       const child = new mapboxgl.Marker({ element: el }).setLngLat(target).addTo(this.map)
+      this._attachHoverTip(child, m)
+      this._attachDetailToggle(child, m)
       children.push(child)
 
       const leg = this._buildRadialLine(center, target)
@@ -340,7 +343,6 @@ export default class extends Controller {
     return 120
   }
 
-
   _angleForIndex(i,total){ const off=15; return (i*(360/total))-90+off }
   _offsetLngLatByPixels(center,r,deg){
     const p=this.map.project(center); const rad=(deg*Math.PI)/180
@@ -384,6 +386,185 @@ export default class extends Controller {
     const leg = new mapboxgl.Marker({ element: el, anchor: "center" }).setLngLat(mid).addTo(this.map)
     this.allLegs.push(leg)
     return leg
+  }
+
+  // ---------- helpers ----------
+  _priceLabel(price) {
+    if (price == null) return "—"
+    if (typeof price === "string") return price
+    try {
+      return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price)
+    } catch(_) {
+      const n = Number(price)
+      return Number.isFinite(n) ? `R$ ${n.toFixed(2)}` : String(price)
+    }
+  }
+
+  // escapa HTML básico
+  _esc(s) {
+    return String(s ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
+  }
+
+  _categoryText(d) {
+    const c = d.categories ?? d.category
+    if (Array.isArray(c)) return c.map(s => String(s||"").trim()).filter(Boolean).join(" • ")
+    if (typeof c === "string") return c
+    return ""
+  }
+
+  // Hover “tip” (maior e legível)
+  _hoverTipHTML(d) {
+    const name = (d.label || d.name || "Serviço").toString()
+    return `
+      <div class="hover-tip">
+        <div class="ht-title">${this._esc(name)}</div>
+      </div>
+    `
+  }
+  _attachHoverTip(markerInstance, data) {
+    const map = this.map
+    const popup = new mapboxgl.Popup({
+      closeButton: false,
+      closeOnClick: false,
+      offset: 12,
+      className: "hover-tip-popup"
+    })
+    let hideTimer = null
+    const show = () => {
+      try {
+        clearTimeout(hideTimer)
+        popup
+          .setLngLat(markerInstance.getLngLat())
+          .setHTML(this._hoverTipHTML(data))
+          .addTo(map)
+        const el = popup.getElement()
+        if (el && !el._hoverBound) {
+          el.addEventListener("mouseenter", () => clearTimeout(hideTimer))
+          el.addEventListener("mouseleave", () => {
+            hideTimer = setTimeout(() => { try { popup.remove() } catch(_) {} }, 120)
+          })
+          el._hoverBound = true
+        }
+      } catch(_) {}
+    }
+    const hide = () => {
+      clearTimeout(hideTimer)
+      hideTimer = setTimeout(() => { try { popup.remove() } catch(_) {} }, 120)
+    }
+    const el = markerInstance.getElement()
+    el.addEventListener("mouseenter", show)
+    el.addEventListener("mouseleave", hide)
+    el.addEventListener("touchstart", show, { passive: true })
+    el.addEventListener("touchend", hide,   { passive: true })
+  }
+
+  // Card detalhado — mostra apenas categoria, valor e "Ver detalhes"
+  _detailHTML(d) {
+    const name  = (d.label || d.name || "Serviço").toString()
+    const price = this._priceLabel(d.price)
+    const cat   = this._categoryText(d)
+
+    return `
+      <div class="detail-card">
+        <div class="dc-header">
+          <div class="dc-title">${this._esc(name)}</div>
+          <div class="dc-price">${price}</div>
+        </div>
+        <div class="dc-meta">
+          ${cat ? `<div class="dc-row"><span class="dc-k">Categoria:</span> <span class="dc-v">${this._esc(cat)}</span></div>` : ""}
+        </div>
+        <div class="dc-actions">
+          <button type="button" class="dc-action-btn" data-url="${d.url || ""}">Ver detalhes</button>
+        </div>
+      </div>
+    `
+  }
+
+  _bindDetailPopupActions(popup, onAfterClose) {
+    const root = popup.getElement()
+    if (!root) return
+    const btn = root.querySelector(".dc-action-btn")
+    if (!btn) return
+
+    const handler = (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      const url = btn.getAttribute("data-url")
+      try { popup.remove() } catch(_) {}
+      if (typeof onAfterClose === "function") onAfterClose()
+
+      // ⛳️ Ir para o SHOW do serviço (mesma aba)
+      if (url) {
+        if (window.Turbo?.visit) window.Turbo.visit(url, { action: "advance" })
+        else window.location.assign(url)
+      }
+    }
+    btn.addEventListener("click", handler, { once: true })
+  }
+
+  _attachDetailToggle(markerInstance, data) {
+    const map = this.map
+    const chip = markerInstance.getElement()
+    chip.classList.add("price-marker-flex")
+
+    // botão setinha
+    const arrow = document.createElement("button")
+    arrow.type = "button"
+    arrow.className = "pm-arrow"
+    arrow.setAttribute("aria-label", "Mais informações")
+    arrow.innerHTML = "▾"
+    chip.appendChild(arrow)
+
+    const popup = new mapboxgl.Popup({
+      closeButton: true,
+      closeOnClick: true,
+      offset: { bottom: [0, 16], top: [0, 16], left: [0, 16], right: [0, 16] },
+      anchor: "bottom",
+      className: "detail-popup"
+    })
+
+    let open = false
+    let onMoveFn = null
+
+    const syncClosedState = () => {
+      open = false
+      arrow.classList.remove("open")
+      if (onMoveFn) { map.off("move", onMoveFn); onMoveFn = null }
+    }
+
+    const toggle = (ev) => {
+      ev.stopPropagation()
+      ev.preventDefault()
+
+      if (open) {
+        try { popup.remove() } catch (_) {}
+        syncClosedState()
+        return
+      }
+
+      try {
+        popup
+          .setLngLat(markerInstance.getLngLat())
+          .setHTML(this._detailHTML(data))
+          .addTo(map)
+
+        open = true
+        arrow.classList.add("open")
+
+        // fecha ao mover o mapa
+        onMoveFn = () => { try { popup.remove() } catch (_) {}; syncClosedState() }
+        map.on("move", onMoveFn)
+
+        // fecha pelo X / clique fora
+        popup.once("close", syncClosedState)
+        popup.once("remove", syncClosedState)
+
+        // botão "Ver detalhes" -> SHOW do serviço
+        this._bindDetailPopupActions(popup, syncClosedState)
+      } catch(_) {}
+    }
+
+    arrow.addEventListener("click", toggle)
   }
 
   // ---------- view ----------
