@@ -1,0 +1,76 @@
+<% content_for :title, "Lembrete de confirmação" %>
+<% content_for :header_tagline do %>
+  Confirme ou recuse para avisar o cliente
+<% end %>
+
+<% service_label = @service&.subcategories.presence || @service&.name || "Serviço" %>
+
+<p style="margin:0 0 16px 0;font:400 14px/1.6 system-ui,-apple-system,Segoe UI,Roboto;color:#334155;">
+  Olá <strong><%= @professional&.name || "profissional" %></strong>, este agendamento continua pendente:
+</p>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+       style="width:100%;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;margin-top:6px;border-spacing:0;">
+
+  <!-- cabeçalho -->
+  <tr>
+    <td style="padding:16px;border-bottom:1px solid #e5e7eb;">
+      <div style="font:600 14px/1.4 system-ui,-apple-system,Segoe UI,Roboto;color:#0f172a;">
+        <%= @client&.name || "Cliente" %>
+      </div>
+      <div style="font:500 12px/1.4 system-ui,-apple-system,Segoe UI,Roboto;color:#64748b;">
+        solicitou um atendimento
+      </div>
+    </td>
+  </tr>
+
+  <!-- procedimento -->
+  <tr>
+    <td style="padding:14px 16px;">
+      <div style="font:500 12px;color:#6b7280;text-transform:uppercase;letter-spacing:.02em;">Procedimento</div>
+      <div style="font:600 15px;color:#0f172a;"><%= service_label %></div>
+    </td>
+  </tr>
+
+  <!-- divisor -->
+  <tr>
+    <td style="padding:0;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;border-spacing:0;">
+        <tr><td style="height:1px;line-height:1px;font-size:0;background:#e5e7eb;">&nbsp;</td></tr>
+      </table>
+    </td>
+  </tr>
+
+  <% if @start.present? %>
+    <!-- quando -->
+    <tr>
+      <td style="padding:14px 16px;">
+        <div style="font:500 12px;color:#6b7280;text-transform:uppercase;letter-spacing:.02em;">Quando</div>
+        <div style="font:600 15px;color:#0f172a;">
+          <%= l(@start, format: :long) %><% if @end %> — <%= l(@end, format: :time) %><% end %>
+        </div>
+      </td>
+    </tr>
+
+    <!-- divisor -->
+    <tr>
+      <td style="padding:0;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;border-spacing:0;">
+          <tr><td style="height:1px;line-height:1px;font-size:0;background:#e5e7eb;">&nbsp;</td></tr>
+        </table>
+      </td>
+    </tr>
+  <% end %>
+
+  <!-- chip -->
+  <tr>
+    <td style="padding:14px 16px;">
+      <span style="display:inline-block;padding:7px 10px;border-radius:999px;
+                   font:600 12px/1 system-ui,-apple-system,Segoe UI,Roboto;
+                   color:#1e3a8a;background:#dbeafe;border:1px solid #bfdbfe;">
+        Aguardando sua confirmação
+      </span>
+    </td>
+  </tr>
+</table>
+

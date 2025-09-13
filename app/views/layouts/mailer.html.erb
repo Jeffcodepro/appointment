@@ -1,13 +1,94 @@
-<!DOCTYPE html>
-<html>
+<!-- app/views/layouts/mailer.html.erb -->
+<!doctype html>
+<html lang="pt-BR">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <style>
-      /* Email styles need to be inline */
-    </style>
+    <meta name="color-scheme" content="light">
+    <meta name="supported-color-schemes" content="light">
+    <title><%= content_for?(:title) ? yield(:title) : "Appointment" %></title>
+    <!-- preheader (texto de preview no inbox) -->
+    <span style="display:none!important;visibility:hidden;opacity:0;color:transparent;height:0;width:0;overflow:hidden;">
+      <%= content_for?(:preheader) ? yield(:preheader) : "Atualizações do seu agendamento e mensagens." %>
+    </span>
   </head>
+  <body style="margin:0;padding:0;background:#f1f5f9;">
+    <!-- wrapper 100% -->
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="width:100%;background:#f1f5f9;">
+      <tr>
+        <td align="center" style="padding:24px;">
+          <!-- card -->
+          <table role="presentation" cellpadding="0" cellspacing="0" width="600"
+                 style="width:600px;max-width:600px;background:#ffffff;border:1px solid #e5e7eb;border-radius:14px;">
+            <!-- masthead -->
+            <tr>
+              <td style="padding:18px 20px;border-bottom:1px solid #e5e7eb;">
+                <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+                  <tr>
+                    <td style="font:700 18px/1.2 system-ui,-apple-system,Segoe UI,Roboto;color:#0f172a;">
+                      <!-- logo + brand -->
+                      <% logo_src = @brand_logo_cid.presence || image_url("logo2.png") %>
+                        <span style="display:inline-block;vertical-align:middle;margin-right:8px;height:28px;width:28px;">
+                          <img src="<%= logo_src %>" alt="Appointment"
+                              width="28" height="28"
+                              style="display:block;border:0;outline:none;text-decoration:none;border-radius:6px;">
+                        </span>
+                        <span style="vertical-align:middle;">Appointment</span>
+                    </td>
+                    <td align="right" style="font:600 14px/1 system-ui,-apple-system,Segoe UI,Roboto;color:#64748b;">
+                      <!-- “ícones” estilo rede (compat: emojis) -->
+                      <span style="margin-left:10px">💬</span>
+                      <span style="margin-left:10px">👥</span>
+                      <span style="margin-left:10px">🔔</span>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
 
-  <body>
-    <%= yield %>
+            <%# hero opcional (banner grande) %>
+            <% if content_for?(:hero_image_url) %>
+              <tr>
+                <td>
+                  <img src="<%= yield(:hero_image_url) %>" alt="" width="600"
+                       style="display:block;width:100%;max-width:600px;height:auto;border:0;border-bottom:1px solid #e5e7eb;">
+                </td>
+              </tr>
+            <% end %>
+
+            <!-- header interno (título + tagline) -->
+            <tr>
+              <td style="padding:20px 22px 8px 22px;">
+                <div style="font:800 22px/1.25 system-ui,-apple-system,Segoe UI,Roboto;color:#0f172a;margin:0 0 6px 0;">
+                  <%= content_for?(:title) ? yield(:title) : "Atualização" %>
+                </div>
+                <% if content_for?(:header_tagline) %>
+                  <div style="font:500 13px/1.5 system-ui,-apple-system,Segoe UI,Roboto;color:#6b7280;margin:0;">
+                    <%= yield :header_tagline %>
+                  </div>
+                <% end %>
+              </td>
+            </tr>
+
+            <!-- corpo (views) -->
+            <tr>
+              <td style="padding:8px 22px 22px 22px;">
+                <%= yield %>
+              </td>
+            </tr>
+
+            <!-- rodapé -->
+            <tr>
+              <td style="padding:16px 20px;border-top:1px solid #e5e7eb;background:#fafafa;border-bottom-left-radius:14px;border-bottom-right-radius:14px;">
+                <div style="font:400 12px/1.6 system-ui,-apple-system,Segoe UI,Roboto;color:#94a3b8;">
+                  Você recebeu este e-mail porque tem uma conta no Appointment.
+                  <br>Não responda este endereço — use a conversa dentro da plataforma.
+                </div>
+              </td>
+            </tr>
+          </table>
+          <!-- /card -->
+        </td>
+      </tr>
+    </table>
   </body>
 </html>

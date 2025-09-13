@@ -3,21 +3,38 @@
   Você recebeu uma mensagem em sua conversa
 <% end %>
 
-<p style="margin:0 0 8px 0;font:700 18px/1.3 system-ui,-apple-system,Segoe UI,Roboto;color:#0f172a;">
-  Nova mensagem de <%= @sender&.name || "Usuário" %> 💬
-</p>
+<%# hero opcional: coloque uma imagem ampla se quiser %>
+<%# content_for :hero_image_url, image_url("mail/hero-conversa.png") %>
 
-<p style="margin:0 0 12px 0;font:400 14px/1.6 system-ui,-apple-system,Segoe UI,Roboto;color:#334155;">
-  Olá <strong><%= @recipient&.name || "tudo bem" %></strong>, você tem uma nova mensagem:
-</p>
+<!-- bloco estilo “post” -->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+       style="width:100%;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;margin-top:6px;">
+  <tr>
+    <td style="padding:14px 16px;border-bottom:1px solid #e5e7eb;">
+      <div style="font:600 14px/1.4 system-ui,-apple-system,Segoe UI,Roboto;color:#0f172a;">
+        <%= @sender&.name || "Usuário" %>
+      </div>
+      <div style="font:500 12px/1.4 system-ui,-apple-system,Segoe UI,Roboto;color:#64748b;">
+        enviou uma mensagem
+      </div>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding:16px;">
+      <div style="padding:12px 14px;border-left:4px solid #e5e7eb;background:#f8fafc;border-radius:8px;
+                  font:400 14px/1.6 system-ui,-apple-system,Segoe UI,Roboto;color:#0f172a;">
+        <%= @message.content.to_s.truncate(240) %>
+      </div>
 
-<div style="margin:10px 0 16px 0;padding:12px 14px;border-left:4px solid #e5e7eb;background:#f8fafc;border-radius:8px;
-            font:400 14px/1.6 system-ui,-apple-system,Segoe UI,Roboto;color:#0f172a;">
-  <%= @message.content.to_s.truncate(240) %>
-</div>
+      <!-- chip + CTA -->
+      <div style="margin-top:14px;">
+        <span style="display:inline-block;padding:7px 10px;border-radius:999px;
+                     font:600 12px/1 system-ui,-apple-system,Segoe UI,Roboto;
+                     color:#1e3a8a;background:#dbeafe;border:1px solid #bfdbfe;">
+          Mensagem não lida
+        </span>
+      </div>
 
-<span style="display:inline-block;padding:8px 10px;border-radius:999px;font:600 12px/1 system-ui,-apple-system,Segoe UI,Roboto;color:#1e3a8a;background:#dbeafe;border:1px solid #bfdbfe;">
-  Mensagem não lida
-</span>
-
-
+    </td>
+  </tr>
+</table>
