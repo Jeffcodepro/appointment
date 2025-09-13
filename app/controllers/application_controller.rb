@@ -5,26 +5,27 @@ class ApplicationController < ActionController::Base
   before_action :configure_permitted_parameters, if: :devise_controller?
   before_action :dispatch_user, if: :user_signed_in?
 
-  # ✅ chama o armazenamento da última página navegável
   before_action :store_user_location!, if: :storable_location?
-  # 🔑 novo: captura return_to vindo na query mesmo em telas do Devise
   before_action :capture_return_to
 
   NON_PAGE_PATHS = [
-    %r{\A/services/cities},          # JSON de cidades
-    %r{\A/services/\d+/availability} # JSON de disponibilidade
+    %r{\A/services/cities},
+    %r{\A/services/\d+/availability}
   ].freeze
-
 
   protected
 
   def configure_permitted_parameters
-    devise_parameter_sanitizer.permit(:sign_up,        keys: %i[role name])
-    devise_parameter_sanitizer.permit(:account_update, keys: %i[name])
+    # Permite campos extras, inclusive uploads (avatar/banner)
+    extra = %i[
+      name as_client as_professional active_role
+      phone_number cep city state address address_number description
+      avatar banner
+    ]
+    devise_parameter_sanitizer.permit(:sign_up,        keys: extra)
+    devise_parameter_sanitizer.permit(:account_update, keys: extra)
   end
 
-  # Ordem de preferência:
-  # 1) return_to explícito (session)  2) stored_location_for  3) fallback por papel
   def after_sign_in_path_for(resource)
     rt = sanitize_return_path(session.delete(:return_to))
     return rt if rt
@@ -35,24 +36,7 @@ class ApplicationController < ActionController::Base
     resource.respond_to?(:professional?) && resource.professional? ? dashboard_path : root_path
   end
 
-
   private
-
-  # ----- armazenar última URL navegável -----
-  def storable_location?
-    request.get? && is_navigational_format? && !devise_controller? && !request.xhr?
-  end
-
-  def store_user_location!
-    store_location_for(:user, request.fullpath)
-  end
-
-  def capture_return_to
-    session[:return_to] = params[:return_to] if params[:return_to].present?
-  end
-
-
-  # ----- suas regras pós-login -----
 
   def storable_location?
     request.get? &&
@@ -74,6 +58,11 @@ class ApplicationController < ActionController::Base
     return unless request.get?
     return if devise_controller?
 
+    # Não intervir na navegação do fluxo de profissionais
+    if controller_name == "professionals"
+      return
+    end
+
     if current_user.professional? && !current_user.profile_completed?
       target = edit_profile_path(current_user)
       redirect_to(target) and return unless request.path == target
@@ -86,7 +75,7 @@ class ApplicationController < ActionController::Base
 
   def sanitize_return_path(path)
     return unless path.present?
-    return unless path.start_with?('/') # evita URLs externas
+    return unless path.start_with?('/')
     return if NON_PAGE_PATHS.any? { |re| re.match?(path) }
     path
   end

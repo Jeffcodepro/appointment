@@ -1,9 +1,10 @@
+<!-- app/views/shared/_pro_navbar.html.erb -->
 <nav class="navbar navbar-expand-lg bg-white shadow-sm fixed-top site-navbar pro-navbar">
   <div class="container-fluid">
 
     <%= link_to root_path, class: "navbar-brand d-flex align-items-center gap-2" do %>
       <%= image_tag "logo2.png", alt: "Logo", class: "brand-logo" %>
-      <span class="brand-wordmark d-none d-sm-inline">Appointments</span>
+      <span class="brand-wordmark d-none d-sm-inline">Appointment</span>
     <% end %>
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#proNavbar"
@@ -17,7 +18,7 @@
 
         <li class="nav-item">
           <%= link_to service_history_path,
-                      class: "nav-link nav-link-pill #{current_page?(service_history_path) ? 'active' : ''}" do %>
+                      class: "nav-link nav-link-pill #{ current_page?(service_history_path) ? 'active' : '' }" do %>
             <i class="fa-regular fa-calendar-check"></i>
             <span>Histórico</span>
           <% end %>
@@ -25,7 +26,7 @@
 
         <li class="nav-item position-relative">
           <%= link_to conversations_path,
-                      class: "nav-link nav-link-pill #{current_page?(conversations_path) ? 'active' : ''}" do %>
+                      class: "nav-link nav-link-pill #{ current_page?(conversations_path) ? 'active' : '' }" do %>
             <i class="fa-regular fa-comments"></i>
             <span>Minhas conversas</span>
             <% if unread_total.positive? %>
@@ -37,7 +38,7 @@
         <% if current_user&.professional? %>
           <li class="nav-item">
             <%= link_to mine_services_path,
-                        class: "nav-link nav-link-pill #{current_page?(mine_services_path) ? 'active' : ''}" do %>
+                        class: "nav-link nav-link-pill #{ current_page?(mine_services_path) ? 'active' : '' }" do %>
               <i class="fa-regular fa-rectangle-list"></i>
               <span>Meus serviços</span>
               <% count = current_user.services.count %>
@@ -57,18 +58,79 @@
       </ul>
 
       <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
+        <!-- Dropdown de alternância de visão (polido) -->
+        <li class="nav-item dropdown me-2 vision-toggle">
+          <a class="nav-link dropdown-toggle d-inline-flex align-items-center gap-2"
+             href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fa-solid fa-arrows-rotate"></i>
+            <span>Visão</span>
+            <span class="vision-current <%= current_user.client? ? 'is-client' : 'is-pro' %>">
+              <%= current_user.client? ? "Cliente" : "Profissional" %>
+            </span>
+          </a>
+
+          <ul class="dropdown-menu dropdown-menu-end vision-menu">
+            <li class="dropdown-header">Trocar visão</li>
+
+            <li>
+              <% if current_user.as_client? %>
+                <%= button_to role_path(role: :client),
+                      method: :put,
+                      form:  { data: { turbo: false } },
+                      class: "dropdown-item d-flex align-items-center gap-2 #{ current_user.client? ? 'active' : '' }" do %>
+                  <i class="fa-solid fa-user"></i>
+                  <div class="flex-fill">
+                    <div class="title">Usar como Cliente</div>
+                    <div class="sub">Explorar serviços e contratar</div>
+                  </div>
+                  <% if current_user.client? %><i class="fa-solid fa-check ms-2"></i><% end %>
+                <% end %>
+              <% else %>
+                <button type="button"
+                        class="dropdown-item d-flex align-items-center gap-2"
+                        data-bs-toggle="modal" data-bs-target="#enableClientModal">
+                  <i class="fa-solid fa-user"></i>
+                  <div class="flex-fill">
+                    <div class="title">Habilitar perfil de Cliente…</div>
+                    <div class="sub">Ative para explorar e contratar</div>
+                  </div>
+                </button>
+              <% end %>
+            </li>
+
+            <li><hr class="dropdown-divider"></li>
+
+            <li>
+              <%= button_to role_path(role: :professional),
+                    method: :put,
+                    form:  { data: { turbo: false } },
+                    class: "dropdown-item d-flex align-items-center gap-2 #{ current_user.professional? ? 'active' : '' }" do %>
+                <i class="fa-solid fa-briefcase"></i>
+                <div class="flex-fill">
+                  <div class="title">Usar como Profissional</div>
+                  <div class="sub">Gerenciar serviços e agenda</div>
+                </div>
+                <% if current_user.professional? %><i class="fa-solid fa-check ms-2"></i><% end %>
+              <% end %>
+            </li>
+          </ul>
+        </li>
+
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle d-flex align-items-center gap-2 nav-user" href="#" role="button"
              data-bs-toggle="dropdown" aria-expanded="false">
             <% if current_user.avatar.attached? %>
-              <%= cl_image_tag current_user.avatar.key,
-                    width: 32, height: 32, crop: :fill, gravity: :face,
-                    fetch_format: :auto, quality: :auto,
-                    class: "rounded-circle navbar__avatar", alt: current_user.name %>
+              <%= image_tag(
+                    current_user.avatar,
+                    class: "rounded-circle navbar__avatar",
+                    alt: current_user.name,
+                    style: "width:32px; height:32px; object-fit:cover;"
+                  ) %>
             <% else %>
               <% initials = (current_user.name.presence || current_user.email).split.map { |s| s[0] }.join.first(2).upcase %>
               <span class="rounded-circle navbar__avatar-fallback"><%= initials %></span>
             <% end %>
+
             <span class="d-none d-md-inline"><%= first_name(current_user) %></span>
           </a>
           <ul class="dropdown-menu dropdown-menu-end">
@@ -85,3 +147,29 @@
     </div>
   </div>
 </nav>
+
+<!-- Modal para habilitar perfil de cliente (profissional-only) -->
+<% if user_signed_in? && current_user.professional? && !current_user.as_client? %>
+  <div class="modal fade cancel-modal" id="enableClientModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content cancel-modal">
+        <div class="modal-header">
+          <h5 class="modal-title">Habilitar perfil de cliente?</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <p>Para usar a visão de cliente, habilite seu perfil de cliente.</p>
+          <p class="small text-muted mb-0">Você poderá explorar serviços e contratar profissionais.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn--ghost" data-bs-dismiss="modal">Agora não</button>
+          <%= button_to "Sim, habilitar agora",
+                role_path(role: :client, enable: 1),
+                method: :put,
+                form: { data: { turbo: false } },
+                class: "btn-create-service" %>
+        </div>
+      </div>
+    </div>
+  </div>
+<% end %>

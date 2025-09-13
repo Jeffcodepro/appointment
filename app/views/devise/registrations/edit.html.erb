@@ -1,40 +1,122 @@
-<h2>Editar conta</h2>
+<%# app/views/devise/registrations/edit.html.erb %>
+<% user = resource || current_user %>
 
-<%= simple_form_for(resource, as: resource_name, url: registration_path(resource_name), html: { method: :put, data: { controller: "cep" } }) do |f| %>
-  <%= f.error_notification %>
+<div class="auth-page clean with-footer-gap">
+  <div class="auth-card clean">
+    <h1 class="auth-title clean">Editar conta</h1>
 
-  <div class="form-inputs">
-    <%= f.input :role, as: :select,
-      collection: [["Cliente", "client"], ["Profissional", "professional"]],
-      label: "Tipo de usuário" %>
+    <%= simple_form_for(
+          resource,
+          as: resource_name,
+          url: registration_path(resource_name),
+          html: { method: :put, multipart: true, id: "editAccountForm", data: { turbo: false } }
+        ) do |f| %>
 
-    <%= f.input :name, label: "Nome completo" %>
-    <%= f.input :phone_number, label: "Telefone" %>
+      <div class="grid grid-1 gap">
+        <!-- Nome -->
+        <div class="auth-field">
+          <%= f.label :name, "Nome completo" %>
+          <%= f.text_field :name, class: "input", required: true %>
+        </div>
 
-    <%= f.input :cep,
-      label: "CEP",
-      input_html: { data: { "cep-target": "cepField", action: "keyup->cep#search" } } %>
+        <!-- E-mail -->
+        <div class="auth-field">
+          <%= f.label :email, "E-mail" %>
+          <%= f.email_field :email, class: "input", autocomplete: "email", required: true %>
+        </div>
 
-    <%= f.input :city,
-      label: "Cidade",
-      input_html: { data: { "cep-target": "cityField" } } %>
-    <%= f.input :state,
-      label: "Estado",
-      input_html: { data: { "cep-target": "stateField" } } %>
+        <!-- Avatar -->
+        <% avatar_input_id = "#{f.object_name}_avatar" %>
+        <div class="auth-field file-input" data-controller="file-input">
+          <%= f.label :avatar, "Foto (avatar)" %>
 
-    <%= f.input :address, label: "Endereço" %>
-    <%= f.input :description, label: "Descrição", as: :text %>
+          <% if user.avatar.attached? %>
+            <div style="margin-bottom:8px">
+              <%= image_tag(
+                    user.avatar,                             # ✅ sem .variant
+                    alt: user.name,
+                    class: "rounded-circle",
+                    style: "width:64px; height:64px; object-fit:cover;"
+                  ) %>
+            </div>
+          <% end %>
 
-    <%= f.input :email, required: true %>
+          <%= f.file_field :avatar,
+                id: avatar_input_id,
+                hidden: true, style: "display:none",
+                data: { file_input_target: "input", action: "change->file-input#change" },
+                accept: "image/*" %>
 
-    <%= f.input :current_password, label: "Senha atual", hint: "Necessária para confirmar alterações", required: true %>
+          <label for="<%= avatar_input_id %>" class="file-input__button" data-file-input-target="button">
+            Escolher arquivo
+          </label>
+          <span class="file-input__name" data-file-input-target="name">Nenhum arquivo selecionado</span>
+        </div>
+
+        <!-- Banner -->
+        <% banner_input_id = "#{f.object_name}_banner" %>
+        <div class="auth-field file-input" data-controller="file-input">
+          <%= f.label :banner, "Banner" %>
+
+          <% if user.banner.attached? %>
+            <div style="margin-bottom:8px">
+              <%= image_tag(
+                    user.banner,                             # ✅ sem .variant
+                    alt: "#{user.name} banner",
+                    style: "display:block; width:320px; height:80px; object-fit:cover; border-radius:8px;"
+                  ) %>
+            </div>
+          <% end %>
+
+          <%= f.file_field :banner,
+                id: banner_input_id,
+                hidden: true, style: "display:none",
+                data: { file_input_target: "input", action: "change->file-input#change" },
+                accept: "image/*" %>
+
+          <label for="<%= banner_input_id %>" class="file-input__button" data-file-input-target="button">
+            Escolher arquivo
+          </label>
+          <span class="file-input__name" data-file-input-target="name">Nenhum arquivo selecionado</span>
+        </div>
+
+        <!-- Senhas (opcionais) -->
+        <div class="grid grid-2 gap">
+          <div class="auth-field">
+            <%= f.label :password, "Nova senha" %>
+            <%= f.password_field :password, class: "input", autocomplete: "new-password" %>
+            <% if @minimum_password_length %>
+              <small class="hint"><%= @minimum_password_length %> caracteres no mínimo</small>
+            <% end %>
+          </div>
+
+          <div class="auth-field">
+            <%= f.label :password_confirmation, "Confirmar nova senha" %>
+            <%= f.password_field :password_confirmation, class: "input", autocomplete: "new-password" %>
+          </div>
+        </div>
+
+        <!-- Senha atual -->
+        <div class="auth-field">
+          <%= f.label :current_password, "Senha atual" %>
+          <%= f.password_field :current_password, class: "input",
+                placeholder: "Necessária apenas se você for alterar e-mail ou senha" %>
+          <small class="hint">Se não for alterar e-mail/senha, pode deixar em branco.</small>
+        </div>
+      </div>
+
+      <div class="form-actions stack" style="margin-top:16px; margin-bottom:48px">
+        <%= f.button :submit, "Salvar e ir para o Dashboard", class: "btn-auth clean" %>
+        <%= link_to "Voltar", root_path, class: "btn-auth-outline clean" %>
+      </div>
+    <% end %>
+
+    <!-- Ações extras -->
+    <div class="form-actions stack" style="margin-top:0; margin-bottom:48px">
+      <%= link_to "Cancelar minha conta",
+                  registration_path(resource_name),
+                  data: { turbo_method: :delete, turbo_confirm: "Tem certeza?" },
+                  class: "btn-auth-outline clean" %>
+    </div>
   </div>
-
-  <div class="form-actions">
-    <%= f.button :submit, "Salvar alterações" %>
-  </div>
-<% end %>
-
-<%= link_to "Cancelar minha conta", registration_path(resource_name),
-            data: { turbo_method: :delete, turbo_confirm: "Tem certeza?" },
-            class: "btn btn-outline-danger mt-3" %>
+</div>

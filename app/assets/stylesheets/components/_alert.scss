@@ -4,3 +4,17 @@
   right: 16px;
   z-index: 1000;
 }
+
+
+.alerts-stack{
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 1000;
+}
+
+/* Como agora a .alert fica dentro do stack, não precisa ser fixed */
+.alert { position: static; }

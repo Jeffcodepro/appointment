@@ -95,3 +95,32 @@
     gap: .4rem;
   }
 }
+
+/* ====== Vision dropdown polish ====== */
+.vision-toggle > .nav-link{
+  padding:.35rem .6rem;
+  border:1px solid #e5e7eb;
+  border-radius:999px;
+  background:#fff;
+  font-weight:700;
+}
+.vision-toggle .vision-current{
+  padding:.1rem .5rem;
+  border-radius:999px;
+  font-size:.85em;
+  border:1px solid #e5e7eb;
+}
+.vision-toggle .vision-current.is-client{
+  background:#ecfeff; color:#0a5764; border-color:#d7f3f8;
+}
+.vision-toggle .vision-current.is-pro{
+  background:#eef2ff; color:#3730a3; border-color:#e0e7ff;
+}
+.vision-menu .dropdown-header{
+  font-size:.75rem; color:#6b7280; font-weight:700;
+}
+.vision-menu .dropdown-item .title{ font-weight:700; line-height:1.1; }
+.vision-menu .dropdown-item .sub{ font-size:.8rem; color:#6b7280; line-height:1.1; }
+.vision-menu .dropdown-item.active{
+  background:#f0f9fb; color:#0a5764;
+}
