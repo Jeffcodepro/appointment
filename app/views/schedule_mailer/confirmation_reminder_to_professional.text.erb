@@ -1,0 +1,9 @@
+Lembrete de confirmação
+
+Cliente: <%= @client&.name %>
+Procedimento: <%= @service&.subcategories.presence || @service&.name %>
+<% if @start.present? %>
+Quando: <%= l(@start, format: :long) %><% if @end %> - <%= l(@end, format: :time) %><% end %>
+<% end %>
+
+Acesse: <%= schedule_url(@schedule) %>

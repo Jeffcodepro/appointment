@@ -4,19 +4,20 @@
 <% end %>
 
 <p style="margin:0 0 8px 0;font:700 18px/1.3 system-ui,-apple-system,Segoe UI,Roboto;color:#0f172a;">
-  Sua solicitação foi recusada 🙇‍♂️
+  Sua solicitação foi recusada
 </p>
 
 <p style="margin:0 0 16px 0;font:400 14px/1.6 system-ui,-apple-system,Segoe UI,Roboto;color:#334155;">
-  Olá <strong><%= @client&.name || "tudo bem" %></strong>, o profissional
-  <strong><%= @professional&.name || "responsável" %></strong> recusou o agendamento.
+  Olá <strong><%= @client&.name || "tudo bem" %></strong>, veja os detalhes:
 </p>
 
 <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin:6px 0 18px 0;border:1px solid #e5e7eb;border-radius:12px;">
   <tr>
     <td style="padding:14px 16px;border-bottom:1px solid #e5e7eb;">
       <div style="font:500 12px/1.4 system-ui,-apple-system,Segoe UI,Roboto;color:#6b7280;text-transform:uppercase;letter-spacing:.02em;">Procedimento</div>
-      <div style="font:600 15px/1.4 system-ui,-apple-system,Segoe UI,Roboto;color:#0f172a;"><%= @service&.subcategories %></div>
+      <div style="font:600 15px/1.4 system-ui,-apple-system,Segoe UI,Roboto;color:#0f172a;">
+        <%= @service&.subcategories.presence || @service&.name || "Serviço" %>
+      </div>
     </td>
   </tr>
   <% if @start.present? %>
@@ -24,7 +25,7 @@
       <td style="padding:14px 16px;border-bottom:1px solid #e5e7eb;">
         <div style="font:500 12px/1.4 system-ui,-apple-system,Segoe UI,Roboto;color:#6b7280;text-transform:uppercase;letter-spacing:.02em;">Data e horário</div>
         <div style="font:600 15px/1.4 system-ui,-apple-system,Segoe UI,Roboto;color:#0f172a;">
-          <%= l(@start, format: :long) %><% if @end %> — <%= l(@end, format: :time) %><% end %>
+          <%= l(@start, format: :long) %><% if @end.present? %> — <%= l(@end, format: :time) %><% end %>
         </div>
       </td>
     </tr>
@@ -32,11 +33,16 @@
   <tr>
     <td style="padding:14px 16px;">
       <div style="font:500 12px/1.4 system-ui,-apple-system,Segoe UI,Roboto;color:#6b7280;text-transform:uppercase;letter-spacing:.02em;">Profissional</div>
-      <div style="font:600 15px/1.4 system-ui,-apple-system,Segoe UI,Roboto;color:#0f172a;"><%= @professional&.name || "Profissional" %></div>
+      <div style="font:600 15px/1.4 system-ui,-apple-system,Segoe UI,Roboto;color:#0f172a;">
+        <%= @professional&.name || "Profissional" %>
+      </div>
     </td>
   </tr>
 </table>
 
-<span style="display:inline-block;padding:8px 10px;border-radius:999px;font:600 12px/1 system-ui,-apple-system,Segoe UI,Roboto;color:#92400e;background:#fef3c7;border:1px solid #fde68a;">
+<span style="display:inline-block;
+             padding:8px 10px;border-radius:999px;
+             font:600 12px/1 system-ui,-apple-system,Segoe UI,Roboto;
+             color:#92400e;background:#fef3c7;border:1px solid #fde68a;">
   Recusado
 </span>
