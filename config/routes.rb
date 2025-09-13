@@ -1,25 +1,20 @@
+# config/routes.rb
 Rails.application.routes.draw do
-  devise_for :users
-  # root to: "pages#home"
+  # Usa controller customizado do Devise p/ registrations
+  devise_for :users, controllers: { registrations: "users/registrations" }
+
   root to: "services#index"
-  # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
-  # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
-  # Can be used by load balancers and uptime monitors to verify that the app is live.
   get "up" => "rails/health#show", as: :rails_health_check
-
-  # Defines the root path route ("/")
-  # root "posts#index"
 
   resources :services do
     collection do
       get :cities
       get :mine
     end
-
     member do
-      get :availability, defaults: { format: :json }
-      get :availability_summary, defaults: { format: :json }
+      get :availability,          defaults: { format: :json }
+      get :availability_summary,  defaults: { format: :json }
       get :calendar
     end
   end
@@ -41,12 +36,16 @@ Rails.application.routes.draw do
     get :day
   end
 
+  resource :role, only: :update
+
   get "login_and_return", to: "pages#login_and_return", as: :login_and_return
-  get "history", to: "schedules#history", as: :service_history
+  get "history",          to: "schedules#history",     as: :service_history
 
-
+  # ---------------- Perfil profissional ----------------
   scope "users/:user_id" do
+    get   "profile",      to: "professionals#edit",   as: nil
     get   "profile/edit", to: "professionals#edit",   as: :edit_profile
     patch "profile",      to: "professionals#update", as: :profile
   end
+
 end

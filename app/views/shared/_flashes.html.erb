@@ -1,21 +1,16 @@
-<% if notice %>
-  <div class="alert alert-info alert-dismissible fade show m-1"
-       role="alert"
-       data-controller="flash"
-       data-flash-timeout-value="5000"
-       data-action="turbo:before-cache->flash#close">
-    <button type="button" class="btn-close" aria-label="Fechar" data-action="click->flash#close"></button>
-    <%= notice %>
-  </div>
-<% end %>
+<% messages_seen = [] %>
+<% flash.each do |type, message| %>
+  <% next if message.blank? || messages_seen.include?(message) %>
+  <% messages_seen << message %>
 
-<% if alert %>
-  <div class="alert alert-warning alert-dismissible fade show m-1"
-       role="alert"
+  <% bs = { notice: "info", alert: "warning", error: "danger", success: "success" }[type.to_sym] || "info" %>
+  <div class="toast show"
+       role="<%= bs == 'danger' ? 'alert' : 'status' %>"
+       aria-live="<%= bs == 'danger' ? 'assertive' : 'polite' %>"
        data-controller="flash"
        data-flash-timeout-value="5000"
        data-action="turbo:before-cache->flash#close">
-    <button type="button" class="btn-close" aria-label="Fechar" data-action="click->flash#close"></button>
-    <%= alert %>
+    <button type="button" class="toast-close" aria-label="Fechar" data-action="click->flash#close">×</button>
+    <%= message %>
   </div>
 <% end %>

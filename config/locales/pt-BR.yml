@@ -83,3 +83,7 @@ pt-BR:
       time: "%H:%M"         # <- este formato que faltava
       short: "%d/%m %H:%M"
       long: "%d/%m/%Y %H:%M"
+
+  simple_form:
+    error_notification:
+      default_message: "Por favor, corrija os problemas abaixo:"

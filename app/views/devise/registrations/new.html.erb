@@ -1,47 +1,144 @@
+<%# app/views/devise/registrations/new.html.erb %>
+<% has_errors = resource&.errors&.any? %>
+
 <div class="auth-page clean">
-  <div class="auth-card clean">
+  <%# === ALTERAÇÃO: Toast de erro com botão fechar e timeout === %>
+  <% if has_errors %>
+    <div class="toast show"
+         role="alert" aria-live="assertive"
+         data-controller="flash"
+         data-flash-timeout-value="6000">
+      <button type="button" class="toast-close" aria-label="Fechar" data-action="flash#close">×</button>
+      <strong><%= t("simple_form.error_notification.default_message") %></strong>
+    </div>
+  <% end %>
+
+  <div class="auth-card clean <%= 'has-errors' if has_errors %>">
     <h1 class="auth-title clean">Criar conta</h1>
 
     <%= simple_form_for(
           resource,
           as: resource_name,
           url: registration_path(resource_name),
-          html: { data: { turbo: false }, class: "auth-form clean" }
+          html: { data: { turbo: false }, class: "auth-form clean", id: "signupForm" }
         ) do |f| %>
 
-      <%= f.error_notification %>
+      <div class="form-inputs" data-controller="cep roles">
+        <!-- === ALTERAÇÃO: escolher cliente/profissional/ambos, sem Bootstrap === -->
+        <div class="role-options" id="roleOptions">
+          <label class="chk">
+            <%= f.check_box :as_client,
+                  id: "user_as_client",
+                  checked: true,
+                  data: { roles_target: "client", action: "roles#toggle" } %>
+            <span>Quero contratar serviços <em>(perfil de cliente)</em></span>
+          </label>
 
-      <div class="form-inputs">
-        <%= f.input :role,
-              as: :select,
-              collection: [["Cliente", "client"], ["Profissional", "professional"]],
-              prompt: "Selecione o tipo de conta",
-              label: "Tipo de usuário",
-              input_html: { class: "auth-input clean" } %>
+        <label class="chk">
+            <%= f.check_box :as_professional,
+                  id: "user_as_professional",
+                  data: { roles_target: "pro", action: "roles#toggle" } %>
+            <span>Quero oferecer serviços <em>(perfil profissional)</em></span>
+          </label>
 
-        <%= f.input :name,
-              label: "Nome completo",
-              input_html: { class: "auth-input clean", autocomplete: "name" } %>
+          <small class="hint">Selecione pelo menos um perfil.</small>
+        </div>
 
-        <%= f.input :email,
-              label: "E-mail",
-              required: true,
-              input_html: { class: "auth-input clean", autocomplete: "email" } %>
+        <!-- === ALTERAÇÃO: visão inicial controlada pelo controller de roles === -->
+        <%= f.hidden_field :active_role,
+              value: "client",
+              id: "active_role_field",
+              data: { roles_target: "activeRole" } %>
 
-        <%= f.input :password,
-              label: "Senha",
-              required: true,
-              hint: (@minimum_password_length ? "#{@minimum_password_length} caracteres no mínimo" : nil),
-              input_html: { class: "auth-input clean", autocomplete: "new-password" } %>
+        <!-- === ALTERAÇÃO: Campos base, cada um em sua própria linha === -->
+        <div class="grid grid-1 gap">
+          <div class="auth-field">
+            <%= f.label :name, "Nome completo" %>
+            <%= f.text_field :name, class: "input", autocomplete: "name", required: true %>
+          </div>
 
-        <%= f.input :password_confirmation,
-              label: "Confirmar senha",
-              required: true,
-              input_html: { class: "auth-input clean", autocomplete: "new-password" } %>
+          <div class="auth-field">
+            <%= f.label :email, "E-mail" %>
+            <%= f.email_field :email, class: "input", autocomplete: "email", required: true %>
+          </div>
+
+          <div class="auth-field">
+            <%= f.label :password, "Senha" %>
+            <%= f.password_field :password, class: "input", autocomplete: "new-password", required: true %>
+            <% if @minimum_password_length %>
+              <small class="hint"><%= @minimum_password_length %> caracteres no mínimo</small>
+            <% end %>
+          </div>
+
+          <div class="auth-field">
+            <%= f.label :password_confirmation, "Confirmar senha" %>
+            <%= f.password_field :password_confirmation, class: "input", autocomplete: "new-password", required: true %>
+          </div>
+        </div>
+
+        <!-- === ALTERAÇÃO: Bloco PROFISSIONAL (controlado por Stimulus: roles) === -->
+        <div id="proFieldsBlock" class="panel is-hidden" data-roles-target="proBlock">
+          <h2 class="panel-title">Dados do perfil profissional</h2>
+
+          <!-- Telefone (linha única) -->
+          <div class="grid grid-1 gap">
+            <div class="auth-field">
+              <%= f.label :phone_number, "Telefone" %>
+              <%= f.telephone_field :phone_number, class: "input", placeholder: "(11) 99999-9999", autocomplete: "tel", 'data-pro-required': true %>
+            </div>
+          </div>
+
+          <!-- CEP (linha única) -->
+          <div class="grid grid-1 gap">
+            <div class="auth-field">
+              <%= f.label :cep, "CEP" %>
+              <%= f.text_field :cep, class: "input", placeholder: "00000-000",
+                                'data-cep-target': "cepField",
+                                data: { action: "keyup->cep#search" },
+                                'data-pro-required': true %>
+            </div>
+          </div>
+
+          <!-- Endereço (rua/avenida) em linha própria -->
+          <div class="grid grid-1 gap">
+            <div class="auth-field">
+              <%= f.label :address, "Endereço (rua/avenida)" %>
+              <%= f.text_field :address, class: "input", placeholder: "Ex.: Praça da Sé", autocomplete: "address-line1", 'data-pro-required': true %>
+              <small class="hint">Não inclua cidade/UF aqui.</small>
+            </div>
+          </div>
+
+          <!-- Número em linha própria -->
+          <div class="grid grid-1 gap">
+            <div class="auth-field">
+              <%= f.label :address_number, "Número" %>
+              <%= f.text_field :address_number, class: "input", placeholder: "Ex.: 252", autocomplete: "address-line2", 'data-pro-required': true %>
+            </div>
+          </div>
+
+          <!-- Cidade + UF na mesma linha -->
+          <div class="grid grid-2 gap">
+            <div class="auth-field">
+              <%= f.label :city, "Cidade" %>
+              <%= f.text_field :city, class: "input", placeholder: "Ex.: São Paulo", 'data-cep-target': "cityField", 'data-pro-required': true %>
+            </div>
+
+            <div class="auth-field">
+              <%= f.label :state, "UF" %>
+              <%= f.select :state, User::BRAZIL_UF, { include_blank: "Selecione" },
+                           class: "input select", 'data-cep-target': "stateField", 'data-pro-required': true %>
+            </div>
+          </div>
+
+          <div class="auth-field">
+            <%= f.label :description, "Descrição" %>
+            <%= f.text_area :description, class: "input textarea", rows: 3, placeholder: "Fale sobre sua experiência e serviços", 'data-pro-required': true %>
+          </div>
+        </div>
       </div>
 
       <div class="form-actions stack">
-        <%= f.button :submit, "Cadastrar", class: "btn-auth clean" %>
+        <button class="btn-auth clean" type="submit">Cadastrar</button>
         <%= link_to "Voltar ao entrar", new_session_path(resource_name), class: "btn-auth-outline clean" %>
       </div>
     <% end %>
