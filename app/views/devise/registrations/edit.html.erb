@@ -1,122 +1,134 @@
-<%# app/views/devise/registrations/edit.html.erb %>
-<% user = resource || current_user %>
+<section class="container pt-3">
+  <h2>Complete seu perfil profissional</h2>
 
-<div class="auth-page clean with-footer-gap">
-  <div class="auth-card clean">
-    <h1 class="auth-title clean">Editar conta</h1>
-
-    <%= simple_form_for(
-          resource,
-          as: resource_name,
-          url: registration_path(resource_name),
-          html: { method: :put, multipart: true, id: "editAccountForm", data: { turbo: false } }
-        ) do |f| %>
-
-      <div class="grid grid-1 gap">
-        <!-- Nome -->
-        <div class="auth-field">
-          <%= f.label :name, "Nome completo" %>
-          <%= f.text_field :name, class: "input", required: true %>
-        </div>
-
-        <!-- E-mail -->
-        <div class="auth-field">
-          <%= f.label :email, "E-mail" %>
-          <%= f.email_field :email, class: "input", autocomplete: "email", required: true %>
-        </div>
-
-        <!-- Avatar -->
-        <% avatar_input_id = "#{f.object_name}_avatar" %>
-        <div class="auth-field file-input" data-controller="file-input">
-          <%= f.label :avatar, "Foto (avatar)" %>
-
-          <% if user.avatar.attached? %>
-            <div style="margin-bottom:8px">
-              <%= image_tag(
-                    user.avatar,                             # ✅ sem .variant
-                    alt: user.name,
-                    class: "rounded-circle",
-                    style: "width:64px; height:64px; object-fit:cover;"
-                  ) %>
-            </div>
-          <% end %>
-
-          <%= f.file_field :avatar,
-                id: avatar_input_id,
-                hidden: true, style: "display:none",
-                data: { file_input_target: "input", action: "change->file-input#change" },
-                accept: "image/*" %>
-
-          <label for="<%= avatar_input_id %>" class="file-input__button" data-file-input-target="button">
-            Escolher arquivo
-          </label>
-          <span class="file-input__name" data-file-input-target="name">Nenhum arquivo selecionado</span>
-        </div>
-
-        <!-- Banner -->
-        <% banner_input_id = "#{f.object_name}_banner" %>
-        <div class="auth-field file-input" data-controller="file-input">
-          <%= f.label :banner, "Banner" %>
-
-          <% if user.banner.attached? %>
-            <div style="margin-bottom:8px">
-              <%= image_tag(
-                    user.banner,                             # ✅ sem .variant
-                    alt: "#{user.name} banner",
-                    style: "display:block; width:320px; height:80px; object-fit:cover; border-radius:8px;"
-                  ) %>
-            </div>
-          <% end %>
-
-          <%= f.file_field :banner,
-                id: banner_input_id,
-                hidden: true, style: "display:none",
-                data: { file_input_target: "input", action: "change->file-input#change" },
-                accept: "image/*" %>
-
-          <label for="<%= banner_input_id %>" class="file-input__button" data-file-input-target="button">
-            Escolher arquivo
-          </label>
-          <span class="file-input__name" data-file-input-target="name">Nenhum arquivo selecionado</span>
-        </div>
-
-        <!-- Senhas (opcionais) -->
-        <div class="grid grid-2 gap">
-          <div class="auth-field">
-            <%= f.label :password, "Nova senha" %>
-            <%= f.password_field :password, class: "input", autocomplete: "new-password" %>
-            <% if @minimum_password_length %>
-              <small class="hint"><%= @minimum_password_length %> caracteres no mínimo</small>
-            <% end %>
-          </div>
-
-          <div class="auth-field">
-            <%= f.label :password_confirmation, "Confirmar nova senha" %>
-            <%= f.password_field :password_confirmation, class: "input", autocomplete: "new-password" %>
-          </div>
-        </div>
-
-        <!-- Senha atual -->
-        <div class="auth-field">
-          <%= f.label :current_password, "Senha atual" %>
-          <%= f.password_field :current_password, class: "input",
-                placeholder: "Necessária apenas se você for alterar e-mail ou senha" %>
-          <small class="hint">Se não for alterar e-mail/senha, pode deixar em branco.</small>
-        </div>
-      </div>
-
-      <div class="form-actions stack" style="margin-top:16px; margin-bottom:48px">
-        <%= f.button :submit, "Salvar e ir para o Dashboard", class: "btn-auth clean" %>
-        <%= link_to "Voltar", root_path, class: "btn-auth-outline clean" %>
-      </div>
+  <%# ===== PREVIEW (card do topo) ===== %>
+  <div class="card text-bg-dark banner-card mb-4" id="profile-preview">
+    <%# Banner atual ou placeholder %>
+    <% if @profile.banner.attached? %>
+      <%= image_tag(
+            @profile.banner,
+            class: "card-img banner-card__img",
+            id: "preview-banner-img",
+            alt: "Banner de #{@profile.name}",
+            style: "width:100%; height:300px; object-fit:cover;"
+          ) %>
+    <% else %>
+      <div class="card-img banner-card__placeholder"
+           id="preview-banner-placeholder"
+           style="height:300px; background:#e9ecef;"></div>
+      <img id="preview-banner-img"
+           class="card-img banner-card__img d-none"
+           alt=""
+           style="width:100%; height:300px; object-fit:cover;">
     <% end %>
 
-    <!-- Ações extras -->
-    <div class="form-actions stack" style="margin-top:0; margin-bottom:48px">
-      <%= link_to "Cancelar minha conta",
-                  registration_path(resource_name),
-                  data: { turbo_method: :delete, turbo_confirm: "Tem certeza?" },
-                  class: "btn-auth-outline clean" %>
+    <%# Overlay: avatar %>
+    <div class="card-img-overlay p-3 p-md-4">
+      <div class="banner-card__avatar-wrap">
+        <% if @profile.avatar.attached? %>
+          <%= image_tag(
+                @profile.avatar,
+                class: "rounded-circle shadow banner-card__avatar",
+                id: "preview-avatar-img",
+                alt: @profile.name,
+                style: "width:120px; height:120px; object-fit:cover;"
+              ) %>
+        <% else %>
+          <img id="preview-avatar-img"
+               class="rounded-circle shadow banner-card__avatar d-none"
+               alt=""
+               style="width:120px; height:120px; object-fit:cover;">
+          <% initials = (@profile.name.presence || @profile.email).split.map { |s| s[0] }.join.first(2).upcase %>
+          <div id="preview-avatar-fallback"
+               class="rounded-circle d-flex align-items-center justify-content-center banner-card__avatar-fallback shadow"
+               style="width:120px; height:120px; background:#f3f4f6; color:#6b7280; font-weight:700; font-size:1.6rem;">
+            <%= initials %>
+          </div>
+        <% end %>
+      </div>
     </div>
   </div>
-</div>
+
+  <%# ===== FORM ===== %>
+  <%= simple_form_for @profile,
+        url: profile_path(user_id: @profile.id),
+        html: { method: :patch, multipart: true, data: { turbo: false } } do |f| %>
+
+    <%= f.error_notification %>
+
+    <%# Campo BANNER — controller aponta para o preview do CARD via selectors %>
+    <div class="mb-3"
+         data-controller="file-input"
+         data-file-input-preview-selector-value="#preview-banner-img"
+         data-file-input-placeholder-selector-value="#preview-banner-placeholder">
+      <label class="form-label">Banner (1920x400 recomendado)</label>
+      <%= f.input :banner, as: :file, label: false,
+            input_html: {
+              accept: "image/*",
+              data: { file_input_target: "input", action: "change->file-input#change" }
+            } %>
+    </div>
+
+    <div class="row">
+      <%# Campo AVATAR — controller aponta para o preview do CARD via selectors %>
+      <div class="col-md-4"
+           data-controller="file-input"
+           data-file-input-preview-selector-value="#preview-avatar-img"
+           data-file-input-fallback-selector-value="#preview-avatar-fallback">
+        <%= f.input :avatar, as: :file, label: "Sua foto",
+              input_html: {
+                accept: "image/*",
+                data: { file_input_target: "input", action: "change->file-input#change" }
+              } %>
+      </div>
+
+      <div class="col-md-8">
+        <%= f.input :name,        label: "Nome" %>
+        <%= f.input :description, label: "Descrição", as: :text, input_html: { rows: 4 } %>
+
+        <div class="row">
+          <div class="col-md-4">
+            <%= f.input :cep,
+                        label: "CEP",
+                        input_html: { placeholder: "00000-000", autocomplete: "postal-code" } %>
+          </div>
+          <div class="col-md-8">
+            <%= f.input :address,
+                        label: "Endereço (rua/avenida)",
+                        hint: "Não inclua número, cidade ou UF aqui.",
+                        input_html: { placeholder: "Ex.: Praça da Sé", autocomplete: "address-line1" } %>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-4">
+            <%= f.input :address_number,
+                        label: "Número",
+                        input_html: { placeholder: "Ex.: 252", autocomplete: "address-line2" } %>
+          </div>
+          <div class="col-md-5">
+            <%= f.input :city,
+                        label: "Cidade",
+                        input_html: { placeholder: "Ex.: São Paulo", autocomplete: "address-level2" } %>
+          </div>
+          <div class="col-md-3">
+            <%= f.input :state,
+                        label: "UF",
+                        as: :select,
+                        collection: User::BRAZIL_UF,
+                        prompt: "Selecione",
+                        input_html: { autocomplete: "address-level1" } %>
+          </div>
+        </div>
+
+        <%= f.input :phone_number,
+                    label: "Telefone",
+                    input_html: { placeholder: "(11) 99999-9999", autocomplete: "tel" } %>
+      </div>
+    </div>
+
+    <div class="mt-3">
+      <%= f.button :submit, "Salvar e ir para o dashboard", class: "btn-select-service" %>
+    </div>
+  <% end %>
+</section>

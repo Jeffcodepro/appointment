@@ -1,0 +1,15 @@
+/* Neutraliza o "verde" de campos considerados válidos pelo Bootstrap */
+.form-control:valid,
+.form-select:valid,
+.form-control.is-valid,
+.form-select.is-valid,
+.was-validated .form-control:valid,
+.was-validated .form-select:valid,
+.form-control.is-valid:focus,
+.form-select.is-valid:focus,
+.was-validated .form-control:valid:focus,
+.was-validated .form-select:valid:focus {
+  border-color: var(--bs-border-color) !important;
+  background-image: none !important; /* remove o ícone de check */
+  box-shadow: none !important;
+}

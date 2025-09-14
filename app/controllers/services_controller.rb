@@ -238,24 +238,22 @@ class ServicesController < ApplicationController
     preload_from_last if params[:last_service_id].present?
   end
 
-  # POST /services
   def create
     @service = Service.new(service_params)
     @service.user = current_user
 
     if @service.save
       if params[:save_and_new].present?
-        # 👉 volta para o NEW sem pré-preencher (form limpinho)
         redirect_to new_service_path, notice: "Serviço salvo. Cadastre o próximo."
       else
         redirect_to dashboard_path, notice: "Serviço criado com sucesso."
       end
     else
-      flash.now[:alert] = "Não foi possível criar o serviço. Verifique os campos."
+      # ✅ Mostra as mensagens reais
+      flash.now[:alert] = @service.errors.full_messages.to_sentence.presence || "Não foi possível criar o serviço. Verifique os campos."
       render :new, status: :unprocessable_entity
     end
   end
-
 
   # DELETE /services/:id
   def destroy
@@ -289,7 +287,7 @@ class ServicesController < ApplicationController
     if @service.update(service_params)
       redirect_to mine_services_path, notice: "Serviço atualizado com sucesso."
     else
-      flash.now[:alert] = "Não foi possível atualizar. Verifique os campos."
+      flash.now[:alert] = @service.errors.full_messages.to_sentence.presence || "Não foi possível atualizar. Verifique os campos."
       render :edit, status: :unprocessable_entity
     end
   end
