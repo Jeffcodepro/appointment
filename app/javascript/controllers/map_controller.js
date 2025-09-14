@@ -36,6 +36,15 @@ export default class extends Controller {
       attributionControl: true
     })
 
+    // ✅ evita warnings de ícones ausentes (ex.: "br-state-4")
+    this._onStyleImageMissing = (e) => {
+      const id = e?.id || ""
+      if (!id || this.map.hasImage(id)) return
+      const empty = { width: 1, height: 1, data: new Uint8Array([0, 0, 0, 0]) }
+      try { this.map.addImage(id, empty, { sdf: true }) } catch (_) {}
+    }
+    this.map.on("styleimagemissing", this._onStyleImageMissing)
+
     // coleções
     this.groups     = new Map()
     this.anchors    = new Map()
@@ -94,6 +103,7 @@ export default class extends Controller {
       this.map?.off("move", this._onMove)
       this.map?.off("zoom", this._onZoom)
       this.map?.off("click", this._onClick)
+      this.map?.off("styleimagemissing", this._onStyleImageMissing)
     } catch (_) {}
     this._clearAllMarkers()
     try { this.map?.remove() } catch(_) {}
@@ -282,7 +292,7 @@ export default class extends Controller {
 
     const children = []
     const lines = []
-    const radiusPx = this._spiderRadius(items.length)
+    const radiusPx = this._spiderRadius(items.length) // <- corrigido
 
     items.forEach((m, i) => {
       const target = this._offsetLngLatByPixels(center, radiusPx, this._angleForIndex(i, items.length))
@@ -400,7 +410,6 @@ export default class extends Controller {
     }
   }
 
-  // escapa HTML básico
   _esc(s) {
     return String(s ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
   }
@@ -412,7 +421,7 @@ export default class extends Controller {
     return ""
   }
 
-  // Hover “tip” (maior e legível)
+  // Hover “tip”
   _hoverTipHTML(d) {
     const name = (d.label || d.name || "Serviço").toString()
     return `
@@ -458,7 +467,6 @@ export default class extends Controller {
     el.addEventListener("touchend", hide,   { passive: true })
   }
 
-  // Card detalhado — mostra apenas categoria, valor e "Ver detalhes"
   _detailHTML(d) {
     const name  = (d.label || d.name || "Serviço").toString()
     const price = this._priceLabel(d.price)
@@ -493,7 +501,6 @@ export default class extends Controller {
       try { popup.remove() } catch(_) {}
       if (typeof onAfterClose === "function") onAfterClose()
 
-      // ⛳️ Ir para o SHOW do serviço (mesma aba)
       if (url) {
         if (window.Turbo?.visit) window.Turbo.visit(url, { action: "advance" })
         else window.location.assign(url)
@@ -507,7 +514,6 @@ export default class extends Controller {
     const chip = markerInstance.getElement()
     chip.classList.add("price-marker-flex")
 
-    // botão setinha
     const arrow = document.createElement("button")
     arrow.type = "button"
     arrow.className = "pm-arrow"
@@ -551,15 +557,12 @@ export default class extends Controller {
         open = true
         arrow.classList.add("open")
 
-        // fecha ao mover o mapa
         onMoveFn = () => { try { popup.remove() } catch (_) {}; syncClosedState() }
         map.on("move", onMoveFn)
 
-        // fecha pelo X / clique fora
         popup.once("close", syncClosedState)
         popup.once("remove", syncClosedState)
 
-        // botão "Ver detalhes" -> SHOW do serviço
         this._bindDetailPopupActions(popup, syncClosedState)
       } catch(_) {}
     }

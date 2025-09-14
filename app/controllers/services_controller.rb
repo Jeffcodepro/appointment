@@ -10,8 +10,6 @@ class ServicesController < ApplicationController
   before_action :set_service, only: [:show, :destroy]
   before_action :set_owned_service, only: [:edit, :update]
 
-
-
   include ActionView::Helpers::NumberHelper
 
   BRAZIL_BOUNDING_BOX = {
@@ -102,12 +100,10 @@ class ServicesController < ApplicationController
 
     rel = Schedule.for_provider(provider.id).blocking
 
-
     # agendamentos do provider que conflitam com o dia
     day_schedules = rel
       .where("start_at < ? AND end_at > ?", day_end, day_start)
       .pluck(:start_at, :end_at)
-
 
     now = Time.zone.now
 
@@ -335,7 +331,6 @@ class ServicesController < ApplicationController
       ]
     )
   end
-
 
   def preload_from_last
     last = current_user.services.find_by(id: params[:last_service_id])

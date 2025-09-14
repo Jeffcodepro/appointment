@@ -1,40 +1,48 @@
 # app/controllers/users/registrations_controller.rb
-class Users::RegistrationsController < Devise::RegistrationsController
-  def update
-    self.resource = resource_class.to_adapter.get!(send(:"current_#{resource_name}").to_key)
-    prev_unconfirmed_email = resource.unconfirmed_email if resource.respond_to?(:unconfirmed_email)
+module Users
+  class RegistrationsController < Devise::RegistrationsController
+    before_action :authenticate_user!
+    before_action :set_profile, only: [:edit, :update]
+    before_action :configure_permitted_parameters, if: :devise_controller?
 
-    if update_resource(resource, account_update_params)
-      set_flash_message_for_update(resource, prev_unconfirmed_email)
-      bypass_sign_in resource, scope: resource_name if sign_in_after_change_password?
-      redirect_to after_update_path_for(resource)
-    else
-      clean_up_passwords resource
-      set_minimum_password_length
-      flash.now[:error] = t("simple_form.error_notification.default_message")
-      render :edit, status: :unprocessable_entity
-    end
-  end
-
-  protected
-
-  def update_resource(resource, params)
-    if params[:password].present? || params[:email].present?
+    def edit
       super
-    else
-      params.delete(:current_password)
-
-      avatar = params.delete(:avatar)
-      banner = params.delete(:banner)
-      resource.avatar.attach(avatar) if avatar
-      resource.banner.attach(banner) if banner
-
-      resource.assign_attributes(params)
-      resource.save(validate: false)
     end
-  end
 
-  def after_update_path_for(_resource)
-    dashboard_path
+    def update
+      super
+    end
+
+    protected
+
+    # Campos extras permitidos
+    def configure_permitted_parameters
+      keys = [
+        :name, :avatar, :email,
+        # estes flags existem no modelo e podem ser mantidos
+        :active_role, :as_client, :as_professional
+      ]
+      devise_parameter_sanitizer.permit(:sign_up,        keys: keys)
+      devise_parameter_sanitizer.permit(:account_update, keys: keys)
+    end
+
+    # Ao atualizar a conta: não exigir senha atual se não for alterar a senha
+    def update_resource(resource, params)
+      if params[:password].blank? && params[:password_confirmation].blank?
+        resource.update_without_password(params.except(:current_password))
+      else
+        super
+      end
+    end
+
+    def after_update_path_for(resource)
+      edit_user_registration_path
+    end
+
+    private
+
+    def set_profile
+      @profile = current_user
+    end
   end
 end
