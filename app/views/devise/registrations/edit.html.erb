@@ -1,81 +1,56 @@
+<% @profile ||= current_user %>
+
 <section class="container pt-3">
-  <h2>Complete seu perfil profissional</h2>
+  <h1 class="h4 mb-3">Minha conta</h1>
+  <p class="text-muted mb-4">
+    Atualize seus dados básicos de acesso. Para editar seu <strong>perfil profissional</strong>,
+    use o menu “Editar perfil” quando estiver na visão de Profissional.
+  </p>
 
-  <%# ===== PREVIEW (card do topo) ===== %>
-  <div class="card text-bg-dark banner-card mb-4" id="profile-preview">
-    <%# Banner atual ou placeholder %>
-    <% if @profile.banner.attached? %>
-      <%= image_tag(
-            @profile.banner,
-            class: "card-img banner-card__img",
-            id: "preview-banner-img",
-            alt: "Banner de #{@profile.name}",
-            style: "width:100%; height:300px; object-fit:cover;"
-          ) %>
-    <% else %>
-      <div class="card-img banner-card__placeholder"
-           id="preview-banner-placeholder"
-           style="height:300px; background:#e9ecef;"></div>
-      <img id="preview-banner-img"
-           class="card-img banner-card__img d-none"
-           alt=""
-           style="width:100%; height:300px; object-fit:cover;">
-    <% end %>
-
-    <%# Overlay: avatar %>
-    <div class="card-img-overlay p-3 p-md-4">
-      <div class="banner-card__avatar-wrap">
-        <% if @profile.avatar.attached? %>
-          <%= image_tag(
-                @profile.avatar,
-                class: "rounded-circle shadow banner-card__avatar",
+  <%# ======= CARD COM AVATAR ======= %>
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body d-flex align-items-center gap-3">
+      <div class="position-relative">
+        <% if @profile&.avatar&.attached? %>
+          <%= image_tag @profile.avatar,
+                class: "rounded-circle",
                 id: "preview-avatar-img",
                 alt: @profile.name,
-                style: "width:120px; height:120px; object-fit:cover;"
-              ) %>
+                style: "width:96px; height:96px; object-fit:cover;" %>
         <% else %>
+          <%= image_tag "avatar_placeholder.png",
+                class: "rounded-circle",
+                id: "preview-avatar-placeholder",
+                alt: "Avatar padrão",
+                style: "width:96px; height:96px; object-fit:cover;" %>
           <img id="preview-avatar-img"
-               class="rounded-circle shadow banner-card__avatar d-none"
+               class="rounded-circle d-none"
                alt=""
-               style="width:120px; height:120px; object-fit:cover;">
-          <% initials = (@profile.name.presence || @profile.email).split.map { |s| s[0] }.join.first(2).upcase %>
-          <div id="preview-avatar-fallback"
-               class="rounded-circle d-flex align-items-center justify-content-center banner-card__avatar-fallback shadow"
-               style="width:120px; height:120px; background:#f3f4f6; color:#6b7280; font-weight:700; font-size:1.6rem;">
-            <%= initials %>
-          </div>
+               style="width:96px; height:96px; object-fit:cover;">
         <% end %>
+      </div>
+
+      <div>
+        <div class="fw-semibold"><%= @profile.name %></div>
+        <div class="text-muted small"><%= @profile.email %></div>
       </div>
     </div>
   </div>
 
-  <%# ===== FORM ===== %>
+  <%# ======= FORM DE CONTA BÁSICA (Devise) ======= %>
   <%= simple_form_for @profile,
-        url: profile_path(user_id: @profile.id),
-        html: { method: :patch, multipart: true, data: { turbo: false } } do |f| %>
+        url: registration_path(:user),
+        html: { method: :put, multipart: true, data: { turbo: false } } do |f| %>
 
     <%= f.error_notification %>
 
-    <%# Campo BANNER — controller aponta para o preview do CARD via selectors %>
-    <div class="mb-3"
-         data-controller="file-input"
-         data-file-input-preview-selector-value="#preview-banner-img"
-         data-file-input-placeholder-selector-value="#preview-banner-placeholder">
-      <label class="form-label">Banner (1920x400 recomendado)</label>
-      <%= f.input :banner, as: :file, label: false,
-            input_html: {
-              accept: "image/*",
-              data: { file_input_target: "input", action: "change->file-input#change" }
-            } %>
-    </div>
-
     <div class="row">
-      <%# Campo AVATAR — controller aponta para o preview do CARD via selectors %>
       <div class="col-md-4"
            data-controller="file-input"
            data-file-input-preview-selector-value="#preview-avatar-img"
-           data-file-input-fallback-selector-value="#preview-avatar-fallback">
+           data-file-input-fallback-selector-value="#preview-avatar-placeholder">
         <%= f.input :avatar, as: :file, label: "Sua foto",
+              hint: "Imagem quadrada funciona melhor.",
               input_html: {
                 accept: "image/*",
                 data: { file_input_target: "input", action: "change->file-input#change" }
@@ -83,52 +58,51 @@
       </div>
 
       <div class="col-md-8">
-        <%= f.input :name,        label: "Nome" %>
-        <%= f.input :description, label: "Descrição", as: :text, input_html: { rows: 4 } %>
-
-        <div class="row">
-          <div class="col-md-4">
-            <%= f.input :cep,
-                        label: "CEP",
-                        input_html: { placeholder: "00000-000", autocomplete: "postal-code" } %>
-          </div>
-          <div class="col-md-8">
-            <%= f.input :address,
-                        label: "Endereço (rua/avenida)",
-                        hint: "Não inclua número, cidade ou UF aqui.",
-                        input_html: { placeholder: "Ex.: Praça da Sé", autocomplete: "address-line1" } %>
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="col-md-4">
-            <%= f.input :address_number,
-                        label: "Número",
-                        input_html: { placeholder: "Ex.: 252", autocomplete: "address-line2" } %>
-          </div>
-          <div class="col-md-5">
-            <%= f.input :city,
-                        label: "Cidade",
-                        input_html: { placeholder: "Ex.: São Paulo", autocomplete: "address-level2" } %>
-          </div>
-          <div class="col-md-3">
-            <%= f.input :state,
-                        label: "UF",
-                        as: :select,
-                        collection: User::BRAZIL_UF,
-                        prompt: "Selecione",
-                        input_html: { autocomplete: "address-level1" } %>
-          </div>
-        </div>
-
-        <%= f.input :phone_number,
-                    label: "Telefone",
-                    input_html: { placeholder: "(11) 99999-9999", autocomplete: "tel" } %>
+        <%= f.input :name,  label: "Nome"  %>
+        <%= f.input :email, label: "E-mail" %>
       </div>
     </div>
 
-    <div class="mt-3">
-      <%= f.button :submit, "Salvar e ir para o dashboard", class: "btn-select-service" %>
+    <hr class="my-4">
+
+    <h2 class="h6">Segurança</h2>
+    <p class="text-muted small mb-3">
+      Preencha os campos abaixo apenas se quiser trocar sua senha.
+    </p>
+
+    <div class="row">
+      <div class="col-md-4">
+        <%= f.input :password,
+              label: "Nova senha",
+              hint: "Deixe em branco para não alterar.",
+              required: false,
+              input_html: { autocomplete: "new-password" } %>
+      </div>
+      <div class="col-md-4">
+        <%= f.input :password_confirmation,
+              label: "Confirmação da nova senha",
+              required: false,
+              input_html: { autocomplete: "new-password" } %>
+      </div>
+      <div class="col-md-4">
+        <%= f.input :current_password,
+              label: "Senha atual",
+              hint: "Obrigatória somente se for trocar a senha.",
+              required: false,
+              input_html: { autocomplete: "current-password" } %>
+      </div>
+    </div>
+
+    <div class="mt-3 d-flex gap-2">
+      <%= f.button :submit, "Salvar alterações", class: "btn-save-changes" %>
+      <%= link_to "Cancelar", root_path, class: "btn--ghost" %>
+    </div>
+  <% end %>
+
+  <% if current_user.as_professional? %>
+    <div class="alert alert-info mt-4 mb-0">
+      Quer atualizar seu <strong>perfil profissional</strong> (descrição, endereço, etc.)?
+      Abra a <em>Visão</em> de Profissional e clique em <strong>Editar perfil</strong>.
     </div>
   <% end %>
 </section>

@@ -1,3 +1,8 @@
+/* ============================
+   Botões – tema Appointment
+   ============================ */
+
+/* Ver mais (primário brand) */
 .btn-see-more {
   @extend .btn;
   background-color: #137d8e;
@@ -11,6 +16,7 @@
   }
 }
 
+/* Pesquisa (ícone) */
 .btn-search {
   background-color: #137d8e;
   border: none;
@@ -29,6 +35,7 @@
   }
 }
 
+/* Voltar p/ serviços (link-button) */
 .btn-back-to-services {
   text-decoration: none;
   background-color: #e1e2e4;
@@ -37,6 +44,7 @@
   border-radius: 0.25rem;
 }
 
+/* Selecionar serviço (primário brand) */
 .btn-select-service {
   @extend .btn;
   background-color: #137d8e;
@@ -52,6 +60,7 @@
   }
 }
 
+/* Agendar serviço (primário brand) */
 .btn-schedule-service {
   @extend .btn;
   background-color: #137d8e;
@@ -69,6 +78,7 @@
   }
 }
 
+/* Enviar mensagem (secundário cinza) */
 .btn-send-a-message {
   @extend .btn;
   background-color: #6d6f76;
@@ -86,10 +96,10 @@
   }
 }
 
-.btn-close {
-  cursor: pointer;
-}
+/* Botão genérico de fechar */
+.btn-close { cursor: pointer; }
 
+/* -------- Modal: confirmar agendamento -------- */
 .custom-modal .btn.btn-confirm-appointment {
   background-color: #137d8e;
   border-color:     #137d8e;
@@ -105,84 +115,85 @@
 .custom-modal .btn.btn-confirm-appointment[disabled] {
   background-color: #b9babf;
   border-color:     #b9babf;
-  color: #92949b;              /* cinza escuro no texto */
-  opacity: 1;                  /* evita o fade padrão do bootstrap */
+  color: #92949b;
+  opacity: 1;
   cursor: not-allowed;
   box-shadow: none;
 }
 
-
-.btn--ghost{
-  background:#e1e2e4;
+/* -------- Botão fantasma / neutro -------- */
+.btn--ghost {
+  background: #e1e2e4;
   border-color: #e1e2e4;
   color: #000000;
   padding: 0.5rem 1.5rem;
-  border:1px
-  solid var(--line);
+  border: 1px solid var(--line); /* fix na propriedade */
 }
-.btn--ghost:hover{
-  background:#2c2d30;
+.btn--ghost:hover {
+  background: #2c2d30;
   border-color: #2c2d30;
   color: white;
 }
 
-
-.btn-chat{
+/* Chat (contorno brand) */
+.btn-chat {
   @extend .btn;
-  background:#fff;
-  border:1px solid #137d8e;
-  color:#137d8e;
+  background: #fff;
+  border: 1px solid #137d8e;
+  color: #137d8e;
   transition: all .15s ease;
 }
 .btn-chat:hover,
 .btn-chat:focus {
-  background:#137d8e;
-  border-color:#137d8e;
-  color:#fff;
+  background: #137d8e;
+  border-color: #137d8e;
+  color: #fff;
   box-shadow: 0 0 0 .2rem rgba(19,125,142,.2);
 }
 
-/* Cancelar (abrir modal) */
-.btn-cancel-appointment{
+/* Cancelar (abrir modal) – destrutivo leve */
+.btn-cancel-appointment {
   @extend .btn;
-  background-color:#fff;
-  border:1px solid rgb(213,114,114);
+  background-color: #fff;
+  border: 1px solid rgb(213,114,114);
   color: rgb(193,45,45);
 }
-.btn-cancel-appointment:hover{
+.btn-cancel-appointment:hover {
   background-color: rgb(193,45,45);
   border-color: rgb(193,45,45);
-  color:#fff; }
-
-/* Confirmar cancelamento (no modal) */
-.cancel-modal .btn-cancel-confirm{
-  background-color:#fff;
-  border:1px solid rgb(213,114,114);
-  color: rgb(193,45,45);
-  padding:.5rem 1rem;
-  border-radius:.5rem;
+  color: #fff;
 }
-.cancel-modal .btn-cancel-confirm:hover{
-  background-color:#a52525;
-  border-color:#a52525;
-  color:#fff; }
 
-/* Exportar CSV - look de ação secundária com brand */
-.btn-export-csv{
+/* Confirmar cancelamento (no modal) – destrutivo leve */
+.cancel-modal .btn-cancel-confirm {
+  background-color: #fff;
+  border: 1px solid rgb(213,114,114);
+  color: rgb(193,45,45);
+  padding: .5rem 1rem;
+  border-radius: .5rem;
+}
+.cancel-modal .btn-cancel-confirm:hover {
+  background-color: #a52525;
+  border-color: #a52525;
+  color: #fff;
+}
+
+/* Exportar CSV – ação secundária com brand */
+.btn-export-csv {
   @extend .btn;
-  display:inline-flex;
-  align-items:center;
-  gap:.5rem;
-  background:#f0f9fb;
-  border:1px solid #a5f3fc;
-  color:#0e7490;
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  background: #f0f9fb;
+  border: 1px solid #a5f3fc;
+  color: #0e7490;
   padding: .5rem .9rem;
   border-radius: .5rem;
 }
-.btn-export-csv:hover{
-  background:#e6f6f9;
-  border-color:#67e8f9;
-  color:#075985;
+.btn-export-csv:hover {
+  background: #e6f6f9;
+  border-color: #67e8f9;
+  color: #075985;
 }
 
 /* Criar serviço – primário brand (#137d8e) */
@@ -201,39 +212,42 @@
   }
 }
 
-/* Cancelar – fantasma no padrão existente */
-.btn-cancel-service {
-  @extend .btn--ghost;
-}
+/* Cancelar – reaproveita o fantasma */
+.btn-cancel-service { @extend .btn--ghost; }
 
-/* Confirmar agendamento */
-.btn-accept-schedule{
+/* Confirmar agendamento / Salvar alterações (mesmo estilo brand) */
+.btn-accept-schedule,
+.btn-save-changes {
   @extend .btn;
-  background:#137d8e;
-  border-color:#137d8e;
-  color:#fff;
+  background-color: #137d8e;
+  border-color:     #137d8e;
+  color: #ffffff;
   transition: all .15s ease;
+  padding: 0.5rem 1.25rem;
+  font-size: 1rem;
 }
 .btn-accept-schedule:hover,
-.btn-accept-schedule:focus {
-  background:#0A5764;
-  border-color:#0A5764;
-  color:#fff;
-  box-shadow: 0 0 0 .2rem rgba(23,72,162,.25);
+.btn-accept-schedule:focus,
+.btn-save-changes:hover,
+.btn-save-changes:focus {
+  background-color: #0A5764;
+  border-color:     #0A5764;
+  color: #ffffff;
+  box-shadow: 0 0 0 .2rem rgba(19,125,142,.2);
 }
 
-/* Recusar agendamento */
-.btn-reject-schedule{
+/* Recusar agendamento (contorno roxo) */
+.btn-reject-schedule {
   @extend .btn;
-  background:#fff;
-  border:1px solid #7a70f2;
-  color:#311bb3;
+  background: #fff;
+  border: 1px solid #7a70f2;
+  color: #311bb3;
   transition: all .15s ease;
 }
 .btn-reject-schedule:hover,
 .btn-reject-schedule:focus {
-  background:#523eeb;
-  border-color:#523eeb;
-  color:#fff;
+  background: #523eeb;
+  border-color: #523eeb;
+  color: #fff;
   box-shadow: 0 0 0 .2rem rgba(122,112,242,.25);
 }

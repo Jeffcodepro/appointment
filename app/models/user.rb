@@ -18,6 +18,8 @@ class User < ApplicationRecord
 
   BRAZIL_UF = %w[AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO].freeze
 
+  # Garante nome preenchido no create (preenche a partir do e-mail se vier vazio)
+  before_validation :ensure_name, on: :create
   validates :name, presence: true, on: :create
 
   # === NOVO: garantir que pelo menos um papel esteja habilitado (create/update)
@@ -107,7 +109,16 @@ class User < ApplicationRecord
     self.save!
   end
 
+  # Para usar nas views sem quebrar quando name está ausente
+  def display_first_name
+    (name.presence || email).to_s.split(/\s+/).first.to_s
+  end
+
   private
+
+  def ensure_name
+    self.name = email.to_s.split("@").first if name.blank?
+  end
 
   # === NOVO: validar ao menos um papel
   def at_least_one_role

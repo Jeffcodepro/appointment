@@ -36,7 +36,7 @@ Rails.application.routes.draw do
     get :day
   end
 
-  resource :role, only: :update
+  resource :role, only: :update, controller: "roles"
 
   get "login_and_return", to: "pages#login_and_return", as: :login_and_return
   get "history",          to: "schedules#history",     as: :service_history
