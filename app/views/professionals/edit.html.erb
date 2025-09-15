@@ -1,9 +1,7 @@
 <section class="container pt-3">
   <h2>Complete seu perfil profissional</h2>
 
-  <%# ===== PREVIEW (idêntico ao show) ===== %>
   <div class="card text-bg-dark banner-card mb-4" id="profile-preview">
-    <%# Fundo: banner atual (Cloudinary) ou placeholder %>
     <% if @profile.banner.attached? %>
       <%= cl_image_tag @profile.banner.key,
             width: 1600, height: 300, crop: :fill, gravity: :auto,
@@ -16,7 +14,6 @@
       <img id="preview-banner-img" class="card-img banner-card__img d-none" alt="">
     <% end %>
 
-    <%# Overlay: avatar canto superior esquerdo %>
     <div class="card-img-overlay p-3 p-md-4">
       <div class="banner-card__avatar-wrap">
         <% if @profile.avatar.attached? %>
@@ -39,7 +36,6 @@
     </div>
   </div>
 
-  <%# ===== FORM ===== %>
   <%= simple_form_for @profile,
         url: profile_path(user_id: @profile.id),
         html: { method: :patch, multipart: true, data: { turbo: false } } do |f| %>
@@ -109,7 +105,6 @@
   <% end %>
 </section>
 
-<%# ===== JS: live preview do banner e avatar ===== %>
 <script>
   (function() {
     function onReady(fn) {

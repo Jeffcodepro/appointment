@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title><%= @title.present? ? @title : "Ocorreu um erro" %> · Appointment</title>
+
+  <% begin %>
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload", media: "all" %>
+  <% rescue => _e %>
+    <!-- fallback inline mínimo -->
+    <style>
+      :root{
+        --brand:#137d8e; --brand-dark:#0A5764; --ink:#111827; --muted:#6b7280; --bg:#f8fafc; --line:#e5e7eb;
+        --ok:#16a34a; --warn:#f59e0b; --danger:#dc2626;
+      }
+      body{margin:0; font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans"; background:var(--bg); color:var(--ink);}
+      .err-wrap{min-height:100vh; display:flex; align-items:center; justify-content:center; padding:32px;}
+      .err-card{max-width:760px; width:100%; background:#fff; border:1px solid var(--line); border-radius:16px; box-shadow:0 2px 18px rgba(0,0,0,.06); overflow:hidden;}
+      .err-head{padding:24px 24px 0; display:flex; align-items:center; gap:12px;}
+      .err-body{padding:24px;} .err-kicker{color:var(--brand); font-weight:700; letter-spacing:.05em; text-transform:uppercase; font-size:.8rem;}
+      .err-title{margin:.35rem 0 0; font-size:1.75rem; line-height:1.2;} .err-msg{color:var(--muted); margin:.5rem 0 0;}
+      .err-actions{display:flex; flex-wrap:wrap; gap:10px; margin-top:20px;}
+      .btn{display:inline-flex; align-items:center; justify-content:center; gap:.5rem; border-radius:.5rem; padding:.6rem 1rem; border:1px solid transparent; cursor:pointer; text-decoration:none; font-weight:600;}
+      .btn-primary{background:var(--brand); border-color:var(--brand); color:#fff;} .btn-primary:hover{background:var(--brand-dark); border-color:var(--brand-dark);}
+      .btn-ghost{background:#fff; border-color:var(--line); color:var(--ink);} .btn-ghost:hover{background:#f3f4f6;}
+      .err-code{margin-left:auto; color:#9ca3af; font-weight:700;}
+      .err-illu{display:block; width:100%; height:180px; background:linear-gradient(135deg, rgba(19,125,142,.08), rgba(10,87,100,.08)); border-top:1px solid var(--line);}
+      @media (max-width:480px){ .err-title{font-size:1.4rem;} .err-illu{height:140px;} }
+    </style>
+  <% end %>
+
+  <%= csrf_meta_tags %>
+</head>
+<body>
+  <div class="err-wrap">
+    <div class="err-card">
+      <div class="err-head">
+        <a href="<%= (defined?(root_path) ? root_path : "/") %>" class="err-brand" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit;">
+          <% begin %>
+            <%= image_tag "logo2.png", alt: "Appointment", style: "width:32px;height:32px;object-fit:contain;" %>
+          <% rescue => _e %>
+          <% end %>
+          <strong>Appointment</strong>
+        </a>
+        <div class="err-code" style="margin-left:auto;color:#9ca3af;font-weight:700;">
+          <% code = (defined?(response) && response.respond_to?(:status) ? response.status : 500) rescue 500 %>
+          <%= code %>
+        </div>
+      </div>
+
+      <div class="err-body">
+        <div class="err-kicker">Ops…</div>
+        <h1 class="err-title"><%= @title || "Ocorreu um erro" %></h1>
+        <p class="err-msg"><%= @message || "Tente novamente em instantes ou volte para a página inicial." %></p>
+
+        <div class="err-actions">
+          <a class="btn btn-primary" href="<%= (defined?(root_path) ? root_path : "/") %>">Ir para a página inicial</a>
+          <% if defined?(services_path) %><a class="btn btn-ghost" href="<%= services_path %>">Explorar serviços</a><% end %>
+
+          <% if defined?(user_signed_in?) && user_signed_in? %>
+            <% if defined?(current_user) && current_user&.client? %>
+              <% if defined?(conversations_path) %><a class="btn btn-ghost" href="<%= conversations_path %>">Minhas conversas</a><% end %>
+              <% if defined?(service_history_path) %><a class="btn btn-ghost" href="<%= service_history_path %>">Histórico</a><% end %>
+            <% else %>
+              <% if defined?(dashboard_path) %><a class="btn btn-ghost" href="<%= dashboard_path %>">Dashboard</a><% end %>
+              <% if defined?(mine_services_path) %><a class="btn btn-ghost" href="<%= mine_services_path %>">Meus serviços</a><% end %>
+            <% end %>
+          <% end %>
+
+          <a class="btn btn-ghost" href="javascript:history.back()">Voltar</a>
+        </div>
+      </div>
+
+      <div class="err-illu" aria-hidden="true"></div>
+    </div>
+  </div>
+</body>
+</html>

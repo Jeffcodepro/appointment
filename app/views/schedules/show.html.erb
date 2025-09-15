@@ -1,11 +1,9 @@
-<!-- app/views/schedules/show.html.erb -->
 <% content_for :head do %>
   <meta name="turbo-cache-control" content="no-preview">
 <% end %>
 
 <div class="container conversation-page <%= current_user.id == @schedule.client_id ? 'viewer-client' : 'viewer-professional' %>">
 
-  <!-- ===== Detalhes do agendamento (mostra para todos) ===== -->
   <div class="card border-0 shadow-sm mb-3">
     <div class="card-body">
       <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
@@ -80,7 +78,6 @@
         </div>
       </div>
 
-      <%# ---- Ações do profissional (somente dono e se não bloqueado) ---- %>
       <% can_act   = current_user&.id == @schedule.professional_id %>
       <% blocked   = @schedule.canceled? || @schedule.completed? || @schedule.no_show? || (@schedule.respond_to?(:confirmed) && @schedule.confirmed?) %>
 
@@ -119,7 +116,6 @@
     </div>
   </div>
 
-  <!-- ===== Chat (idêntico ao que você já tinha) ===== -->
   <h2 class="h6 mb-3">
     Chat do agendamento com
     <% if current_user.id == @schedule.professional_id %>

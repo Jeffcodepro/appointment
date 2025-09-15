@@ -1,8 +1,6 @@
-<%# app/views/devise/registrations/new.html.erb %>
 <% has_errors = resource&.errors&.any? %>
 
 <div class="auth-page clean">
-  <%# === ALTERAÇÃO: Toast de erro com botão fechar e timeout === %>
   <% if has_errors %>
     <div class="toast show"
          role="alert" aria-live="assertive"
@@ -44,13 +42,11 @@
           <small class="hint">Selecione pelo menos um perfil.</small>
         </div>
 
-        <!-- === ALTERAÇÃO: visão inicial controlada pelo controller de roles === -->
         <%= f.hidden_field :active_role,
               value: "client",
               id: "active_role_field",
               data: { roles_target: "activeRole" } %>
 
-        <!-- === ALTERAÇÃO: Campos base, cada um em sua própria linha === -->
         <div class="grid grid-1 gap">
           <div class="auth-field">
             <%= f.label :name, "Nome completo" %>
@@ -76,11 +72,9 @@
           </div>
         </div>
 
-        <!-- === ALTERAÇÃO: Bloco PROFISSIONAL (controlado por Stimulus: roles) === -->
         <div id="proFieldsBlock" class="panel is-hidden" data-roles-target="proBlock">
           <h2 class="panel-title">Dados do perfil profissional</h2>
 
-          <!-- Telefone (linha única) -->
           <div class="grid grid-1 gap">
             <div class="auth-field">
               <%= f.label :phone_number, "Telefone" %>
@@ -88,7 +82,6 @@
             </div>
           </div>
 
-          <!-- CEP (linha única) -->
           <div class="grid grid-1 gap">
             <div class="auth-field">
               <%= f.label :cep, "CEP" %>
@@ -99,7 +92,6 @@
             </div>
           </div>
 
-          <!-- Endereço (rua/avenida) em linha própria -->
           <div class="grid grid-1 gap">
             <div class="auth-field">
               <%= f.label :address, "Endereço (rua/avenida)" %>
@@ -108,7 +100,6 @@
             </div>
           </div>
 
-          <!-- Número em linha própria -->
           <div class="grid grid-1 gap">
             <div class="auth-field">
               <%= f.label :address_number, "Número" %>
@@ -116,7 +107,6 @@
             </div>
           </div>
 
-          <!-- Cidade + UF na mesma linha -->
           <div class="grid grid-2 gap">
             <div class="auth-field">
               <%= f.label :city, "Cidade" %>

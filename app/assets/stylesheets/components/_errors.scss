@@ -1,0 +1,8 @@
+// cores já refletem seu tema
+:root{
+  --brand:#137d8e; --brand-dark:#0A5764; --ink:#111827; --muted:#6b7280; --bg:#f8fafc; --line:#e5e7eb;
+}
+.error-page { /* use esta classe e remova os estilos inline do layout, se quiser */
+  min-height: 100vh; display:flex; align-items:center; justify-content:center; padding:32px;
+  .card{ max-width:760px; width:100%; border-radius:16px; }
+}

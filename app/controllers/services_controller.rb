@@ -39,8 +39,14 @@ class ServicesController < ApplicationController
 
     scope = scope.where(id: params[:service_id]) if params[:service_id].present?
     scope = scope.where(categories: params[:category]) if params[:category].present?
-    scope = scope.joins(:user).where(users: { state: params[:state] }) if params[:state].present?
-    scope = scope.joins(:user).where(users: { city:  params[:city]  }) if params[:city].present?
+
+    # ✅ Filtro robusto por estado/cidade sem depender de alias de JOIN
+    if params[:state].present? || params[:city].present?
+      user_filter = User.all
+      user_filter = user_filter.where(state: params[:state]) if params[:state].present?
+      user_filter = user_filter.where(city:  params[:city])  if params[:city].present?
+      scope = scope.where(user_id: user_filter.select(:id))
+    end
 
     @services = scope.order(created_at: :desc).limit(60)
 

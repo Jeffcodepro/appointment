@@ -48,4 +48,16 @@ Rails.application.routes.draw do
     patch "profile",      to: "professionals#update", as: :profile
   end
 
+  # Páginas de erro (via exceptions_app)
+  match "/404", to: "errors#not_found",      via: :all
+  match "/422", to: "errors#unprocessable",  via: :all
+  match "/500", to: "errors#internal_error", via: :all
+  match "/403", to: "errors#forbidden",      via: :all
+
+  # (Opcional DEV) rota que força 500 real p/ teste
+  get "/dev/force_500", to: "errors#force_error" if Rails.env.development?
+
+  # ✅ Catch-all: qualquer rota não mapeada cai na 404 customizada
+  match "*unmatched", to: "errors#not_found", via: :all
+
 end
