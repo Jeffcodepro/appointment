@@ -9,17 +9,13 @@
   data-turbo-temporary
   hidden
 >
-  <!-- overlay (fundo escurecido+blur) -->
   <div class="custom-modal__overlay"></div>
 
-  <!-- caixa do modal -->
   <div class="custom-modal__dialog" role="document">
     <div class="modal-content rounded-4 border-0 shadow">
 
-      <!-- HEADER com ícone e subtítulo -->
       <div class="modal-header align-items-start">
         <div class="d-flex align-items-center gap-2">
-          <!-- ícone calendário (inline SVG para não depender de libs) -->
           <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
             <path fill="currentColor" d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1V3a1 1 0 0 1 1-1m12 7H5v10h14V9Z"/>
           </svg>
@@ -34,13 +30,11 @@
 
       <div class="modal-body">
         <div class="row g-4">
-          <!-- COLUNA ESQUERDA: Calendário com skeleton -->
           <div class="col-lg-6">
             <div class="simple-calendar-wrap">
               <turbo-frame id="calendar_frame"
                            data-turbo-cache="false"
                            src="<%= calendar_service_path(@service, start_date: Date.current) %>">
-                <!-- Skeleton shimmer enquanto carrega -->
                 <div class="calendar-skeleton">
                   <div class="skeleton skeleton-title"></div>
                   <div class="skeleton skeleton-row"></div>
@@ -53,7 +47,6 @@
             </div>
           </div>
 
-          <!-- COLUNA DIREITA: Slots -->
           <div class="col-lg-6">
               <h6 class="form-label" id="slotsLabel">Horários disponíveis</h6>
             <div class="mb-2" aria-live="polite">

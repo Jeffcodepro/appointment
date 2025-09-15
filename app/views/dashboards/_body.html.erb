@@ -33,7 +33,6 @@
 <div class="card border-0 shadow-sm">
   <div class="card-body">
 
-    <%# ===== MÉTRICAS NO TOPO ===== %>
     <div class="row g-3 mb-3">
       <div class="col-12 col-md-4">
         <div class="p-3 rounded-4 border bg-light h-100">
@@ -65,7 +64,6 @@
       </div>
     </div>
 
-    <%# ===== CALENDÁRIO ===== %>
     <% open_h = 9; close_h = 18 %>
 
     <% if view == "week" %>
@@ -163,7 +161,6 @@
             </div>
 
           <% elsif day_events.any? %>
-          <%# --- mostra até 1, e depois "mais X" abre modal --- %>
           <% visible_events = day_events.first(1) %>
           <% extra_count    = [day_events.size - 1, 0].max %>
 

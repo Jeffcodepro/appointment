@@ -1,9 +1,8 @@
-<%# parent: Conversation ou Schedule / message: Message %>
 <% parent  = local_assigns.fetch(:parent) %>
 <% message = local_assigns.fetch(:message) %>
 
-<% dom_prefix   = parent.model_name.singular %>  <%# "conversation" ou "schedule" %>
-<% post_url     = polymorphic_path([parent, :messages]) %> <%# conversation_messages_path OU schedule_messages_path %>
+<% dom_prefix   = parent.model_name.singular %>
+<% post_url     = polymorphic_path([parent, :messages]) %> 
 <% container_id = "messages_for_#{dom_prefix}_#{parent.id}" %>
 
 

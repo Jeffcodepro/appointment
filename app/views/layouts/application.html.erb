@@ -13,7 +13,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-  <!-- Inter + Outfit -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
 
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
@@ -22,7 +21,6 @@
     <%= yield :head %>
   </head>
 
-  <!-- === ALTERAÇÃO: classe do body e navbar conforme VISÃO (active_role) -->
   <body class="<%= user_signed_in? && current_user.professional? ? 'role-pro' : 'role-default' %> d-flex flex-column min-vh-100">
     <% if user_signed_in? && current_user.professional? %>
       <%= render "shared/pro_navbar" %>

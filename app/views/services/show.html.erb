@@ -33,13 +33,11 @@
         </div>
 
         <div class="text-end">
-          <!-- Preço por hora -->
           <div class="fs-4 fw-bold"><%= humanized_money_with_symbol(@service.price_hour) %></div>
           <small class="text-muted d-block">por hora</small>
         </div>
       </div>
 
-      <!-- GALERIA -->
       <div class="card border-0 mb-3">
         <div class="card-body p-0">
           <% if imgs.size > 1 %>
@@ -70,15 +68,12 @@
         </div>
       </div>
 
-      <!-- AÇÕES -->
       <div class="d-flex gap-2 mb-3">
         <% if user_signed_in? && current_user.id == @service.user_id %>
-          <!-- DONO DO SERVIÇO: conversas + excluir (com modal) -->
           <%= link_to "Ver conversas deste serviço",
                       conversations_path(service_id: @service.id),
                       class: "btn btn--ghost btn-inbox-link" %>
 
-          <!-- Abre modal Bootstrap -->
           <button type="button"
                   class="btn btn-cancel-appointment"
                   data-bs-toggle="modal"
@@ -86,7 +81,6 @@
             Excluir serviço
           </button>
 
-          <!-- Modal de confirmação -->
           <div class="modal fade cancel-modal" id="confirmDeleteService-<%= @service.id %>" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog">
               <div class="modal-content">
@@ -116,7 +110,6 @@
             </div>
           </div>
         <% else %>
-          <!-- QUALQUER OUTRO USUÁRIO: Agendar + Mensagem -->
           <div
             data-controller="schedules"
             data-schedules-service-id-value="<%= @service.id %>"
@@ -146,7 +139,6 @@
         <% end %>
       </div>
 
-      <!-- CARD DE TEMPO E VALOR ESTIMADO -->
       <% avg = @service.average_hours.to_i %>
       <% if avg.positive? %>
         <div class="card border-0 shadow-sm mb-3">
@@ -170,7 +162,6 @@
         </div>
       <% end %>
 
-      <!-- DESCRIÇÃO -->
       <% if @service.description.present? %>
         <div class="mb-0">
           <h2 class="h5 mb-2">Descrição</h2>
@@ -179,7 +170,6 @@
       <% end %>
     </div>
 
-    <!-- DIREITA: MAPA (sticky) lado a lado até o fim da descrição -->
     <div class="col-lg-5">
       <div class="map-shell" style="top: calc(var(--nav-h, 56px) + 16px);">
         <div class="card border-0 rounded-4 overflow-hidden shadow-sm">
@@ -197,7 +187,6 @@
     </div>
   </div>
 
-  <!-- ===== BLOCO INFERIOR: OUTROS SERVIÇOS ===== -->
   <% if @services_from_provider.any? %>
     <div class="mt-5">
       <h2 class="h5 mb-3">Outros serviços de <%= @provider.name %></h2>
@@ -210,7 +199,6 @@
           <%= link_to service_path(s), class: "text-decoration-none text-dark" do %>
             <div class="card border-0 service-tile">
               <div class="card-body">
-                <!-- PRIMEIRA LINHA -->
                 <div class="d-grid align-items-center" style="grid-template-columns: 1fr 72px auto; gap: .75rem;">
                   <div class="fw-semibold">
                     <%= s.categories.presence %>
@@ -230,7 +218,6 @@
                   </div>
                 </div>
 
-                <!-- SEGUNDA LINHA -->
                 <div class="mt-2">
                   <div class="small text-muted">
                     <%= s.description.present? ? truncate(s.description, length: 140) : "Descrição breve não informada." %>
