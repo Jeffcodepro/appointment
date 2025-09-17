@@ -2,6 +2,7 @@
   <h2>Complete seu perfil profissional</h2>
 
   <div class="card text-bg-dark banner-card mb-4" id="profile-preview">
+    <%# ===== Banner (mostra imagem se houver, senão placeholder) ===== %>
     <% if @profile.banner.attached? %>
       <%= cl_image_tag @profile.banner.key,
             width: 1600, height: 300, crop: :fill, gravity: :auto,
@@ -9,26 +10,29 @@
             class: "card-img banner-card__img",
             id: "preview-banner-img",
             alt: "Banner de #{@profile.name}" %>
+      <div class="card-img banner-card__placeholder d-none" id="preview-banner-placeholder"></div>
     <% else %>
-      <div class="card-img banner-card__placeholder" id="preview-banner-placeholder"></div>
       <img id="preview-banner-img" class="card-img banner-card__img d-none" alt="">
+      <div class="card-img banner-card__placeholder" id="preview-banner-placeholder"></div>
     <% end %>
 
     <div class="card-img-overlay p-3 p-md-4">
       <div class="banner-card__avatar-wrap">
-        <% if @profile.avatar.attached? %>
-          <%= cl_image_tag @profile.avatar.key,
+        <%# ===== Avatar PROFISSIONAL (pro_avatar). Sem fallback. ===== %>
+        <% if @profile.pro_avatar&.attached? %>
+          <%= cl_image_tag @profile.pro_avatar.key,
                 width: 120, height: 120, crop: :fill, gravity: :face,
                 fetch_format: :auto, quality: :auto,
                 class: "rounded-circle shadow banner-card__avatar",
-                id: "preview-avatar-img",
+                id: "preview-pro-avatar-img",
                 alt: @profile.name %>
+          <div id="preview-pro-avatar-fallback" class="rounded-circle d-none banner-card__avatar-fallback"></div>
         <% else %>
-          <img id="preview-avatar-img"
-              class="rounded-circle shadow banner-card__avatar d-none" alt="">
+          <img id="preview-pro-avatar-img"
+               class="rounded-circle shadow banner-card__avatar d-none" alt="">
           <% initials = (@profile.name.presence || @profile.email).split.map { |s| s[0] }.join.first(2).upcase %>
-          <div id="preview-avatar-fallback"
-              class="rounded-circle d-flex align-items-center justify-content-center banner-card__avatar-fallback shadow">
+          <div id="preview-pro-avatar-fallback"
+               class="rounded-circle d-flex align-items-center justify-content-center banner-card__avatar-fallback shadow">
             <%= initials %>
           </div>
         <% end %>
@@ -42,16 +46,24 @@
 
     <%= f.error_notification %>
 
-    <div class="mb-3">
+    <%# ===== Input do banner com preview via Stimulus (sem script inline) ===== %>
+    <div class="mb-3"
+         data-controller="file-input"
+         data-file-input-preview-selector-value="#preview-banner-img"
+         data-file-input-fallback-selector-value="#preview-banner-placeholder">
       <label>Banner (1920x400 recomendado)</label>
       <%= f.input :banner, as: :file, label: false,
-                input_html: { id: "user_banner_input", accept: "image/*" } %>
+                input_html: { accept: "image/*", data: { file_input_target: "input", action: "change->file-input#change" } } %>
     </div>
 
     <div class="row">
-      <div class="col-md-4">
-        <%= f.input :avatar, as: :file, label: "Sua foto",
-                  input_html: { id: "user_avatar_input", accept: "image/*" } %>
+      <div class="col-md-4"
+           data-controller="file-input"
+           data-file-input-preview-selector-value="#preview-pro-avatar-img"
+           data-file-input-fallback-selector-value="#preview-pro-avatar-fallback">
+        <%# 👇 Campo correto para a visão PROFISSIONAL %>
+        <%= f.input :pro_avatar, as: :file, label: "Sua foto (visão Profissional)",
+                  input_html: { accept: "image/*", data: { file_input_target: "input", action: "change->file-input#change" } } %>
       </div>
 
       <div class="col-md-8">
@@ -104,59 +116,3 @@
     </div>
   <% end %>
 </section>
-
-<script>
-  (function() {
-    function onReady(fn) {
-      if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", fn);
-      } else {
-        fn();
-      }
-      document.addEventListener("turbo:load", fn);
-    }
-
-    onReady(function() {
-      const bannerInput = document.getElementById("user_banner_input");
-      const bannerImg   = document.getElementById("preview-banner-img");
-      const bannerPh    = document.getElementById("preview-banner-placeholder");
-
-      const avatarInput = document.getElementById("user_avatar_input");
-      const avatarImg   = document.getElementById("preview-avatar-img");
-      const avatarFallback = document.getElementById("preview-avatar-fallback");
-
-      let bannerURL, avatarURL;
-
-      function setImg(el, file, opts = {}) {
-        if (!file) return;
-        const url = URL.createObjectURL(file);
-        el.src = url;
-        if (opts.onShow) opts.onShow();
-        el.classList.remove("d-none");
-        return url;
-      }
-
-      if (bannerInput) {
-        bannerInput.addEventListener("change", function(e) {
-          const file = e.target.files && e.target.files[0];
-          if (!file) return;
-          if (bannerURL) URL.revokeObjectURL(bannerURL);
-          bannerURL = setImg(bannerImg, file, {
-            onShow: () => { if (bannerPh) bannerPh.classList.add("d-none"); }
-          });
-        });
-      }
-
-      if (avatarInput) {
-        avatarInput.addEventListener("change", function(e) {
-          const file = e.target.files && e.target.files[0];
-          if (!file) return;
-          if (avatarURL) URL.revokeObjectURL(avatarURL);
-          avatarURL = setImg(avatarImg, file, {
-            onShow: () => { if (avatarFallback) avatarFallback.classList.add("d-none"); }
-          });
-        });
-      }
-    });
-  })();
-</script>

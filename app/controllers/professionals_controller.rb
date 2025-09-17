@@ -7,7 +7,7 @@ class ProfessionalsController < ApplicationController
 
   def show
     @profile = @user
-    render :edit # ou crie uma view show própria, se preferir
+    render :edit
   end
 
   def new
@@ -17,13 +17,12 @@ class ProfessionalsController < ApplicationController
   def create
     @profile = @user
 
-    # Captura os uploads ANTES de atribuir os demais atributos
-    avatar = params.dig(:user, :avatar)
-    banner = params.dig(:user, :banner)
+    pro_avatar_io = params.dig(:user, :pro_avatar)
+    banner_io     = params.dig(:user, :banner)
 
-    @profile.assign_attributes(profile_params.except(:avatar, :banner))
-    @profile.avatar.attach(avatar) if avatar.present?
-    @profile.banner.attach(banner) if banner.present?
+    @profile.assign_attributes(profile_params.except(:pro_avatar, :banner))
+    @profile.pro_avatar.attach(pro_avatar_io) if pro_avatar_io.present?
+    @profile.banner.attach(banner_io)         if banner_io.present?
 
     if @profile.save
       @profile.update_column(:profile_completed, true)
@@ -40,15 +39,13 @@ class ProfessionalsController < ApplicationController
 
   def update
     @profile = @user
-    Rails.logger.info("[PRO UPDATE] incoming keys: #{params[:user]&.keys}")
 
-    # Captura os uploads ANTES de atribuir os demais atributos
-    avatar = params.dig(:user, :avatar)
-    banner = params.dig(:user, :banner)
+    pro_avatar_io = params.dig(:user, :pro_avatar)
+    banner_io     = params.dig(:user, :banner)
 
-    @profile.assign_attributes(profile_params.except(:avatar, :banner))
-    @profile.avatar.attach(avatar) if avatar.present?
-    @profile.banner.attach(banner) if banner.present?
+    @profile.assign_attributes(profile_params.except(:pro_avatar, :banner))
+    @profile.pro_avatar.attach(pro_avatar_io) if pro_avatar_io.present?
+    @profile.banner.attach(banner_io)         if banner_io.present?
 
     if @profile.save
       @profile.update_column(:profile_completed, true) unless @profile.profile_completed?
@@ -62,7 +59,6 @@ class ProfessionalsController < ApplicationController
   private
 
   def set_user
-    # edição do próprio perfil
     @user = User.find(params[:user_id] || params[:id] || current_user.id)
   end
 
@@ -70,13 +66,9 @@ class ProfessionalsController < ApplicationController
     redirect_to root_path, alert: "Acesso negado." unless current_user && current_user.id == @user.id
   end
 
-  # Permite editar o perfil profissional se o PAPEL estiver habilitado,
-  # independentemente da visão atual (client/professional).
-  # Assim, mesmo se a pessoa estiver na visão de cliente, ela consegue ajustar o perfil pro.
   def ensure_can_edit_professional!
-    return if action_name.in?(%w[new create]) # permitir fluxo de criação
+    return if action_name.in?(%w[new create])
     return if @user.as_professional?
-
     redirect_to root_path, alert: "Ative o perfil profissional para continuar."
   end
 
@@ -84,7 +76,7 @@ class ProfessionalsController < ApplicationController
     params.require(:user).permit(
       :name, :description, :phone_number,
       :cep, :address, :address_number, :city, :state,
-      :avatar, :banner
+      :pro_avatar, :banner
     )
   end
 end
