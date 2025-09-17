@@ -7,6 +7,7 @@ class User < ApplicationRecord
   has_many_attached :images
   has_one_attached  :avatar
   has_one_attached  :banner
+  has_one_attached  :pro_avatar   # 👈 foto específica para a visão Profissional
   has_many :messages, dependent: :destroy
 
   # Mantém enum legado (escopos etc.)
@@ -34,13 +35,14 @@ class User < ApplicationRecord
     validate  :must_be_geocoded, if: :geocoding_required?
   end
 
-  with_options if: :professional?, on: :update do
+  with_options if: :validate_professional_on_update?, on: :update do
     validates :phone_number, :cep, :address, :address_number, :city, :state, :description, presence: true
     validates :state, inclusion: { in: BRAZIL_UF }
     validates :cep, format: { with: /\A\d{5}-?\d{3}\z/, message: "deve estar no formato 00000-000" }
     validates :phone_number, length: { minimum: 8 }
     validate  :must_be_geocoded, if: :geocoding_required?
   end
+
 
   before_validation :normalize_cep, if: -> { cep.present? && will_save_change_to_cep? }
 
@@ -81,20 +83,6 @@ class User < ApplicationRecord
     update_columns(active_role: r, updated_at: Time.current) # salva sem validações
   end
 
-  # Geocode apenas quando estiver na visão profissional
-  def should_geocode?
-    professional? && (
-      will_save_change_to_address? ||
-      will_save_change_to_address_number? ||
-      will_save_change_to_city? ||
-      will_save_change_to_state? ||
-      will_save_change_to_cep?
-    )
-  end
-
-  def geocoding_required?
-    professional? && (Rails.env.production? || ENV["MAPBOX_API_KEY"].present?)
-  end
 
   def must_be_geocoded
     if latitude.blank? || longitude.blank?
@@ -136,4 +124,36 @@ class User < ApplicationRecord
     digits = cep.to_s.gsub(/\D/, "")
     self.cep = digits.size == 8 ? "#{digits[0..4]}-#{digits[5..7]}" : cep
   end
+
+  def validate_professional_on_update?
+    as_professional && changing_professional_fields?
+  end
+
+  def changing_professional_fields?
+    will_save_change_to_phone_number? ||
+    will_save_change_to_cep? ||
+    will_save_change_to_address? ||
+    will_save_change_to_address_number? ||
+    will_save_change_to_city? ||
+    will_save_change_to_state? ||
+    will_save_change_to_description?
+  end
+
+  def changing_address_fields?
+    will_save_change_to_address? ||
+    will_save_change_to_address_number? ||
+    will_save_change_to_city? ||
+    will_save_change_to_state? ||
+    will_save_change_to_cep?
+  end
+
+  def should_geocode?
+    as_professional && changing_address_fields?
+  end
+
+  def geocoding_required?
+    as_professional && changing_address_fields? &&
+      (Rails.env.production? || ENV["MAPBOX_API_KEY"].present?)
+  end
+
 end

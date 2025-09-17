@@ -11,21 +11,19 @@
     <div class="card-body d-flex align-items-center gap-3">
       <div class="position-relative">
         <% if @profile&.avatar&.attached? %>
-          <%= image_tag @profile.avatar,
-                class: "rounded-circle",
-                id: "preview-avatar-img",
+          <%= square_attachment_tag(@profile.avatar,
+                size: 96,
                 alt: @profile.name,
-                style: "width:96px; height:96px; object-fit:cover;" %>
+                id: "preview-avatar-img",
+                class: "rounded-circle") %>
+          <div id="preview-avatar-placeholder" class="avatar-placeholder d-none"></div>
         <% else %>
-          <%= image_tag "avatar_placeholder.png",
-                class: "rounded-circle",
-                id: "preview-avatar-placeholder",
-                alt: "Avatar padrão",
-                style: "width:96px; height:96px; object-fit:cover;" %>
           <img id="preview-avatar-img"
                class="rounded-circle d-none"
                alt=""
                style="width:96px; height:96px; object-fit:cover;">
+          <% initials = (@profile.name.presence || @profile.email).to_s.split.map { |s| s[0] }.join.first(2).upcase %>
+          <div id="preview-avatar-placeholder" class="avatar-placeholder"><%= initials %></div>
         <% end %>
       </div>
 

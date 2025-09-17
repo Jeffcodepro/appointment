@@ -1,4 +1,3 @@
-
 <% content_for :head do %>
   <meta name="turbo-cache-control" content="no-preview">
 <% end %>
@@ -26,14 +25,20 @@
       <div class="dash-hero__overlay">
         <div class="d-flex align-items-center gap-3">
           <div class="dash-hero__avatar-wrap rounded-circle overflow-hidden">
-            <% if owner.respond_to?(:avatar) && owner.avatar&.attached? %>
-              <% if defined?(cl_image_tag) && owner.avatar.respond_to?(:key) %>
-                <%= cl_image_tag owner.avatar.key,
+            <%# --- SEMPRE usar a foto profissional no dashboard --- %>
+            <% pro_att = owner.respond_to?(:pro_avatar) ? owner.pro_avatar : nil %>
+
+            <% if pro_att&.attached? %>
+              <% if defined?(cl_image_tag) && pro_att.respond_to?(:key) %>
+                <%= cl_image_tag pro_att.key,
                       width: 88, height: 88, crop: :fill, gravity: :face,
                       fetch_format: :auto, quality: :auto,
-                      class: "w-100 h-100", style: "object-fit: cover;", alt: (owner.try(:name) || owner.try(:email)) %>
+                      class: "w-100 h-100", style: "object-fit: cover;",
+                      alt: (owner.try(:name) || owner.try(:email)) %>
               <% else %>
-                <%= image_tag owner.avatar, class: "w-100 h-100", style: "object-fit: cover;", alt: (owner.try(:name) || owner.try(:email)) %>
+                <%= image_tag pro_att,
+                      class: "w-100 h-100", style: "object-fit: cover;",
+                      alt: (owner.try(:name) || owner.try(:email)) %>
               <% end %>
             <% else %>
               <% initials = (owner.try(:name).presence || owner.try(:email)).to_s.split.map { |s| s[0] }.join.first(2).upcase %>
@@ -45,13 +50,11 @@
 
           <div>
             <h1 class="h4 mb-1 text-white text-shadow">Olá, <%= first_name(current_user) %></h1>
-
             <div class="text-white-50 small">Seu painel de agendamentos e receita</div>
           </div>
         </div>
       </div>
     </div>
-
 
     <%= turbo_frame_tag "dashboard-body" do %>
       <%= render partial: "dashboards/body",
