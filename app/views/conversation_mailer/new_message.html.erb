@@ -3,10 +3,7 @@
   Você recebeu uma mensagem em sua conversa
 <% end %>
 
-<%# hero opcional: coloque uma imagem ampla se quiser %>
-<%# content_for :hero_image_url, image_url("mail/hero-conversa.png") %>
 
-<!-- bloco estilo “post” -->
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
        style="width:100%;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;margin-top:6px;">
   <tr>
@@ -26,7 +23,6 @@
         <%= @message.content.to_s.truncate(240) %>
       </div>
 
-      <!-- chip + CTA -->
       <div style="margin-top:14px;">
         <span style="display:inline-block;padding:7px 10px;border-radius:999px;
                      font:600 12px/1 system-ui,-apple-system,Segoe UI,Roboto;

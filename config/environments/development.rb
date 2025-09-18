@@ -39,6 +39,10 @@ Rails.application.configure do
   # config/environments/development.rb
   config.active_storage.service = :cloudinary
 
+  # Evita redirecionamento e alguns 404 em dev quando servindo via Rails
+  config.active_storage.resolve_model_to_route = :rails_storage_proxy
+
+
   # Don't care if the mailer can't send.
   config.action_mailer.raise_delivery_errors = false
 

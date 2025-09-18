@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_09_09_225252) do
+ActiveRecord::Schema[7.1].define(version: 2025_09_14_190100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_trgm"
   enable_extension "plpgsql"
@@ -191,7 +191,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_09_09_225252) do
     t.bigint "service_id", null: false
     t.string "name", null: false
     t.text "description"
-    t.integer "price_hour_cents"
+    t.bigint "price_hour_cents"
     t.string "price_hour_currency", default: "BRL", null: false
     t.integer "average_hours"
     t.datetime "created_at", null: false
@@ -210,7 +210,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_09_09_225252) do
     t.bigint "user_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.integer "price_hour_cents", default: 0, null: false
+    t.bigint "price_hour_cents", default: 0, null: false
     t.string "category"
     t.string "subcategory"
     t.index ["user_id"], name: "index_services_on_user_id"
@@ -236,9 +236,14 @@ ActiveRecord::Schema[7.1].define(version: 2025_09_09_225252) do
     t.string "address_number"
     t.string "city"
     t.string "state"
+    t.boolean "as_client", default: true, null: false
+    t.boolean "as_professional", default: false, null: false
+    t.string "active_role", default: "client", null: false
+    t.index ["active_role"], name: "index_users_on_active_role"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
     t.index ["role"], name: "index_users_on_role"
+    t.check_constraint "active_role::text = ANY (ARRAY['client'::character varying, 'professional'::character varying]::text[])", name: "users_active_role_check"
   end
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"

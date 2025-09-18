@@ -10,8 +10,6 @@ class ServicesController < ApplicationController
   before_action :set_service, only: [:show, :destroy]
   before_action :set_owned_service, only: [:edit, :update]
 
-
-
   include ActionView::Helpers::NumberHelper
 
   BRAZIL_BOUNDING_BOX = {
@@ -41,8 +39,14 @@ class ServicesController < ApplicationController
 
     scope = scope.where(id: params[:service_id]) if params[:service_id].present?
     scope = scope.where(categories: params[:category]) if params[:category].present?
-    scope = scope.joins(:user).where(users: { state: params[:state] }) if params[:state].present?
-    scope = scope.joins(:user).where(users: { city:  params[:city]  }) if params[:city].present?
+
+    # ✅ Filtro robusto por estado/cidade sem depender de alias de JOIN
+    if params[:state].present? || params[:city].present?
+      user_filter = User.all
+      user_filter = user_filter.where(state: params[:state]) if params[:state].present?
+      user_filter = user_filter.where(city:  params[:city])  if params[:city].present?
+      scope = scope.where(user_id: user_filter.select(:id))
+    end
 
     @services = scope.order(created_at: :desc).limit(60)
 
@@ -102,12 +106,10 @@ class ServicesController < ApplicationController
 
     rel = Schedule.for_provider(provider.id).blocking
 
-
     # agendamentos do provider que conflitam com o dia
     day_schedules = rel
       .where("start_at < ? AND end_at > ?", day_end, day_start)
       .pluck(:start_at, :end_at)
-
 
     now = Time.zone.now
 
@@ -238,24 +240,22 @@ class ServicesController < ApplicationController
     preload_from_last if params[:last_service_id].present?
   end
 
-  # POST /services
   def create
     @service = Service.new(service_params)
     @service.user = current_user
 
     if @service.save
       if params[:save_and_new].present?
-        # 👉 volta para o NEW sem pré-preencher (form limpinho)
         redirect_to new_service_path, notice: "Serviço salvo. Cadastre o próximo."
       else
         redirect_to dashboard_path, notice: "Serviço criado com sucesso."
       end
     else
-      flash.now[:alert] = "Não foi possível criar o serviço. Verifique os campos."
+      # ✅ Mostra as mensagens reais
+      flash.now[:alert] = @service.errors.full_messages.to_sentence.presence || "Não foi possível criar o serviço. Verifique os campos."
       render :new, status: :unprocessable_entity
     end
   end
-
 
   # DELETE /services/:id
   def destroy
@@ -289,7 +289,7 @@ class ServicesController < ApplicationController
     if @service.update(service_params)
       redirect_to mine_services_path, notice: "Serviço atualizado com sucesso."
     else
-      flash.now[:alert] = "Não foi possível atualizar. Verifique os campos."
+      flash.now[:alert] = @service.errors.full_messages.to_sentence.presence || "Não foi possível atualizar. Verifique os campos."
       render :edit, status: :unprocessable_entity
     end
   end
@@ -337,7 +337,6 @@ class ServicesController < ApplicationController
       ]
     )
   end
-
 
   def preload_from_last
     last = current_user.services.find_by(id: params[:last_service_id])

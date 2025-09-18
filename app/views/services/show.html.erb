@@ -51,7 +51,6 @@
         </div>
       </div>
 
-      <!-- GALERIA -->
       <div class="card border-0 mb-3">
         <div class="card-body p-0">
           <% if service_imgs.size > 1 %>
@@ -109,7 +108,6 @@
         </div>
       </div>
 
-      <!-- AÇÕES -->
       <div class="d-flex gap-2 mb-3">
         <% if user_signed_in? && current_user.id == @service.user_id %>
           <%= link_to "Ver conversas deste serviço",
@@ -170,7 +168,6 @@
         <% end %>
       </div>
 
-      <!-- CARD DE TEMPO E VALOR ESTIMADO -->
       <% avg = @service.average_hours.to_i %>
       <% if avg.positive? %>
         <div class="card border-0 shadow-sm mb-3">
@@ -194,7 +191,6 @@
         </div>
       <% end %>
 
-      <!-- DESCRIÇÃO -->
       <% if @service.description.present? %>
         <div class="mb-0">
           <h2 class="h5 mb-2">Descrição</h2>
@@ -203,7 +199,6 @@
       <% end %>
     </div>
 
-    <!-- DIREITA: MAPA (sticky) -->
     <div class="col-lg-5">
       <div class="map-shell" style="top: calc(var(--nav-h, 56px) + 16px);">
         <div class="card border-0 rounded-4 overflow-hidden shadow-sm">
@@ -221,7 +216,6 @@
     </div>
   </div>
 
-  <!-- ===== OUTROS SERVIÇOS DO MESMO PRO ===== -->
   <% if @services_from_provider.any? %>
     <div class="mt-5">
       <h2 class="h5 mb-3">Outros serviços de <%= @provider.name %></h2>

@@ -1,4 +1,3 @@
-
 <% content_for :head do %>
   <meta name="turbo-cache-control" content="no-preview">
 <% end %>
@@ -6,13 +5,10 @@
 <div class="dashboard-page">
   <div class="container py-4">
 
-    <!-- Banner com foto do profissional -->
-    <%# ==== HERO do dashboard (banner + avatar) ==== %>
     <% owner = defined?(@profile) && @profile.present? ? @profile : @user %>
     <div class="dash-hero card border-0 shadow-sm overflow-hidden mb-4">
       <div class="dash-hero__media">
         <% if owner.respond_to?(:banner) && owner.banner&.attached? %>
-          <%# Se usa Cloudinary (ActiveStorage <= cloudinary), use cl_image_tag p/ recorte/otimização %>
           <% if defined?(cl_image_tag) && owner.banner.respond_to?(:key) %>
             <%= cl_image_tag owner.banner.key,
                   width: 1920, height: 320, crop: :fill, gravity: :auto,
@@ -29,14 +25,20 @@
       <div class="dash-hero__overlay">
         <div class="d-flex align-items-center gap-3">
           <div class="dash-hero__avatar-wrap rounded-circle overflow-hidden">
-            <% if owner.respond_to?(:avatar) && owner.avatar&.attached? %>
-              <% if defined?(cl_image_tag) && owner.avatar.respond_to?(:key) %>
-                <%= cl_image_tag owner.avatar.key,
+            <%# --- SEMPRE usar a foto profissional no dashboard --- %>
+            <% pro_att = owner.respond_to?(:pro_avatar) ? owner.pro_avatar : nil %>
+
+            <% if pro_att&.attached? %>
+              <% if defined?(cl_image_tag) && pro_att.respond_to?(:key) %>
+                <%= cl_image_tag pro_att.key,
                       width: 88, height: 88, crop: :fill, gravity: :face,
                       fetch_format: :auto, quality: :auto,
-                      class: "w-100 h-100", style: "object-fit: cover;", alt: (owner.try(:name) || owner.try(:email)) %>
+                      class: "w-100 h-100", style: "object-fit: cover;",
+                      alt: (owner.try(:name) || owner.try(:email)) %>
               <% else %>
-                <%= image_tag owner.avatar, class: "w-100 h-100", style: "object-fit: cover;", alt: (owner.try(:name) || owner.try(:email)) %>
+                <%= image_tag pro_att,
+                      class: "w-100 h-100", style: "object-fit: cover;",
+                      alt: (owner.try(:name) || owner.try(:email)) %>
               <% end %>
             <% else %>
               <% initials = (owner.try(:name).presence || owner.try(:email)).to_s.split.map { |s| s[0] }.join.first(2).upcase %>
@@ -48,28 +50,23 @@
 
           <div>
             <h1 class="h4 mb-1 text-white text-shadow">Olá, <%= first_name(current_user) %></h1>
-
             <div class="text-white-50 small">Seu painel de agendamentos e receita</div>
           </div>
         </div>
       </div>
     </div>
 
-
-    <!-- Corpo (métricas + calendário) dentro de um Turbo Frame -->
     <%= turbo_frame_tag "dashboard-body" do %>
       <%= render partial: "dashboards/body",
                 locals: {
                   view: @view, date: @date, prev_date: @prev_date, next_date: @next_date,
                   revenue_human: @revenue_human,
                   revenue_future_human: @revenue_future_human,
-                  # contagens
                   count_pending: @count_pending,
                   count_confirmed: @count_confirmed,
                   count_completed: @count_completed,
                   count_canceled_by_client: @count_canceled_by_client,
                   count_canceled_or_rejected_by_professional: @count_canceled_or_rejected_by_professional,
-                  # calendário
                   schedules: @schedules, range_start: @range_start, range_end: @range_end
                 } %>
     <% end %>
@@ -77,7 +74,6 @@
   </div>
 </div>
 
-<!-- ===== Modal CSS-only (fora do frame para não ser re-renderizado) ===== -->
 <div id="dayEventsModal" class="custom-modal" aria-hidden="true" data-controller="day-modal">
   <div class="custom-modal__overlay" data-action="click->day-modal#close"></div>
   <div class="custom-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="dayEventsLabel">
@@ -87,7 +83,6 @@
         <button type="button" class="btn-close" aria-label="Fechar" data-action="click->day-modal#close"></button>
       </div>
 
-      <!-- Turbo Frame preenchido ao abrir (Stimulus define o src) -->
       <turbo-frame id="day-events-modal-body">
         <div class="p-4 text-center text-muted">Carregando…</div>
       </turbo-frame>

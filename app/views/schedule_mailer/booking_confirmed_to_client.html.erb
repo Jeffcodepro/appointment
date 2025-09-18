@@ -1,4 +1,3 @@
-<!-- app/views/schedule_mailer/booking_created_to_client.html.erb -->
 <% content_for :title, (@confirmed ? "Agendamento confirmado" : "Agendamento recebido") %>
 <% content_for :header_tagline do %>
   <%= @confirmed ? "Tudo certo!" : "Aguardando confirmação do profissional" %>
@@ -43,7 +42,6 @@
   </tr>
 </table>
 
-<!-- chip de status -->
 <span style="display:inline-block;
              padding:8px 10px;border-radius:999px;
              font:600 12px/1 system-ui,-apple-system,Segoe UI,Roboto;
@@ -52,4 +50,3 @@
              border:1px solid <%= @confirmed ? '#a7f3d0' : '#bfdbfe' %>;">
   <%= @confirmed ? "Confirmado" : "Aguardando confirmação" %>
 </span>
-

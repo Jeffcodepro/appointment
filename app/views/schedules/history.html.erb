@@ -9,7 +9,6 @@
                 "history-filters-reset-url-value": service_history_path } do %>
 
     <div class="filters-row">
-      <!-- Date dropdown -->
       <div class="filters-group filters-group--wide">
         <label class="label">Período</label>
         <div class="date-dropdown">
@@ -65,10 +64,9 @@
               </div>
             </div>
           </div>
-        </div> <!-- /date-dropdown -->
+        </div>
       </div>
 
-      <!-- Texto / Papel / Status -->
       <div class="filters-group">
         <label class="label">Buscar</label>
         <%= text_field_tag :query, params[:query], class: "form-control form-control-sm",
@@ -103,7 +101,6 @@
           data: { "history-filters-target": "status" } %>
       </div>
 
-      <!-- Ordenação -->
       <div class="filters-group">
         <label class="label">Ordenar por</label>
         <%= select_tag :order,
@@ -193,7 +190,6 @@
                     <%= schedule_time_range_compact(s) %>
                   </div>
 
-                  <!-- Accordion / detalhes com cards e ícones -->
                   <div class="mt-2">
                     <button class="btn btn-light btn-sm has-caret"
                             type="button"
@@ -256,7 +252,6 @@
                       <%= link_to "Conversar", conversation_path(conv), class: "btn-chat btn-sm" %>
                     <% end %>
 
-                    <%# se pendente e eu sou o profissional: confirmar/recusar %>
                     <% if s.pending? && s.professional_id == current_user.id %>
                       <%= button_to "Confirmar",
                             accept_schedule_path(s, from: "history"),
@@ -271,7 +266,6 @@
                       </button>
                     <% end %>
 
-                    <%# mostrar "Cancelar" SOMENTE quando estiver confirmado %>
                     <% if s.confirmed? %>
                       <button type="button"
                               class="btn-cancel-appointment btn-sm"
@@ -285,7 +279,6 @@
                 </div>
               </div>
 
-              <!-- Modal de confirmação de cancelamento (com mensagem opcional) -->
               <div class="modal fade" id="cancelModal_<%= s.id %>" tabindex="-1" aria-labelledby="cancelLabel_<%= s.id %>" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered">
                   <div class="modal-content cancel-modal">
@@ -313,9 +306,7 @@
                   </div>
                 </div>
               </div>
-              <!-- /Modal -->
 
-              <!-- Modal de recusa (com motivo opcional) -->
               <div class="modal fade" id="rejectModal_<%= s.id %>" tabindex="-1" aria-labelledby="rejectLabel_<%= s.id %>" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered">
                   <div class="modal-content cancel-modal">
@@ -353,5 +344,4 @@
     </div>
   </div>
 
-  <%#= paginate @schedules %>
 </div>

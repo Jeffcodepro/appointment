@@ -1,40 +1,104 @@
-<h2>Editar conta</h2>
+<% @profile ||= current_user %>
 
-<%= simple_form_for(resource, as: resource_name, url: registration_path(resource_name), html: { method: :put, data: { controller: "cep" } }) do |f| %>
-  <%= f.error_notification %>
+<section class="container pt-3">
+  <h1 class="h4 mb-3">Minha conta</h1>
+  <p class="text-muted mb-4">
+    Atualize seus dados básicos de acesso. Para editar seu <strong>perfil profissional</strong>,
+    use o menu “Editar perfil” quando estiver na visão de Profissional.
+  </p>
 
-  <div class="form-inputs">
-    <%= f.input :role, as: :select,
-      collection: [["Cliente", "client"], ["Profissional", "professional"]],
-      label: "Tipo de usuário" %>
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body d-flex align-items-center gap-3">
+      <div class="position-relative">
+        <% if @profile&.avatar&.attached? %>
+          <%= square_attachment_tag(@profile.avatar,
+                size: 96,
+                alt: @profile.name,
+                id: "preview-avatar-img",
+                class: "rounded-circle") %>
+          <div id="preview-avatar-placeholder" class="avatar-placeholder d-none"></div>
+        <% else %>
+          <img id="preview-avatar-img"
+               class="rounded-circle d-none"
+               alt=""
+               style="width:96px; height:96px; object-fit:cover;">
+          <% initials = (@profile.name.presence || @profile.email).to_s.split.map { |s| s[0] }.join.first(2).upcase %>
+          <div id="preview-avatar-placeholder" class="avatar-placeholder"><%= initials %></div>
+        <% end %>
+      </div>
 
-    <%= f.input :name, label: "Nome completo" %>
-    <%= f.input :phone_number, label: "Telefone" %>
-
-    <%= f.input :cep,
-      label: "CEP",
-      input_html: { data: { "cep-target": "cepField", action: "keyup->cep#search" } } %>
-
-    <%= f.input :city,
-      label: "Cidade",
-      input_html: { data: { "cep-target": "cityField" } } %>
-    <%= f.input :state,
-      label: "Estado",
-      input_html: { data: { "cep-target": "stateField" } } %>
-
-    <%= f.input :address, label: "Endereço" %>
-    <%= f.input :description, label: "Descrição", as: :text %>
-
-    <%= f.input :email, required: true %>
-
-    <%= f.input :current_password, label: "Senha atual", hint: "Necessária para confirmar alterações", required: true %>
+      <div>
+        <div class="fw-semibold"><%= @profile.name %></div>
+        <div class="text-muted small"><%= @profile.email %></div>
+      </div>
+    </div>
   </div>
 
-  <div class="form-actions">
-    <%= f.button :submit, "Salvar alterações" %>
-  </div>
-<% end %>
+  <%= simple_form_for @profile,
+        url: registration_path(:user),
+        html: { method: :put, multipart: true, data: { turbo: false } } do |f| %>
 
-<%= link_to "Cancelar minha conta", registration_path(resource_name),
-            data: { turbo_method: :delete, turbo_confirm: "Tem certeza?" },
-            class: "btn btn-outline-danger mt-3" %>
+    <%= f.error_notification %>
+
+    <div class="row">
+      <div class="col-md-4"
+           data-controller="file-input"
+           data-file-input-preview-selector-value="#preview-avatar-img"
+           data-file-input-fallback-selector-value="#preview-avatar-placeholder">
+        <%= f.input :avatar, as: :file, label: "Sua foto",
+              hint: "Imagem quadrada funciona melhor.",
+              input_html: {
+                accept: "image/*",
+                data: { file_input_target: "input", action: "change->file-input#change" }
+              } %>
+      </div>
+
+      <div class="col-md-8">
+        <%= f.input :name,  label: "Nome"  %>
+        <%= f.input :email, label: "E-mail" %>
+      </div>
+    </div>
+
+    <hr class="my-4">
+
+    <h2 class="h6">Segurança</h2>
+    <p class="text-muted small mb-3">
+      Preencha os campos abaixo apenas se quiser trocar sua senha.
+    </p>
+
+    <div class="row">
+      <div class="col-md-4">
+        <%= f.input :password,
+              label: "Nova senha",
+              hint: "Deixe em branco para não alterar.",
+              required: false,
+              input_html: { autocomplete: "new-password" } %>
+      </div>
+      <div class="col-md-4">
+        <%= f.input :password_confirmation,
+              label: "Confirmação da nova senha",
+              required: false,
+              input_html: { autocomplete: "new-password" } %>
+      </div>
+      <div class="col-md-4">
+        <%= f.input :current_password,
+              label: "Senha atual",
+              hint: "Obrigatória somente se for trocar a senha.",
+              required: false,
+              input_html: { autocomplete: "current-password" } %>
+      </div>
+    </div>
+
+    <div class="mt-3 d-flex gap-2">
+      <%= f.button :submit, "Salvar alterações", class: "btn-save-changes" %>
+      <%= link_to "Cancelar", root_path, class: "btn--ghost" %>
+    </div>
+  <% end %>
+
+  <% if current_user.as_professional? %>
+    <div class="alert alert-info mt-4 mb-0">
+      Quer atualizar seu <strong>perfil profissional</strong> (descrição, endereço, etc.)?
+      Abra a <em>Visão</em> de Profissional e clique em <strong>Editar perfil</strong>.
+    </div>
+  <% end %>
+</section>

@@ -1,21 +1,12 @@
-<% if notice %>
-  <div class="alert alert-info alert-dismissible fade show m-1"
-       role="alert"
-       data-controller="flash"
-       data-flash-timeout-value="5000"
-       data-action="turbo:before-cache->flash#close">
-    <button type="button" class="btn-close" aria-label="Fechar" data-action="click->flash#close"></button>
-    <%= notice %>
-  </div>
-<% end %>
-
-<% if alert %>
-  <div class="alert alert-warning alert-dismissible fade show m-1"
-       role="alert"
-       data-controller="flash"
-       data-flash-timeout-value="5000"
-       data-action="turbo:before-cache->flash#close">
-    <button type="button" class="btn-close" aria-label="Fechar" data-action="click->flash#close"></button>
-    <%= alert %>
-  </div>
-<% end %>
+<div class="alerts-stack">
+  <% flash.each do |type, msg| %>
+    <% klass =
+      case type.to_s
+      when "notice" then "alert-success"
+      when "alert"  then "alert-warning"
+      when "error"  then "alert-danger"
+      else "alert-info"
+      end %>
+    <div class="alert <%= klass %>" role="alert"><%= msg %></div>
+  <% end %>
+</div>
