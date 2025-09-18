@@ -80,8 +80,6 @@
     <div class="col-lg-6">
       <h1 class="mb-3 mt-3">Todos os serviços</h1>
 
-
-
       <div id="results"><!-- âncora de destino para pós-busca -->
         <% if @services.empty? %>
           <div class="search-service" role="alert">
@@ -91,24 +89,54 @@
           <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4">
             <% @services.each do |service| %>
               <div class="col">
-                <%= link_to service_path(service), class: "text-decoration-none text-dark",  data: { turbo: false } do%>
+                <%= link_to service_path(service), class: "text-decoration-none text-dark", data: { turbo: false } do %>
                   <div class="card h-100 border-0">
                     <%# ======= BLOCO DE IMAGEM / CARROSSEL ======= %>
-                    <% if service.user.images.attached? %>
-                      <% imgs = service.user.images.to_a %>
 
+                    <%# 1) Imagem(ens) do SERVIÇO (prioridade máxima) %>
+                    <% if service.respond_to?(:images) && service.images.attached? %>
+                      <% imgs = service.images.to_a %>
+                      <% if imgs.size > 1 %>
+                        <div id="service-<%= service.id %>-carousel" class="carousel slide rounded-4 overflow-hidden" data-bs-ride="carousel">
+                          <div class="carousel-inner ratio ratio-4x3">
+                            <% imgs.each_with_index do |image, i| %>
+                              <div class="carousel-item <%= i.zero? ? 'active' : '' %>">
+                                <%= image_tag image, class: "d-block w-100 h-100", style: "object-fit: cover;" %>
+                              </div>
+                            <% end %>
+                          </div>
+                          <button class="carousel-control-prev" type="button" data-bs-target="#service-<%= service.id %>-carousel" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Anterior</span>
+                          </button>
+                          <button class="carousel-control-next" type="button" data-bs-target="#service-<%= service.id %>-carousel" data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Próximo</span>
+                          </button>
+                        </div>
+                      <% else %>
+                        <%= image_tag imgs.first, class: "rounded-4", style: "height:200px;width:100%;object-fit:cover;" %>
+                      <% end %>
+
+                    <% elsif service.image&.attached? %>
+                      <%= image_tag service.image, class: "rounded-4", style: "height:200px;width:100%;object-fit:cover;" %>
+
+                    <%# 2) Banner do PROFISSIONAL (antes das imagens do usuário) %>
+                    <% elsif service.user.respond_to?(:banner) && service.user.banner.attached? %>
+                      <%= image_tag service.user.banner, class: "rounded-4", style: "height:200px;width:100%;object-fit:cover;" %>
+
+                    <%# 3) Imagem(ens) do PROFISSIONAL (fallback secundário) %>
+                    <% elsif service.user.images.attached? %>
+                      <% imgs = service.user.images.to_a %>
                       <% if imgs.size > 1 %>
                         <div id="user-<%= service.user.id %>-carousel" class="carousel slide rounded-4 overflow-hidden" data-bs-ride="carousel">
                           <div class="carousel-inner ratio ratio-4x3">
                             <% imgs.each_with_index do |image, i| %>
                               <div class="carousel-item <%= i.zero? ? 'active' : '' %>">
-                                <%= image_tag image,
-                                      class: "d-block w-100 h-100",
-                                      style: "object-fit: cover;" %>
+                                <%= image_tag image, class: "d-block w-100 h-100", style: "object-fit: cover;" %>
                               </div>
                             <% end %>
                           </div>
-
                           <button class="carousel-control-prev" type="button" data-bs-target="#user-<%= service.user.id %>-carousel" data-bs-slide="prev">
                             <span class="carousel-control-prev-icon" aria-hidden="true"></span>
                             <span class="visually-hidden">Anterior</span>
@@ -119,16 +147,17 @@
                           </button>
                         </div>
                       <% else %>
-                        <%= image_tag imgs.first,
-                                      class: "rounded-4",
-                                      style: "height: 200px; width: 100%; object-fit: cover;" %>
+                        <%= image_tag imgs.first, class: "rounded-4", style: "height:200px;width:100%;object-fit:cover;" %>
                       <% end %>
+
+                    <%# 4) Fallback do pipeline (blindado contra AssetNotFound) %>
                     <% else %>
-                      <%= image_tag(
-                            Service.fallback_image_for(service.categories),
-                            class: "rounded-4",
-                            style: "height: 200px; width: 100%; object-fit: cover;"
-                          ) %>
+                      <% fb = Service.fallback_image_for(service.categories) %>
+                      <%= begin
+                            image_tag fb, class: "rounded-4", style: "height:200px;width:100%;object-fit:cover;"
+                          rescue Sprockets::Rails::Helper::AssetNotFound
+                            image_tag "servico_reparo_manutencao.png", class: "rounded-4", style: "height:200px;width:100%;object-fit:cover;"
+                          end %>
                     <% end %>
 
                     <%# ======= BODY DO CARD ======= %>
