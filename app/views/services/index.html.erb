@@ -1,3 +1,4 @@
+<%# =========================== HERO opcional ============================ %>
 <div class="container-fluid banner d-flex align-items-center justify-content-center text-white">
   <div class="text-center">
     <h1 class="display-3 fw-bold">Encontre o Serviço Perfeito</h1>
@@ -5,6 +6,7 @@
   </div>
 </div>
 
+<%# ===================== BARRA DE BUSCA/FILTROS STICKY ===================== %>
 <div class="sticky-search" id="stickySearch">
   <div class="container">
     <div class="row justify-content-center">
@@ -71,14 +73,14 @@
   </div>
 </div>
 
+<%# ============================== CONTEÚDO =============================== %>
 <div class="container main-content">
   <div class="row">
+    <%# -------- Coluna ESQUERDA: Lista de serviços -------- %>
     <div class="col-lg-6">
       <h1 class="mb-3 mt-3">Todos os serviços</h1>
 
-
-
-      <div id="results">
+      <div id="results"><!-- âncora de destino para pós-busca -->
         <% if @services.empty? %>
           <div class="search-service" role="alert">
             Nenhum serviço encontrado com os filtros aplicados.
@@ -89,17 +91,15 @@
               <div class="col">
                 <%= link_to service_path(service), class: "text-decoration-none text-dark", data: { turbo: false } do %>
                   <div class="card h-100 border-0">
-                    <%# ======= BLOCO DE IMAGEM / CARROSSEL ======= %>
-                    <% if service.user.images.attached? %>
-                      <% imgs = service.user.images.to_a %>
+                    <%# ================== BLOCO DE IMAGEM / CARROSSEL ================== %>
 
-                    <%# 1) Imagem(ens) do SERVIÇO (prioridade máxima) %>
+                    <%# 1) Várias imagens do SERVIÇO (se houver) %>
                     <% if service.respond_to?(:images) && service.images.attached? %>
-                      <% imgs = service.images.to_a %>
-                      <% if imgs.size > 1 %>
+                      <% imgs_service = service.images.to_a %>
+                      <% if imgs_service.size > 1 %>
                         <div id="service-<%= service.id %>-carousel" class="carousel slide rounded-4 overflow-hidden" data-bs-ride="carousel">
                           <div class="carousel-inner ratio ratio-4x3">
-                            <% imgs.each_with_index do |image, i| %>
+                            <% imgs_service.each_with_index do |image, i| %>
                               <div class="carousel-item <%= i.zero? ? 'active' : '' %>">
                                 <%= image_tag image, class: "d-block w-100 h-100", style: "object-fit: cover;" %>
                               </div>
@@ -115,23 +115,24 @@
                           </button>
                         </div>
                       <% else %>
-                        <%= image_tag imgs.first, class: "rounded-4", style: "height:200px;width:100%;object-fit:cover;" %>
+                        <%= image_tag imgs_service.first, class: "rounded-4", style: "height:200px;width:100%;object-fit:cover;" %>
                       <% end %>
 
+                    <%# 1.2) Uma imagem principal do SERVIÇO %>
                     <% elsif service.image&.attached? %>
                       <%= image_tag service.image, class: "rounded-4", style: "height:200px;width:100%;object-fit:cover;" %>
 
-                    <%# 2) Banner do PROFISSIONAL (antes das imagens do usuário) %>
+                    <%# 2) BANNER do PROFISSIONAL (preferível antes das fotos do usuário) %>
                     <% elsif service.user.respond_to?(:banner) && service.user.banner.attached? %>
                       <%= image_tag service.user.banner, class: "rounded-4", style: "height:200px;width:100%;object-fit:cover;" %>
 
                     <%# 3) Imagem(ens) do PROFISSIONAL (fallback secundário) %>
                     <% elsif service.user.images.attached? %>
-                      <% imgs = service.user.images.to_a %>
-                      <% if imgs.size > 1 %>
+                      <% imgs_user = service.user.images.to_a %>
+                      <% if imgs_user.size > 1 %>
                         <div id="user-<%= service.user.id %>-carousel" class="carousel slide rounded-4 overflow-hidden" data-bs-ride="carousel">
                           <div class="carousel-inner ratio ratio-4x3">
-                            <% imgs.each_with_index do |image, i| %>
+                            <% imgs_user.each_with_index do |image, i| %>
                               <div class="carousel-item <%= i.zero? ? 'active' : '' %>">
                                 <%= image_tag image, class: "d-block w-100 h-100", style: "object-fit: cover;" %>
                               </div>
@@ -147,10 +148,10 @@
                           </button>
                         </div>
                       <% else %>
-                        <%= image_tag imgs.first, class: "rounded-4", style: "height:200px;width:100%;object-fit:cover;" %>
+                        <%= image_tag imgs_user.first, class: "rounded-4", style: "height:200px;width:100%;object-fit:cover;" %>
                       <% end %>
 
-                    <%# 4) Fallback do pipeline (blindado contra AssetNotFound) %>
+                    <%# 4) Fallback por categoria (blindado contra AssetNotFound) %>
                     <% else %>
                       <% fb = Service.fallback_image_for(service.categories) %>
                       <%= begin
@@ -160,6 +161,7 @@
                           end %>
                     <% end %>
 
+                    <%# ======================== BODY DO CARD ======================== %>
                     <div class="card-body px-0 pt-2">
                       <p class="card-text fw-bold mb-0"><%= service.user.name %></p>
                       <p class="card-text text-muted mb-0 categories"><%= service.categories %></p>
@@ -171,7 +173,7 @@
                         <span class="fw-bold"><%= number_to_currency(service.price_hour, unit: "R$") %></span> por hora
                       </p>
                     </div>
-                  </div>
+                  </div><!-- /card -->
                 <% end %>
               </div>
             <% end %>
@@ -180,6 +182,7 @@
       </div>
     </div>
 
+    <%# -------- Coluna DIREITA: Mapa (sticky) -------- %>
     <div class="col-lg-6 d-none d-lg-block">
       <div id="services-map"
           class="map-sticky"
