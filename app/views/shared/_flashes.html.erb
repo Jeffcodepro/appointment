@@ -1,3 +1,4 @@
+<!-- app/views/shared/_flashes.html.erb -->
 <div class="alerts-stack">
   <% flash.each do |type, msg| %>
     <% klass =
@@ -7,6 +8,14 @@
       when "error"  then "alert-danger"
       else "alert-info"
       end %>
-    <div class="alert <%= klass %>" role="alert"><%= msg %></div>
+
+    <div
+      class="alert <%= klass %> show"
+      role="alert"
+      data-controller="flash"
+      data-flash-timeout-value="4000">
+      <span><%= msg %></span>
+      <button type="button" class="btn-close" aria-label="Fechar" data-action="flash#close">×</button>
+    </div>
   <% end %>
 </div>
