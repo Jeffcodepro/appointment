@@ -19,15 +19,22 @@ class ServicesController < ApplicationController
 
   # GET /services
   def index
-    # estados com serviço
+    # Estados para o filtro
     @states = Service.joins(:user)
                      .where.not(users: { state: [nil, ""] })
                      .distinct
                      .order('users.state')
                      .pluck('users.state')
 
+    # Base + includes para evitar N+1 (service.image, user.banner, user.images)
     scope = Service.with_user
+                   .includes(
+                     :user,
+                     image_attachment: :blob,
+                     user: { banner_attachment: :blob, images_attachments: :blob }
+                   )
 
+    # ---- Filtros ----
     if params[:query].present?
       q = params[:query].to_s.squish
       scope = if looks_like_address?(q)
@@ -40,7 +47,6 @@ class ServicesController < ApplicationController
     scope = scope.where(id: params[:service_id]) if params[:service_id].present?
     scope = scope.where(categories: params[:category]) if params[:category].present?
 
-    # ✅ Filtro robusto por estado/cidade sem depender de alias de JOIN
     if params[:state].present? || params[:city].present?
       user_filter = User.all
       user_filter = user_filter.where(state: params[:state]) if params[:state].present?
@@ -48,8 +54,12 @@ class ServicesController < ApplicationController
       scope = scope.where(user_id: user_filter.select(:id))
     end
 
-    @services = scope.order(created_at: :desc).limit(60)
+    # ---- Variedade na listagem ----
+    # Pega um pool maior, embaralha e intercala por profissional
+    pool = scope.limit(300).to_a.shuffle
+    @services = interleave_by_user(pool).first(60)
 
+    # ---- Marcadores do mapa ----
     @markers  = @services.map do |s|
       next unless s.user.latitude && s.user.longitude
       {
@@ -377,5 +387,23 @@ class ServicesController < ApplicationController
 
   def set_owned_service
     @service = current_user.services.find(params[:id])
+  end
+
+  # === Intercala por profissional para evitar cards repetidos lado a lado ===
+  def interleave_by_user(list)
+    buckets = list.group_by(&:user_id).transform_values { |ary| ary.shuffle }
+    keys = buckets.keys.shuffle
+    out = []
+    loop do
+      progressed = false
+      keys.each do |k|
+        ary = buckets[k]
+        next if ary.blank?
+        out << ary.shift
+        progressed = true
+      end
+      break unless progressed
+    end
+    out
   end
 end

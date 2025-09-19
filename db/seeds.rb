@@ -29,8 +29,8 @@ CITIES_BY_STATE = {
     { city: "Niterói",        address: "Rua Visconde do Rio Branco, 251", cep: "24020-006" }
   ],
   "MG" => [
-    { city: "Belo Horizonte", address: "Av. Amazonas, 1830",          cep: "30180-001" },
-    { city: "Uberlândia",     address: "Av. João Naves de Ávila, 1331", cep: "38400-902" }
+    { city: "Belo Horizonte", address: "Av. Amazonas, 1830",              cep: "30180-001" },
+    { city: "Uberlândia",     address: "Av. João Naves de Ávila, 1331",   cep: "38400-902" }
   ],
   "ES" => [
     { city: "Vitória",    address: "Av. Jerônimo Monteiro, 1000", cep: "29010-002" },
@@ -271,7 +271,7 @@ def unique_company_name
   end
 end
 
-# =============== CRIA PROFISSIONAIS + SERVIÇOS =================
+# =============== CRIA PROFISSIONAIS + SERVIÇOS (GENÉRICOS) =================
 puts "Criando profissionais e serviços…"
 
 professionals = []
@@ -295,12 +295,12 @@ CATEGORIES.each do |cat|
     pro.inject_coordinates rescue nil
     professionals << pro
 
-    # 1) Escolhe UMA imagem única p/ este profissional nesta categoria
+    # 1) Imagem única p/ este profissional nesta categoria
     pro_img = next_unique_image_for_category(cat)
     # 2) Usa como banner/galeria do pro
     attach_banner_to_user!(pro, pro_img)
 
-    # 3) Cria N subcategorias para o mesmo pro, sempre reutilizando a MESMA imagem
+    # 3) Cria N subcategorias para o mesmo pro, reutilizando a MESMA imagem
     chosen_subs = subs.shift(SUBS_PER_PRO)
     if chosen_subs.size < SUBS_PER_PRO
       subs = SUBCATEGORIES[cat].shuffle
@@ -317,7 +317,6 @@ CATEGORIES.each do |cat|
         price_hour_cents: (rand(80..220) * 100),
         average_hours: rand(1..4)
       )
-      # imagem do serviço = banner/galeria do pro (consistência visual por subcategoria)
       attach_image_to_service!(srv, pro_img)
       services << srv
     end
@@ -326,6 +325,48 @@ end
 
 puts "✅ #{professionals.size} profissionais"
 puts "✅ #{services.size} serviços (mesma imagem por pro dentro da categoria; imagens diferentes entre pros)"
+
+# =============== PROFISSIONAL FIXO: JEFFERSON (ODONTO) ===============
+puts "Criando profissional fixo (Jefferson)…"
+owner_email    = "jeffersonoliveirapro1212@gmail.com"
+owner_password = "123456"
+owner_addr     = random_address_from_pool
+
+jefferson = User.create!(
+  name: "Jefferson Oliveira",
+  email: owner_email,
+  password: owner_password,
+  role: :professional,
+  profile_completed: true,
+  phone_number: Faker::PhoneNumber.cell_phone_in_e164,
+  description: pro_bio_for("Consultório odontológico", city: owner_addr[:city]),
+  **owner_addr
+)
+jefferson.inject_coordinates rescue nil
+professionals << jefferson
+
+# Uma imagem única para o Jefferson (odonto)
+owner_img = next_unique_image_for_category("Consultório odontológico") || CATEGORY_IMAGE_FALLBACK["Consultório odontológico"]
+attach_banner_to_user!(jefferson, owner_img)
+
+# Cria 1 serviço para cada subcategoria de odontologia (6 no total)
+odonto_subs = SUBCATEGORIES["Consultório odontológico"]
+owner_services = odonto_subs.map do |sub|
+  srv = Service.create!(
+    user: jefferson,
+    categories: "Consultório odontológico",
+    subcategories: sub,
+    name: "#{sub} – #{unique_company_name}",
+    description: service_description_for("Consultório odontológico", sub),
+    price_hour_cents: (rand(120..300) * 100),
+    average_hours: rand(1..3)
+  )
+  attach_image_to_service!(srv, owner_img)
+  services << srv
+  srv
+end
+
+puts "✅ Jefferson criado com #{owner_services.size} serviços em odontologia (email: #{owner_email} / senha: #{owner_password})"
 
 # =============== CLIENTES ========================
 puts "Criando clientes..."
@@ -344,7 +385,7 @@ clients = Array.new(CLI_COUNT) do
 end
 puts "✅ #{clients.size} clientes"
 
-# =============== CONVERSAS =======================
+# =============== CONVERSAS (amostras aleatórias) =======================
 puts "Criando conversas de amostra..."
 conversations = []
 services.sample(15).each do |s|
@@ -376,6 +417,54 @@ def free_slot_for_provider(provider_id, duration_hours:, days_ahead: 30, open_ho
   nil
 end
 
+# --- 6 agendamentos para o Jefferson, com clientes e dias diferentes ---
+puts "Criando 6 agendamentos para o Jefferson..."
+require 'set'
+used_dates = Set.new
+six_clients = clients.sample(6).uniq
+six_clients += clients.sample(6) while six_clients.size < 6
+
+owner_services_by_sub = owner_services.index_by(&:subcategories)
+
+odonto_subs.each_with_index do |sub, i|
+  srv = owner_services_by_sub[sub]
+  dur = (srv.average_hours.presence || 1).to_i
+
+  slot = nil
+  40.times do
+    s = free_slot_for_provider(jefferson.id, duration_hours: dur, days_ahead: 50)
+    break unless s
+    d = s[0].to_date
+    # garante datas distintas e dias úteis
+    if !used_dates.include?(d) && !d.saturday? && !d.sunday?
+      slot = s
+      used_dates << d
+      break
+    end
+  end
+  next unless slot
+  start_at, end_at = slot
+  client = six_clients[i]
+
+  sch = Schedule.create!(
+    user_id: client.id,
+    client: client,
+    professional: jefferson,
+    service: srv,
+    start_at: start_at,
+    end_at: end_at,
+    status: Schedule.statuses[:confirmed],
+    accepted_client: true,
+    accepted_professional: true,
+    confirmed: true
+  )
+
+  Message.create!(user: client,    schedule: sch, content: "Olá Jefferson, gostaria de agendar #{sub.downcase}.")
+  Message.create!(user: jefferson, schedule: sch, content: "Agendamento confirmado! Até lá.")
+end
+puts "✅ 6 agendamentos confirmados para o Jefferson"
+
+# --- Agendamentos aleatórios (mantido) ---
 puts "Criando agendamentos..."
 SCHEDULE_COUNT = 50
 created = 0
@@ -413,5 +502,5 @@ while created < SCHEDULE_COUNT && attempts < SCHEDULE_COUNT * 10
   created += 1
 end
 
-puts "✅ #{created} agendamentos"
+puts "✅ #{created} agendamentos aleatórios"
 puts "Seeds concluídas!"
